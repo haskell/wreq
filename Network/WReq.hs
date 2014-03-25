@@ -11,6 +11,8 @@ module Network.WReq
     , JSONError(..)
     , head
     , options
+    , put
+    , delete
     , Options
     , manager
     , proxy
@@ -22,6 +24,8 @@ module Network.WReq
     , postWith
     , headWith
     , optionsWith
+    , putWith
+    , deleteWith
     , foldGet
     , foldGetWith
     ) where
@@ -91,17 +95,18 @@ post url payload = postWith defaults url payload
 
 postWith :: Options -> String -> Payload -> IO (Response L.ByteString)
 postWith opts url payload = prepare opts url $ \req mgr -> do
-  let fixPayload = case payload of
-                     NoPayload -> id
-                     Raw contentType bs ->
-                       setHeader "Content-Type" contentType .
-                       setBody (HTTP.RequestBodyBS bs)
-                     Params ps -> HTTP.urlEncodedBody ps
-                     JSON val ->
-                       setHeader "Content-Type" "application/json" .
-                       setBody (HTTP.RequestBodyLBS (Aeson.encode val))
-  HTTP.withResponse (fixPayload . setMethod HTTP.methodPost $ req) mgr
+  HTTP.withResponse (setPayload payload . setMethod HTTP.methodPost $ req) mgr
     readResponse
+
+setPayload :: Payload -> HTTP.Request -> HTTP.Request
+setPayload payload =
+  case payload of
+    NoPayload -> id
+    Raw ct bs -> setHeader "Content-Type" ct .
+                 setBody (HTTP.RequestBodyBS bs)
+    Params ps -> HTTP.urlEncodedBody ps
+    JSON val  -> setHeader "Content-Type" "application/json" .
+                 setBody (HTTP.RequestBodyLBS (Aeson.encode val))
 
 setHeader :: HeaderName -> S.ByteString -> HTTP.Request -> HTTP.Request
 setHeader name value req = req {
@@ -120,16 +125,32 @@ head = headWith defaults
 headWith :: Options -> String -> IO (Response ())
 headWith = emptyMethodWith HTTP.methodHead
 
+put :: String -> Payload -> IO (Response ())
+put = putWith defaults
+
+putWith :: Options -> String -> Payload -> IO (Response ())
+putWith opts url payload = prepare opts url $ \req mgr -> do
+  HTTP.withResponse (setPayload payload . setMethod HTTP.methodPost $ req) mgr
+    ignoreResponse
+
 options :: String -> IO (Response ())
 options = optionsWith defaults
 
 optionsWith :: Options -> String -> IO (Response ())
 optionsWith = emptyMethodWith HTTP.methodOptions
 
+delete :: String -> IO (Response ())
+delete = deleteWith defaults
+
+deleteWith :: Options -> String -> IO (Response ())
+deleteWith = emptyMethodWith HTTP.methodDelete
+
 emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
 emptyMethodWith method opts url = prepare opts url $ \req mgr ->
-  HTTP.withResponse (setMethod method req) mgr
-    (fmap (fmap (const ())) . readResponse)
+  HTTP.withResponse (setMethod method req) mgr ignoreResponse
+
+ignoreResponse :: HTTP.Response BodyReader -> IO (Response ())
+ignoreResponse resp = fmap (const ()) <$> readResponse resp
 
 readResponse :: HTTP.Response BodyReader -> IO (Response L.ByteString)
 readResponse resp = do
