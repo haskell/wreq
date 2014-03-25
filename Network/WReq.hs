@@ -76,7 +76,8 @@ get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url
 
 getWith :: Options -> String -> IO (Response L.ByteString)
-getWith opts url = prepareAndRun opts url readResponse
+getWith opts url = prepare id opts url $ \req mgr ->
+  HTTP.withResponse req mgr readResponse
 
 type ContentType = S.ByteString
 
@@ -164,7 +165,8 @@ foldGet :: (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGet f z url = foldGetWith defaults f z url
 
 foldGetWith :: Options -> (a -> S.ByteString -> IO a) -> a -> String -> IO a
-foldGetWith opts f z0 url = prepareAndRun opts url (foldResponseBody f z0)
+foldGetWith opts f z0 url = prepare id opts url $ \req mgr ->
+  HTTP.withResponse req mgr (foldResponseBody f z0)
 
 foldResponseBody :: (a -> S.ByteString -> IO a) -> a
                  -> HTTP.Response BodyReader -> IO a
@@ -174,10 +176,6 @@ foldResponseBody f z0 resp = go z0
           if S.null bs
             then return z
             else f z bs >>= go
-
-prepareAndRun :: Options -> String -> (HTTP.Response BodyReader -> IO a) -> IO a
-prepareAndRun opts url body = prepare id opts url $ \req mgr ->
-  HTTP.withResponse req mgr body
 
 prepare :: (HTTP.Request -> HTTP.Request) -> Options -> String
         -> (HTTP.Request -> Manager -> IO a) -> IO a
