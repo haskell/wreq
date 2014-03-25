@@ -26,7 +26,6 @@ library
     bytestring >= 0.9,
     http-client >= 0.2,
     http-client-tls >= 0.2,
-    http-types >= 0.8,
-    lens >= 0.4
+    http-types >= 0.8
   -- hs-source-dirs:
   default-language:    Haskell98

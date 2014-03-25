@@ -17,9 +17,7 @@ module Network.WReq
     , manager
     , proxy
     , auth
-    , Response
-    , respHeaders
-    , respBody
+    , Response(..)
     , getWith
     , postWith
     , headWith
@@ -32,14 +30,13 @@ module Network.WReq
 
 import Control.Applicative ((<$>))
 import Control.Exception (Exception, throwIO)
-import Control.Lens
 import Control.Monad (unless)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Typeable, Data)
 import Data.IORef (IORef, newIORef)
 import Data.Maybe (fromMaybe)
 import Network.HTTP.Client (BodyReader, Manager, ManagerSettings, requestBody)
-import Network.HTTP.Client.Internal (Proxy(..), addProxy)
+import Network.HTTP.Client.Internal (Proxy(..), Response(..), addProxy)
 import Network.HTTP.Types (Header, HeaderName)
 import Prelude hiding (head)
 import System.IO (Handle)
@@ -50,26 +47,19 @@ import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types as HTTP
 
-data Response a = Response {
-    _respHeaders :: [Header]
-  , _respBody :: a
-  } deriving (Functor, Eq, Read, Show, Typeable)
-makeLenses ''Response
-
 data Options = Options {
-    _manager :: Either ManagerSettings Manager
-  , _proxy :: Maybe Proxy
-  , _auth :: Maybe (S.ByteString, S.ByteString)
-  , _headers :: [Header]
+    manager :: Either ManagerSettings Manager
+  , proxy :: Maybe Proxy
+  , auth :: Maybe (S.ByteString, S.ByteString)
+  , headers :: [Header]
   } deriving (Typeable)
-makeLenses ''Options
 
 defaults :: Options
 defaults = Options {
-    _manager = Left TLS.tlsManagerSettings
-  , _proxy   = Nothing
-  , _auth    = Nothing
-  , _headers = []
+    manager = Left TLS.tlsManagerSettings
+  , proxy   = Nothing
+  , auth    = Nothing
+  , headers = []
   }
 
 get :: String -> IO (Response L.ByteString)
@@ -154,10 +144,7 @@ ignoreResponse resp = fmap (const ()) <$> readResponse resp
 readResponse :: HTTP.Response BodyReader -> IO (Response L.ByteString)
 readResponse resp = do
   chunks <- HTTP.brConsume (HTTP.responseBody resp)
-  return Response {
-      _respHeaders = HTTP.responseHeaders resp
-    , _respBody = L.fromChunks chunks
-    }
+  return resp { responseBody = L.fromChunks chunks }
 
 foldGet :: (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGet f z url = foldGetWith defaults f z url
@@ -176,7 +163,7 @@ foldResponseBody f z0 resp = go z0
 
 request :: (HTTP.Request -> HTTP.Request)
         -> Options -> String -> (HTTP.Response BodyReader -> IO a) -> IO a
-request modify opts url body = case _manager opts of
+request modify opts url body = case manager opts of
                           Left settings -> HTTP.withManager settings go
                           Right manager -> go manager
   where
@@ -185,12 +172,12 @@ request modify opts url body = case _manager opts of
       HTTP.withResponse req mgr body
 
 setAuth :: Options -> HTTP.Request -> HTTP.Request
-setAuth opts req = case _auth opts of
+setAuth opts req = case auth opts of
                      Nothing   -> req
                      Just cred -> uncurry HTTP.applyBasicAuth cred req
 
 setProxy :: Options -> HTTP.Request -> HTTP.Request
-setProxy opts req = case _proxy opts of
+setProxy opts req = case proxy opts of
                       Nothing                -> req
                       Just (Proxy host port) -> addProxy host port req
 
@@ -202,16 +189,16 @@ instance Exception JSONError
 json :: FromJSON a => Response L.ByteString -> IO (Response a)
 json resp = do
   let contentType = fromMaybe "unknown" . lookup "Content-Type" .
-                    _respHeaders $ resp
+                    responseHeaders $ resp
   unless (contentType == "application/json") $
     throwIO (JSONError $ "content type of response is " ++ show contentType)
-  case Aeson.eitherDecode' (_respBody resp) of
+  case Aeson.eitherDecode' (responseBody resp) of
     Left err  -> throwIO (JSONError err)
     Right val -> return (fmap (const val) resp)
 
 getHeader :: HeaderName -> Response a -> [S.ByteString]
-getHeader name = map snd . filter ((== name) . fst) . _respHeaders
+getHeader name = map snd . filter ((== name) . fst) . responseHeaders
 
 main = do
   resp <- get "http://x.org/"
-  return (resp^.respBody)
+  return (responseBody resp)
