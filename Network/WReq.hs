@@ -94,9 +94,9 @@ post :: String -> Payload -> IO (Response L.ByteString)
 post url payload = postWith defaults url payload
 
 postWith :: Options -> String -> Payload -> IO (Response L.ByteString)
-postWith opts url payload = prepare opts url $ \req mgr -> do
-  HTTP.withResponse (setPayload payload . setMethod HTTP.methodPost $ req) mgr
-    readResponse
+postWith opts url payload =
+  prepare (setPayload payload . setMethod HTTP.methodPost) opts url $
+  \req mgr -> HTTP.withResponse req mgr readResponse
 
 setPayload :: Payload -> HTTP.Request -> HTTP.Request
 setPayload payload =
@@ -129,9 +129,9 @@ put :: String -> Payload -> IO (Response ())
 put = putWith defaults
 
 putWith :: Options -> String -> Payload -> IO (Response ())
-putWith opts url payload = prepare opts url $ \req mgr -> do
-  HTTP.withResponse (setPayload payload . setMethod HTTP.methodPost $ req) mgr
-    ignoreResponse
+putWith opts url payload =
+  prepare (setPayload payload . setMethod HTTP.methodPost) opts url $
+  \req mgr -> HTTP.withResponse req mgr ignoreResponse
 
 options :: String -> IO (Response ())
 options = optionsWith defaults
@@ -146,8 +146,8 @@ deleteWith :: Options -> String -> IO (Response ())
 deleteWith = emptyMethodWith HTTP.methodDelete
 
 emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
-emptyMethodWith method opts url = prepare opts url $ \req mgr ->
-  HTTP.withResponse (setMethod method req) mgr ignoreResponse
+emptyMethodWith method opts url = prepare (setMethod method) opts url $
+  \req mgr -> HTTP.withResponse req mgr ignoreResponse
 
 ignoreResponse :: HTTP.Response BodyReader -> IO (Response ())
 ignoreResponse resp = fmap (const ()) <$> readResponse resp
@@ -176,16 +176,17 @@ foldResponseBody f z0 resp = go z0
             else f z bs >>= go
 
 prepareAndRun :: Options -> String -> (HTTP.Response BodyReader -> IO a) -> IO a
-prepareAndRun opts url body = prepare opts url $ \req mgr ->
+prepareAndRun opts url body = prepare id opts url $ \req mgr ->
   HTTP.withResponse req mgr body
 
-prepare :: Options -> String -> (HTTP.Request -> Manager -> IO a) -> IO a
-prepare opts url body = case _manager opts of
+prepare :: (HTTP.Request -> HTTP.Request) -> Options -> String
+        -> (HTTP.Request -> Manager -> IO a) -> IO a
+prepare modify opts url body = case _manager opts of
                           Left settings -> HTTP.withManager settings go
                           Right manager -> go manager
   where
     go mgr = do
-      req <- (setAuth opts . setProxy opts) <$> HTTP.parseUrl url
+      req <- (modify . setAuth opts . setProxy opts) <$> HTTP.parseUrl url
       body req mgr
 
 setAuth :: Options -> HTTP.Request -> HTTP.Request
