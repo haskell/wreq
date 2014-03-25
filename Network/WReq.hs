@@ -202,7 +202,3 @@ json resp = do
 
 getHeader :: HeaderName -> Response a -> [S.ByteString]
 getHeader name = map snd . filter ((== name) . fst) . responseHeaders
-
-main = do
-  resp <- get "http://x.org/"
-  return (responseBody resp)
