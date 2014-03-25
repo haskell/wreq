@@ -1,5 +1,5 @@
-{-# LANGUAGE DeriveFunctor, DeriveDataTypeable, OverloadedStrings,
-    TemplateHaskell, GADTs #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, GADTs, OverloadedStrings,
+    TemplateHaskell #-}
 
 module Network.WReq
     (
@@ -30,6 +30,7 @@ module Network.WReq
 
 import Control.Applicative ((<$>))
 import Control.Exception (Exception, throwIO)
+import Control.Failure (Failure(failure))
 import Control.Monad (unless)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Typeable, Data)
@@ -186,14 +187,17 @@ data JSONError = JSONError String
 
 instance Exception JSONError
 
-json :: FromJSON a => Response L.ByteString -> IO (Response a)
+json :: (Failure JSONError m, FromJSON a) =>
+        Response L.ByteString -> m (Response a)
+{-# SPECIALIZE json :: (FromJSON a) =>
+                       Response L.ByteString -> IO (Response a) #-}
 json resp = do
   let contentType = fromMaybe "unknown" . lookup "Content-Type" .
                     responseHeaders $ resp
   unless (contentType == "application/json") $
-    throwIO (JSONError $ "content type of response is " ++ show contentType)
+    failure (JSONError $ "content type of response is " ++ show contentType)
   case Aeson.eitherDecode' (responseBody resp) of
-    Left err  -> throwIO (JSONError err)
+    Left err  -> failure (JSONError err)
     Right val -> return (fmap (const val) resp)
 
 getHeader :: HeaderName -> Response a -> [S.ByteString]

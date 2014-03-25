@@ -24,6 +24,7 @@ library
     aeson >= 0.7,
     base >= 4.6,
     bytestring >= 0.9,
+    failure >= 0.1,
     http-client >= 0.2,
     http-client-tls >= 0.2,
     http-types >= 0.8
