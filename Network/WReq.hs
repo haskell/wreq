@@ -9,6 +9,8 @@ module Network.WReq
     , binary
     , json
     , JSONError(..)
+    , head
+    , options
     , Options
     , manager
     , proxy
@@ -18,6 +20,8 @@ module Network.WReq
     , respBody
     , getWith
     , postWith
+    , headWith
+    , optionsWith
     , foldGet
     , foldGetWith
     ) where
@@ -33,6 +37,8 @@ import Data.Maybe (fromMaybe)
 import Network.HTTP.Client (BodyReader, Manager, ManagerSettings, requestBody)
 import Network.HTTP.Client.Internal (Proxy(..), addProxy)
 import Network.HTTP.Types (Header, HeaderName)
+import Prelude hiding (head)
+import System.IO (Handle)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
@@ -107,6 +113,22 @@ setBody body req = req { requestBody = body }
 
 setMethod :: HTTP.Method -> HTTP.Request -> HTTP.Request
 setMethod method req = req { HTTP.method = method }
+
+head :: String -> IO (Response ())
+head = headWith defaults
+
+headWith :: Options -> String -> IO (Response ())
+headWith opts url = prepare opts url $ \req mgr ->
+  HTTP.withResponse (setMethod HTTP.methodHead req) mgr
+    (fmap (fmap (const ())) . readResponse)
+
+options :: String -> IO (Response ())
+options = optionsWith defaults
+
+optionsWith :: Options -> String -> IO (Response ())
+optionsWith opts url = prepare opts url $ \req mgr ->
+  HTTP.withResponse (setMethod HTTP.methodOptions req) mgr
+    (fmap (fmap (const ())) . readResponse)
 
 readResponse :: HTTP.Response BodyReader -> IO (Response L.ByteString)
 readResponse resp = do
