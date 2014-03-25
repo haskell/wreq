@@ -76,8 +76,7 @@ get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url
 
 getWith :: Options -> String -> IO (Response L.ByteString)
-getWith opts url = prepare id opts url $ \req mgr ->
-  HTTP.withResponse req mgr readResponse
+getWith opts url = request id opts url readResponse
 
 type ContentType = S.ByteString
 
@@ -96,8 +95,7 @@ post url payload = postWith defaults url payload
 
 postWith :: Options -> String -> Payload -> IO (Response L.ByteString)
 postWith opts url payload =
-  prepare (setPayload payload . setMethod HTTP.methodPost) opts url $
-  \req mgr -> HTTP.withResponse req mgr readResponse
+  request (setPayload payload . setMethod HTTP.methodPost) opts url readResponse
 
 setPayload :: Payload -> HTTP.Request -> HTTP.Request
 setPayload payload =
@@ -131,8 +129,8 @@ put = putWith defaults
 
 putWith :: Options -> String -> Payload -> IO (Response ())
 putWith opts url payload =
-  prepare (setPayload payload . setMethod HTTP.methodPost) opts url $
-  \req mgr -> HTTP.withResponse req mgr ignoreResponse
+  request (setPayload payload . setMethod HTTP.methodPost) opts url
+  ignoreResponse
 
 options :: String -> IO (Response ())
 options = optionsWith defaults
@@ -147,8 +145,8 @@ deleteWith :: Options -> String -> IO (Response ())
 deleteWith = emptyMethodWith HTTP.methodDelete
 
 emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
-emptyMethodWith method opts url = prepare (setMethod method) opts url $
-  \req mgr -> HTTP.withResponse req mgr ignoreResponse
+emptyMethodWith method opts url =
+  request (setMethod method) opts url ignoreResponse
 
 ignoreResponse :: HTTP.Response BodyReader -> IO (Response ())
 ignoreResponse resp = fmap (const ()) <$> readResponse resp
@@ -165,8 +163,7 @@ foldGet :: (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGet f z url = foldGetWith defaults f z url
 
 foldGetWith :: Options -> (a -> S.ByteString -> IO a) -> a -> String -> IO a
-foldGetWith opts f z0 url = prepare id opts url $ \req mgr ->
-  HTTP.withResponse req mgr (foldResponseBody f z0)
+foldGetWith opts f z0 url = request id opts url (foldResponseBody f z0)
 
 foldResponseBody :: (a -> S.ByteString -> IO a) -> a
                  -> HTTP.Response BodyReader -> IO a
@@ -177,15 +174,15 @@ foldResponseBody f z0 resp = go z0
             then return z
             else f z bs >>= go
 
-prepare :: (HTTP.Request -> HTTP.Request) -> Options -> String
-        -> (HTTP.Request -> Manager -> IO a) -> IO a
-prepare modify opts url body = case _manager opts of
+request :: (HTTP.Request -> HTTP.Request)
+        -> Options -> String -> (HTTP.Response BodyReader -> IO a) -> IO a
+request modify opts url body = case _manager opts of
                           Left settings -> HTTP.withManager settings go
                           Right manager -> go manager
   where
     go mgr = do
       req <- (modify . setAuth opts . setProxy opts) <$> HTTP.parseUrl url
-      body req mgr
+      HTTP.withResponse req mgr body
 
 setAuth :: Options -> HTTP.Request -> HTTP.Request
 setAuth opts req = case _auth opts of
