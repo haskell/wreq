@@ -1,0 +1,8 @@
+^(?:dist|benchmarks/dist|tests/coverage|tests/dist)$
+\.(?:aux|eventlog|h[ip]|log|[oa]|orig|prof|ps|rej|swp|tix)$
+~$
+
+syntax: glob
+.\#*
+cabal.sandbox.config
+\.cabal-sandbox
