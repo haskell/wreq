@@ -118,16 +118,17 @@ head :: String -> IO (Response ())
 head = headWith defaults
 
 headWith :: Options -> String -> IO (Response ())
-headWith opts url = prepare opts url $ \req mgr ->
-  HTTP.withResponse (setMethod HTTP.methodHead req) mgr
-    (fmap (fmap (const ())) . readResponse)
+headWith = emptyMethodWith HTTP.methodHead
 
 options :: String -> IO (Response ())
 options = optionsWith defaults
 
 optionsWith :: Options -> String -> IO (Response ())
-optionsWith opts url = prepare opts url $ \req mgr ->
-  HTTP.withResponse (setMethod HTTP.methodOptions req) mgr
+optionsWith = emptyMethodWith HTTP.methodOptions
+
+emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
+emptyMethodWith method opts url = prepare opts url $ \req mgr ->
+  HTTP.withResponse (setMethod method req) mgr
     (fmap (fmap (const ())) . readResponse)
 
 readResponse :: HTTP.Response BodyReader -> IO (Response L.ByteString)
