@@ -22,6 +22,7 @@ module Network.WReq
     , foldGetWith
     ) where
 
+import Control.Applicative ((<$>))
 import Control.Exception (Exception, throwIO)
 import Control.Lens
 import Control.Monad (unless)
@@ -140,14 +141,18 @@ prepare opts url body = case _manager opts of
                           Right manager -> go manager
   where
     go mgr = do
-      req0 <- HTTP.parseUrl url
-      let reqAuth = case _auth opts of
-                      Nothing   -> req0
-                      Just cred -> uncurry HTTP.applyBasicAuth cred req0
-          reqProxy = case _proxy opts of
-                       Nothing                -> reqAuth
-                       Just (Proxy host port) -> addProxy host port reqAuth
-      body reqProxy mgr
+      req <- (setAuth opts . setProxy opts) <$> HTTP.parseUrl url
+      body req mgr
+
+setAuth :: Options -> HTTP.Request -> HTTP.Request
+setAuth opts req = case _auth opts of
+                     Nothing   -> req
+                     Just cred -> uncurry HTTP.applyBasicAuth cred req
+
+setProxy :: Options -> HTTP.Request -> HTTP.Request
+setProxy opts req = case _proxy opts of
+                      Nothing                -> req
+                      Just (Proxy host port) -> addProxy host port req
 
 data JSONError = JSONError String
                deriving (Show, Typeable)
