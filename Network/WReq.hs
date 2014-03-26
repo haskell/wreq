@@ -2,39 +2,55 @@
 
 module Network.WReq
     (
+    -- * HTTP verbs
       get
-    , Payload(..)
     , post
-    , binary
-    , json
-    , JSONError(..)
     , head
     , options
     , put
     , delete
-    , Response
-    , Lens.responseStatus
-    , Lens.responseVersion
-    , Lens.responseHeaders
-    , Lens.responseBody
-    , Lens.responseCookieJar
-    , Options
-    , Lens.manager
-    , Lens.proxy
-    , Lens.auth
-    , Lens.headers
-    , Lens.params
-    , Proxy(Proxy)
-    , Lens.proxyHost
-    , Lens.proxyPort
+    -- ** Configurable verbs
     , getWith
     , postWith
     , headWith
     , optionsWith
     , putWith
     , deleteWith
+    -- ** Incremental consumption of responses
     , foldGet
     , foldGetWith
+
+    -- * Payloads for POST and PUT
+    , Payload(..)
+    , binary
+
+    -- * Responses
+    , Response
+    , Lens.responseStatus
+    , Lens.responseVersion
+    , Lens.responseHeaders
+    , Lens.responseBody
+    , Lens.responseCookieJar
+    -- ** Decoding responses
+    , JSONError(..)
+    , json
+
+    -- * Configuration
+    , Options
+    , Lens.manager
+    , Lens.headers
+    , Lens.params
+    -- ** Proxy settings
+    , Lens.proxy
+    , Proxy(Proxy)
+    , Lens.proxyHost
+    , Lens.proxyPort
+    -- ** Authentication
+    , Lens.auth
+    , Auth
+    , basicAuth
+    , oauth2Bearer
+    , oauth2Token
     ) where
 
 import Control.Failure (Failure(failure))
