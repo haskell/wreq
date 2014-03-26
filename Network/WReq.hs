@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, GADTs, OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 
 module Network.WReq
     (

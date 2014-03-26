@@ -1,5 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, GADTs, OverloadedStrings,
-    RecordWildCards, TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable, GADTs, RecordWildCards #-}
 
 module Network.WReq.Types
     (

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, GADTs, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Network.WReq.Internal
     (
