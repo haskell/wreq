@@ -27,10 +27,9 @@ library
     Network.WReq.Types
   other-modules:
     Paths_wreq
-  -- other-extensions:
   build-depends:
     aeson >= 0.7,
-    base >= 4.6,
+    base >= 4.5,
     bytestring >= 0.9,
     failure >= 0.1,
     http-client >= 0.2,
@@ -38,5 +37,4 @@ library
     http-types >= 0.8,
     lens-family-core >= 1.0,
     lens-family-th >= 0.2
-  -- hs-source-dirs:
   default-language:    Haskell98
