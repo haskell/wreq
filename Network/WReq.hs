@@ -1,5 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, GADTs, OverloadedStrings,
-    TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, GADTs, OverloadedStrings #-}
 
 module Network.WReq
     (
@@ -13,11 +12,21 @@ module Network.WReq
     , options
     , put
     , delete
+    , Response
+    , Lens.responseStatus
+    , Lens.responseVersion
+    , Lens.responseHeaders
+    , Lens.responseBody
+    , Lens.responseCookieJar
     , Options
-    , manager
-    , proxy
-    , auth
-    , Response(..)
+    , Lens.manager
+    , Lens.proxy
+    , Lens.auth
+    , Lens.headers
+    , Lens.params
+    , Proxy(Proxy)
+    , Lens.proxyHost
+    , Lens.proxyPort
     , getWith
     , postWith
     , headWith
@@ -29,31 +38,24 @@ module Network.WReq
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Exception (Exception, throwIO)
+import Lens.Family
 import Control.Failure (Failure(failure))
 import Control.Monad (unless)
-import Data.Aeson (FromJSON, ToJSON)
-import Data.Data (Typeable, Data)
-import Data.IORef (IORef, newIORef)
+import Data.Aeson (FromJSON)
 import Data.Maybe (fromMaybe)
-import Network.HTTP.Client (BodyReader, Manager, ManagerSettings, requestBody)
+import Network.HTTP.Client (BodyReader, requestBody)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..), addProxy)
-import Network.HTTP.Types (Header, HeaderName)
+import Network.HTTP.Types (HeaderName)
 import Prelude hiding (head)
-import System.IO (Handle)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types as HTTP
-
-data Options = Options {
-    manager :: Either ManagerSettings Manager
-  , proxy :: Maybe Proxy
-  , auth :: Maybe (S.ByteString, S.ByteString)
-  , headers :: [Header]
-  } deriving (Typeable)
+import qualified Network.WReq.Lens as Lens
+import qualified Network.WReq.Internal.Lens as Int
+import Network.WReq.Types (JSONError(..), Options(..), Payload(..))
 
 defaults :: Options
 defaults = Options {
@@ -61,6 +63,7 @@ defaults = Options {
   , proxy   = Nothing
   , auth    = Nothing
   , headers = []
+  , params  = []
   }
 
 get :: String -> IO (Response L.ByteString)
@@ -68,15 +71,6 @@ get url = getWith defaults url
 
 getWith :: Options -> String -> IO (Response L.ByteString)
 getWith opts url = request id opts url readResponse
-
-type ContentType = S.ByteString
-
-data Payload where
-    NoPayload :: Payload
-    Raw       :: ContentType -> S.ByteString -> Payload
-    Params    :: [(S.ByteString, S.ByteString)] -> Payload
-    JSON      :: ToJSON a => a -> Payload
-  deriving (Typeable)
 
 binary :: S.ByteString -> Payload
 binary = Raw "application/octet-stream"
@@ -166,11 +160,18 @@ request :: (HTTP.Request -> HTTP.Request)
         -> Options -> String -> (HTTP.Response BodyReader -> IO a) -> IO a
 request modify opts url body = case manager opts of
                           Left settings -> HTTP.withManager settings go
-                          Right manager -> go manager
+                          Right mgr     -> go mgr
   where
     go mgr = do
-      req <- (modify . setAuth opts . setProxy opts) <$> HTTP.parseUrl url
+      let mods = setQuery opts . setAuth opts . setProxy opts
+      req <- (modify . mods) <$> HTTP.parseUrl url
       HTTP.withResponse req mgr body
+
+setQuery :: Options -> HTTP.Request -> HTTP.Request
+setQuery opts req =
+  case params opts of
+    [] -> req
+    ps -> req { HTTP.queryString = HTTP.renderSimpleQuery True ps }
 
 setAuth :: Options -> HTTP.Request -> HTTP.Request
 setAuth opts req = case auth opts of
@@ -181,11 +182,6 @@ setProxy :: Options -> HTTP.Request -> HTTP.Request
 setProxy opts req = case proxy opts of
                       Nothing                -> req
                       Just (Proxy host port) -> addProxy host port req
-
-data JSONError = JSONError String
-               deriving (Show, Typeable)
-
-instance Exception JSONError
 
 json :: (Failure JSONError m, FromJSON a) =>
         Response L.ByteString -> m (Response a)
@@ -199,6 +195,3 @@ json resp = do
   case Aeson.eitherDecode' (responseBody resp) of
     Left err  -> failure (JSONError err)
     Right val -> return (fmap (const val) resp)
-
-getHeader :: HeaderName -> Response a -> [S.ByteString]
-getHeader name = map snd . filter ((== name) . fst) . responseHeaders
