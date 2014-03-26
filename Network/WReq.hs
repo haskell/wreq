@@ -117,9 +117,9 @@ json :: (Failure JSONError m, FromJSON a) =>
 {-# SPECIALIZE json :: (FromJSON a) =>
                        Response L.ByteString -> IO (Response a) #-}
 json resp = do
-  let contentType = fromMaybe "unknown" . lookup "Content-Type" .
-                    responseHeaders $ resp
-  unless (contentType == "application/json") $
+  let contentType = fst . S.break (==59) . fromMaybe "unknown" .
+                    lookup "Content-Type" . responseHeaders $ resp
+  unless ("application/json" `S.isPrefixOf` contentType) $
     failure (JSONError $ "content type of response is " ++ show contentType)
   case Aeson.eitherDecode' (responseBody resp) of
     Left err  -> failure (JSONError err)
