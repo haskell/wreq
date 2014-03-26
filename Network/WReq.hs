@@ -38,14 +38,15 @@ module Network.WReq
     ) where
 
 import Control.Applicative ((<$>))
-import Lens.Family
 import Control.Failure (Failure(failure))
 import Control.Monad (unless)
 import Data.Aeson (FromJSON)
 import Data.Maybe (fromMaybe)
+import Lens.Family ((.~), (%~))
 import Network.HTTP.Client (BodyReader, requestBody)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..), addProxy)
 import Network.HTTP.Types (HeaderName)
+import Network.WReq.Types (JSONError(..), Options(..), Payload(..))
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
@@ -53,9 +54,8 @@ import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types as HTTP
-import qualified Network.WReq.Lens as Lens
 import qualified Network.WReq.Internal.Lens as Int
-import Network.WReq.Types (JSONError(..), Options(..), Payload(..))
+import qualified Network.WReq.Lens as Lens
 
 defaults :: Options
 defaults = Options {
@@ -80,28 +80,22 @@ post url payload = postWith defaults url payload
 
 postWith :: Options -> String -> Payload -> IO (Response L.ByteString)
 postWith opts url payload =
-  request (setPayload payload . setMethod HTTP.methodPost) opts url readResponse
+  request (setPayload payload . (Int.method .~ HTTP.methodPost)) opts url
+    readResponse
 
 setPayload :: Payload -> HTTP.Request -> HTTP.Request
 setPayload payload =
   case payload of
     NoPayload -> id
     Raw ct bs -> setHeader "Content-Type" ct .
-                 setBody (HTTP.RequestBodyBS bs)
+                 (Int.requestBody .~ HTTP.RequestBodyBS bs)
     Params ps -> HTTP.urlEncodedBody ps
     JSON val  -> setHeader "Content-Type" "application/json" .
-                 setBody (HTTP.RequestBodyLBS (Aeson.encode val))
+                 (Int.requestBody .~ HTTP.RequestBodyLBS (Aeson.encode val))
 
 setHeader :: HeaderName -> S.ByteString -> HTTP.Request -> HTTP.Request
-setHeader name value req = req {
-    HTTP.requestHeaders = (name, value) : newHeaders
-  } where newHeaders = filter ((/= name) . fst) (HTTP.requestHeaders req)
-
-setBody :: HTTP.RequestBody -> HTTP.Request -> HTTP.Request
-setBody body req = req { requestBody = body }
-
-setMethod :: HTTP.Method -> HTTP.Request -> HTTP.Request
-setMethod method req = req { HTTP.method = method }
+setHeader name value =
+  Int.requestHeaders %~ ((name,value) :) . filter ((/= name) . fst)
 
 head :: String -> IO (Response ())
 head = headWith defaults
@@ -114,8 +108,8 @@ put = putWith defaults
 
 putWith :: Options -> String -> Payload -> IO (Response ())
 putWith opts url payload =
-  request (setPayload payload . setMethod HTTP.methodPost) opts url
-  ignoreResponse
+  request (setPayload payload . (Int.method .~ HTTP.methodPost)) opts url
+    ignoreResponse
 
 options :: String -> IO (Response ())
 options = optionsWith defaults
@@ -131,7 +125,7 @@ deleteWith = emptyMethodWith HTTP.methodDelete
 
 emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
 emptyMethodWith method opts url =
-  request (setMethod method) opts url ignoreResponse
+  request (Int.method .~ method) opts url ignoreResponse
 
 ignoreResponse :: HTTP.Response BodyReader -> IO (Response ())
 ignoreResponse resp = fmap (const ()) <$> readResponse resp
