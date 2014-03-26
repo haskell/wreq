@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP, OverloadedStrings #-}
 
 module Network.WReq.Internal
     (
@@ -16,6 +16,7 @@ module Network.WReq.Internal
 
 import Control.Applicative ((<$>))
 import Data.Monoid ((<>))
+import Data.Version (showVersion)
 import Lens.Family ((.~), (%~))
 import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
@@ -24,12 +25,21 @@ import Network.WReq.Types (Auth(..), Options(..), Payload(..))
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
+import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.WReq.Internal.Lens as Int
 import qualified Network.WReq.Lens as Lens
 
+-- This mess allows this module to continue to load during interactive
+-- development in ghci :-(
+#if defined(VERSION_base)
+import Paths_wreq (version)
+#else
+import Data.Version (Version(..))
+version = Version [0] ["wip"]
+#endif
 
 setPayload :: Payload -> Request -> Request
 setPayload payload =
@@ -72,9 +82,12 @@ request modify opts url body =
     either (flip HTTP.withManager go) go (manager opts)
   where
     go mgr = do
-      let mods = setQuery opts . setAuth opts . setProxy opts
+      let mods = setQuery opts . setAuth opts . setProxy opts . setUserAgent
       req <- (modify . mods) <$> HTTP.parseUrl url
       HTTP.withResponse req mgr body
+    setUserAgent = setHeader "User-Agent" $
+                   "haskell wreq-" <>
+                   Char8.pack (showVersion version)
 
 setQuery :: Options -> Request -> Request
 setQuery opts =
