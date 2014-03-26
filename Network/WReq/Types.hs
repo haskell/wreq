@@ -3,6 +3,7 @@
 module Network.WReq.Types
     (
       Options(..)
+    , Auth(..)
     , ContentType
     , Payload(..)
     , JSONError(..)
@@ -22,10 +23,15 @@ type ContentType = S.ByteString
 data Options = Options {
     manager :: Either ManagerSettings Manager
   , proxy :: Maybe Proxy
-  , auth :: Maybe (S.ByteString, S.ByteString)
+  , auth :: Maybe Auth
   , headers :: [Header]
   , params :: [(S.ByteString, S.ByteString)]
   } deriving (Typeable)
+
+data Auth = BasicAuth S.ByteString S.ByteString
+          | OAuth2Bearer S.ByteString
+          | OAuth2Token S.ByteString
+          deriving (Eq, Show, Typeable)
 
 instance Show Options where
   show (Options{..}) = concat ["Options { "

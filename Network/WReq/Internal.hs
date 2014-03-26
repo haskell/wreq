@@ -15,11 +15,12 @@ module Network.WReq.Internal
     ) where
 
 import Control.Applicative ((<$>))
+import Data.Monoid ((<>))
 import Lens.Family ((.~), (%~))
 import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Types (HeaderName)
-import Network.WReq.Types (Options(..), Payload(..))
+import Network.WReq.Types (Auth(..), Options(..), Payload(..))
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
@@ -82,7 +83,11 @@ setQuery opts =
     ps -> Int.queryString .~ HTTP.renderSimpleQuery True ps
 
 setAuth :: Options -> Request -> Request
-setAuth = maybe id (uncurry HTTP.applyBasicAuth) . auth
+setAuth = maybe id f . auth
+  where
+    f (BasicAuth user pass) = HTTP.applyBasicAuth user pass
+    f (OAuth2Bearer token)  = setHeader "Authorization" ("Bearer " <> token)
+    f (OAuth2Token token)   = setHeader "Authorization" ("token " <> token)
 
 setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy
