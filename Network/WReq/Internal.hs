@@ -17,7 +17,7 @@ module Network.WReq.Internal
 import Control.Applicative ((<$>))
 import Lens.Family ((.~), (%~))
 import Network.HTTP.Client (BodyReader)
-import Network.HTTP.Client.Internal (Proxy(..), Response(..), addProxy)
+import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Types (HeaderName)
 import Network.WReq.Types (Options(..), Payload(..))
 import Prelude hiding (head)
@@ -30,7 +30,7 @@ import qualified Network.WReq.Internal.Lens as Int
 import qualified Network.WReq.Lens as Lens
 
 
-setPayload :: Payload -> HTTP.Request -> HTTP.Request
+setPayload :: Payload -> Request -> Request
 setPayload payload =
   case payload of
     NoPayload -> id
@@ -40,7 +40,7 @@ setPayload payload =
     JSON val  -> setHeader "Content-Type" "application/json" .
                  (Int.requestBody .~ HTTP.RequestBodyLBS (Aeson.encode val))
 
-setHeader :: HeaderName -> S.ByteString -> HTTP.Request -> HTTP.Request
+setHeader :: HeaderName -> S.ByteString -> Request -> Request
 setHeader name value =
   Int.requestHeaders %~ ((name,value) :) . filter ((/= name) . fst)
 
@@ -48,16 +48,16 @@ emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
 emptyMethodWith method opts url =
   request (Int.method .~ method) opts url ignoreResponse
 
-ignoreResponse :: HTTP.Response BodyReader -> IO (Response ())
+ignoreResponse :: Response BodyReader -> IO (Response ())
 ignoreResponse resp = (Lens.responseBody .~ ()) <$> readResponse resp
 
-readResponse :: HTTP.Response BodyReader -> IO (Response L.ByteString)
+readResponse :: Response BodyReader -> IO (Response L.ByteString)
 readResponse resp = do
   chunks <- HTTP.brConsume (HTTP.responseBody resp)
   return resp { responseBody = L.fromChunks chunks }
 
 foldResponseBody :: (a -> S.ByteString -> IO a) -> a
-                 -> HTTP.Response BodyReader -> IO a
+                 -> Response BodyReader -> IO a
 foldResponseBody f z0 resp = go z0
   where go z = do
           bs <- HTTP.brRead (HTTP.responseBody resp)
@@ -65,8 +65,8 @@ foldResponseBody f z0 resp = go z0
             then return z
             else f z bs >>= go
 
-request :: (HTTP.Request -> HTTP.Request)
-        -> Options -> String -> (HTTP.Response BodyReader -> IO a) -> IO a
+request :: (Request -> Request) -> Options -> String
+        -> (Response BodyReader -> IO a) -> IO a
 request modify opts url body =
     either (flip HTTP.withManager go) go (manager opts)
   where
@@ -75,15 +75,15 @@ request modify opts url body =
       req <- (modify . mods) <$> HTTP.parseUrl url
       HTTP.withResponse req mgr body
 
-setQuery :: Options -> HTTP.Request -> HTTP.Request
+setQuery :: Options -> Request -> Request
 setQuery opts =
   case params opts of
     [] -> id
     ps -> Int.queryString .~ HTTP.renderSimpleQuery True ps
 
-setAuth :: Options -> HTTP.Request -> HTTP.Request
+setAuth :: Options -> Request -> Request
 setAuth = maybe id (uncurry HTTP.applyBasicAuth) . auth
 
-setProxy :: Options -> HTTP.Request -> HTTP.Request
+setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy
   where f (Proxy host port) = addProxy host port
