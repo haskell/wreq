@@ -27,6 +27,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.WReq.Internal.Lens as Int
+import qualified Network.WReq.Lens as Lens
 
 
 setPayload :: Payload -> HTTP.Request -> HTTP.Request
@@ -48,7 +49,7 @@ emptyMethodWith method opts url =
   request (Int.method .~ method) opts url ignoreResponse
 
 ignoreResponse :: HTTP.Response BodyReader -> IO (Response ())
-ignoreResponse resp = fmap (const ()) <$> readResponse resp
+ignoreResponse resp = (Lens.responseBody .~ ()) <$> readResponse resp
 
 readResponse :: HTTP.Response BodyReader -> IO (Response L.ByteString)
 readResponse resp = do
@@ -66,9 +67,8 @@ foldResponseBody f z0 resp = go z0
 
 request :: (HTTP.Request -> HTTP.Request)
         -> Options -> String -> (HTTP.Response BodyReader -> IO a) -> IO a
-request modify opts url body = case manager opts of
-                          Left settings -> HTTP.withManager settings go
-                          Right mgr     -> go mgr
+request modify opts url body =
+    either (flip HTTP.withManager go) go (manager opts)
   where
     go mgr = do
       let mods = setQuery opts . setAuth opts . setProxy opts
@@ -76,17 +76,14 @@ request modify opts url body = case manager opts of
       HTTP.withResponse req mgr body
 
 setQuery :: Options -> HTTP.Request -> HTTP.Request
-setQuery opts req =
+setQuery opts =
   case params opts of
-    [] -> req
-    ps -> req { HTTP.queryString = HTTP.renderSimpleQuery True ps }
+    [] -> id
+    ps -> Int.queryString .~ HTTP.renderSimpleQuery True ps
 
 setAuth :: Options -> HTTP.Request -> HTTP.Request
-setAuth opts req = case auth opts of
-                     Nothing   -> req
-                     Just cred -> uncurry HTTP.applyBasicAuth cred req
+setAuth = maybe id (uncurry HTTP.applyBasicAuth) . auth
 
 setProxy :: Options -> HTTP.Request -> HTTP.Request
-setProxy opts req = case proxy opts of
-                      Nothing                -> req
-                      Just (Proxy host port) -> addProxy host port req
+setProxy = maybe id f . proxy
+  where f (Proxy host port) = addProxy host port
