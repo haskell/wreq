@@ -44,7 +44,7 @@ import Data.Maybe (fromMaybe)
 import Lens.Family ((.~))
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
 import Network.WReq.Internal
-import Network.WReq.Types (JSONError(..), Options(..), Payload(..))
+import Network.WReq.Types (Auth(..), JSONError(..), Options(..), Payload(..))
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
@@ -124,3 +124,12 @@ json resp = do
   case Aeson.eitherDecode' (responseBody resp) of
     Left err  -> failure (JSONError err)
     Right val -> return (fmap (const val) resp)
+
+basicAuth :: S.ByteString -> S.ByteString -> Maybe Auth
+basicAuth user pass = Just (BasicAuth user pass)
+
+oauth2Bearer :: S.ByteString -> Maybe Auth
+oauth2Bearer token = Just (OAuth2Bearer token)
+
+oauth2Token :: S.ByteString -> Maybe Auth
+oauth2Token token = Just (OAuth2Token token)
