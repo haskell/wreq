@@ -4,5 +4,6 @@
 
 syntax: glob
 .\#*
-cabal.sandbox.config
 \.cabal-sandbox
+cabal.sandbox.config
+test-tokens.txt
