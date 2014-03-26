@@ -15,6 +15,7 @@ category:            Web
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
+language:            Haskell2010
 
 library
   ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
@@ -38,3 +39,12 @@ library
     lens-family-core >= 1.0,
     lens-family-th >= 0.2
   default-language:    Haskell98
+
+test-suite tests
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: tests
+  main-is:        Properties.hs
+
+  build-depends:
+    base,
+    wreq
