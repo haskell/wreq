@@ -21,6 +21,7 @@ library
 
   exposed-modules:
     Network.WReq
+    Network.WReq.Internal
     Network.WReq.Internal.Lens
     Network.WReq.Lens
     Network.WReq.Types

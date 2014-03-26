@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Network.WReq.Internal.Lens
     (
@@ -16,6 +17,7 @@ module Network.WReq.Internal.Lens
     , rawBody
     , decompress
     , redirectCount
+    , responseTimeout
     , checkStatus
     , getConnectionWrapper
     , cookieJar
