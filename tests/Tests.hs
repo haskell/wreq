@@ -11,6 +11,7 @@ import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool, assertEqual)
 import qualified Data.ByteString.Lazy as L
+import Prelude hiding (head)
 
 basicGet = do
   r <- get "http://httpbin.org/get"
@@ -25,15 +26,25 @@ basicPost = do
   assertEqual "POST is binary" (Just "application/octet-stream")
                                (body ^? key "headers" . key "Content-Type")
 
+basicHead = do
+  r <- head "http://httpbin.org/get"
+  assertEqual "HEAD succeeds" status200 (r ^. responseStatus)
+
 basicPut = do
   r <- put "http://httpbin.org/put" (binary "wibble")
   assertEqual "PUT succeeds" status200 (r ^. responseStatus)
+
+basicDelete = do
+  r <- delete "http://httpbin.org/delete"
+  assertEqual "DELETE succeeds" status200 (r ^. responseStatus)
 
 tests = [
     testGroup "basic" [
       testCase "get" basicGet
     , testCase "post" basicPost
+    , testCase "head" basicHead
     , testCase "put" basicPut
+    , testCase "delete" basicDelete
     ]
   ]
 
