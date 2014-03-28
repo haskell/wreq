@@ -28,6 +28,7 @@ module Network.WReq
     , Response
     , Lens.responseStatus
     , Lens.responseVersion
+    , Lens.responseHeader
     , Lens.responseHeaders
     , Lens.responseBody
     , Lens.responseCookieJar
