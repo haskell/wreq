@@ -43,8 +43,14 @@ library
 test-suite tests
   type:           exitcode-stdio-1.0
   hs-source-dirs: tests
-  main-is:        Properties.hs
+  main-is:        Tests.hs
 
   build-depends:
+    HUnit,
+    aeson,
     base,
+    bytestring,
+    lens >= 4.1,
+    test-framework,
+    test-framework-hunit,
     wreq

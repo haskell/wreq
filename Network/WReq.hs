@@ -31,6 +31,9 @@ module Network.WReq
     , Lens.responseHeaders
     , Lens.responseBody
     , Lens.responseCookieJar
+    , Lens.Status
+    , Lens.statusCode
+    , Lens.statusMessage
     -- ** Decoding responses
     , JSONError(..)
     , json
@@ -102,13 +105,13 @@ head = headWith defaults
 headWith :: Options -> String -> IO (Response ())
 headWith = emptyMethodWith HTTP.methodHead
 
-put :: String -> Payload -> IO (Response ())
+put :: String -> Payload -> IO (Response L.ByteString)
 put = putWith defaults
 
-putWith :: Options -> String -> Payload -> IO (Response ())
+putWith :: Options -> String -> Payload -> IO (Response L.ByteString)
 putWith opts url payload =
-  request (setPayload payload . (Int.method .~ HTTP.methodPost)) opts url
-    ignoreResponse
+  request (setPayload payload . (Int.method .~ HTTP.methodPut)) opts url
+    readResponse
 
 options :: String -> IO (Response ())
 options = optionsWith defaults

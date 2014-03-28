@@ -19,12 +19,17 @@ module Network.WReq.Lens
     , responseBody
     , responseCookieJar
     , responseClose'
+    , HTTP.Status
+    , statusCode
+    , statusMessage
     ) where
 
 import Lens.Family.TH (mkLensesBy)
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.WReq.Types as Types
+import qualified Network.HTTP.Types.Status as HTTP
 
 mkLensesBy Just ''Types.Options
 mkLensesBy Just ''HTTP.Proxy
 mkLensesBy Just ''HTTP.Response
+mkLensesBy Just ''HTTP.Status
