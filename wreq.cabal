@@ -21,7 +21,7 @@ cabal-version:       >=1.10
 language:            Haskell2010
 
 library
-  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
+  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -threaded
 
   exposed-modules:
     Network.WReq
