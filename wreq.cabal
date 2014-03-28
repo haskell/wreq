@@ -32,7 +32,7 @@ library
     Paths_wreq
   build-depends:
     aeson >= 0.7,
-    base >= 4.5,
+    base >= 4.5 && < 5,
     bytestring >= 0.9,
     failure >= 0.1,
     http-client >= 0.2,
@@ -51,10 +51,18 @@ test-suite tests
   build-depends:
     HUnit,
     aeson,
-    base,
+    base >= 4.5 && < 5,
     bytestring,
     http-types,
     lens >= 4.1,
     test-framework,
     test-framework-hunit,
     wreq
+
+source-repository head
+  type:     git
+  location: https://github.com/bos/wreq
+
+source-repository head
+  type:     mercurial
+  location: https://bitbucket.org/bos/wreq
