@@ -25,18 +25,27 @@ module Network.WReq.Lens
     , statusMessage
     ) where
 
+import Control.Applicative (Applicative(..), (<$>))
+import Data.ByteString (ByteString)
 import Lens.Family.TH (mkLensesBy)
 import qualified Network.HTTP.Client as HTTP
-import qualified Network.WReq.Types as Types
+import qualified Network.HTTP.Types.Header as HTTP
 import qualified Network.HTTP.Types.Status as HTTP
-import Control.Lens
-import Data.ByteString
-import Data.CaseInsensitive
+import qualified Network.WReq.Types as Types
 
 mkLensesBy Just ''Types.Options
 mkLensesBy Just ''HTTP.Proxy
 mkLensesBy Just ''HTTP.Response
 mkLensesBy Just ''HTTP.Status
 
-responseHeader :: CI ByteString -> Traversal' (HTTP.Response body) ByteString
-responseHeader x = responseHeaders . traverse . itraversed . indices (==x)
+responseHeader :: Applicative f =>
+                  HTTP.HeaderName -> (ByteString -> f ByteString)
+               -> HTTP.Response body -> f (HTTP.Response body)
+responseHeader n = responseHeaders . assoc n
+
+assoc :: (Eq k, Applicative f) => k -> (a -> f a) -> [(k, a)] -> f [(k, a)]
+assoc n f = go
+  where go []         = pure []
+        go (ab@(a,b):as)
+          | a == n    = ((:).(,) a) <$> f b <*> go as
+          | otherwise = (ab:) <$> go as

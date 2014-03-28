@@ -35,12 +35,10 @@ library
     aeson >= 0.7,
     base >= 4.5,
     bytestring >= 0.9,
-    case-insensitive,
     failure >= 0.1,
     http-client >= 0.2,
     http-client-tls >= 0.2,
     http-types >= 0.8,
-    lens >= 4.1,
     lens-family-core >= 1.0,
     lens-family-th >= 0.2
   default-language:    Haskell98
