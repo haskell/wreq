@@ -1,22 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Main (main) where
 
 import Control.Lens ((^.), (^?))
 import Data.Aeson (Value(..))
 import Data.Aeson.Lens (key)
+import Data.Maybe (isJust)
 import Network.HTTP.Types.Status (status200)
 import Network.WReq
+import Prelude hiding (head)
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool, assertEqual)
-import qualified Data.ByteString.Lazy as L
-import Prelude hiding (head)
 
 basicGet = do
-  r <- get "http://httpbin.org/get"
+  r <- get "http://httpbin.org/get" >>= json
   assertEqual "GET succeeds" status200 (r ^. responseStatus)
-  assertBool "GET gives non-empty result" $ L.length (r^.responseBody) > 0
+  let body = r ^. responseBody :: Value
+  assertBool "GET request has User-Agent header" $
+    isJust (body ^? key "headers" . key "User-Agent")
 
 basicPost = do
   r <- post "http://httpbin.org/post" (binary "wibble") >>= json
