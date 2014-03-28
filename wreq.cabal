@@ -3,9 +3,12 @@
 
 name:                wreq
 version:             0.0.0.0
-synopsis:            HTTP client
--- description:
+synopsis:            An easy-to-use HTTP client library.
+description:
+  .
+  wreq is a HTTP client library that is designed for ease of use.
 homepage:            https://github.com/bos/wreq
+bug-reports:         https://github.com/bos/wreq/issues
 license:             BSD3
 license-file:        LICENSE
 -- author:
@@ -18,7 +21,7 @@ cabal-version:       >=1.10
 language:            Haskell2010
 
 library
-  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
 
   exposed-modules:
     Network.WReq
@@ -32,10 +35,12 @@ library
     aeson >= 0.7,
     base >= 4.5,
     bytestring >= 0.9,
+    case-insensitive,
     failure >= 0.1,
     http-client >= 0.2,
     http-client-tls >= 0.2,
     http-types >= 0.8,
+    lens >= 4.1,
     lens-family-core >= 1.0,
     lens-family-th >= 0.2
   default-language:    Haskell98
@@ -50,6 +55,7 @@ test-suite tests
     aeson,
     base,
     bytestring,
+    http-types,
     lens >= 4.1,
     test-framework,
     test-framework-hunit,
