@@ -1,18 +1,22 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Main (main) where
 
+import Control.Exception (Exception)
 import Control.Lens ((^.), (^?))
+import Control.Monad (unless)
 import Data.Aeson (Value(..))
 import Data.Aeson.Lens (key)
 import Data.Maybe (isJust)
+import Network.HTTP.Client (HttpException(..))
 import Network.HTTP.Types.Status (status200)
 import Network.WReq
 import Prelude hiding (head)
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assertBool, assertEqual)
+import Test.HUnit (Assertion, assertBool, assertEqual, assertFailure)
+import qualified Control.Exception as E
 
 basicGet = do
   r <- get "http://httpbin.org/get" >>= json
@@ -41,6 +45,17 @@ basicDelete = do
   r <- delete "http://httpbin.org/delete"
   assertEqual "DELETE succeeds" status200 (r ^. responseStatus)
 
+throwsStatusCode = assertThrows "404 causes exception to be thrown" inspect $
+                   head "http://httpbin.org/status/404"
+  where inspect e = case e of
+                      StatusCodeException _ _ _ -> return ()
+                      _ -> assertFailure "unexpected exception thrown"
+
+assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
+assertThrows desc inspect act = do
+  caught <- (act >> return False) `E.catch` \e -> inspect e >> return True
+  unless caught (assertFailure desc)
+
 tests = [
     testGroup "basic" [
       testCase "get" basicGet
@@ -48,6 +63,7 @@ tests = [
     , testCase "head" basicHead
     , testCase "put" basicPut
     , testCase "delete" basicDelete
+    , testCase "404" throwsStatusCode
     ]
   ]
 
