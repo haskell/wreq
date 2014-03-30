@@ -7,7 +7,7 @@ import Control.Applicative ((<$>))
 import Control.Exception (Exception)
 import Control.Lens ((^.), (^?), (.~), (&))
 import Control.Monad (unless)
-import Data.Aeson (Value(..), object)
+import Data.Aeson (object)
 import Data.Aeson.Lens (key)
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
@@ -80,12 +80,12 @@ getRedirect site = do
     (r ^. responseBody ^? key "url")
 
 getParams site = do
-  let opts = defaults & param "foo" .~ ["bar"]
-  r1 <- getWith opts (site "/get")
+  let opts1 = defaults & param "foo" .~ ["bar"]
+  r1 <- getWith opts1 (site "/get")
   assertEqual "params set correctly 1" (Just (object [("foo","bar")]))
     (r1 ^. responseBody ^? key "args")
-  let opts = defaults & params .~ [("quux","baz")]
-  r2 <- getWith opts (site "/get")
+  let opts2 = defaults & params .~ [("quux","baz")]
+  r2 <- getWith opts2 (site "/get")
   assertEqual "params set correctly 2" (Just (object [("quux","baz")]))
     (r2 ^. responseBody ^? key "args")
 
