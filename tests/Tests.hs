@@ -89,6 +89,13 @@ getParams site = do
   assertEqual "params set correctly 2" (Just (object [("quux","baz")]))
     (r2 ^. responseBody ^? key "args")
 
+getHeaders site = do
+  let opts = defaults & header "X-Wibble" .~ ["bar"]
+  r <- getWith opts (site "/get")
+  assertEqual "extra header set correctly"
+    (Just "bar")
+    (r ^. responseBody ^? key "headers" . key "X-Wibble")
+
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
   caught <- (act >> return False) `E.catch` \e -> inspect e >> return True
