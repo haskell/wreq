@@ -75,6 +75,12 @@ getBasicAuth site = do
   assertThrows "basic auth GET fails if password is bad" inspect $
     getWith opts (site "/basic-auth/user/asswd")
 
+redirect site = do
+  r <- get (site "/redirect/3") >>= json
+  let body = r ^. responseBody :: Value
+  assertEqual "redirect goes to /get" (Just "http://httpbin.org/get")
+    (body ^? key "url")
+
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
   caught <- (act >> return False) `E.catch` \e -> inspect e >> return True
@@ -91,6 +97,7 @@ testsWith site = [
     ]
   , testGroup "fancy" [
       testCase "basic auth" $ getBasicAuth site
+    , testCase "redirect" $ redirect site
     ]
   ]
 
