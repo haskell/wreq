@@ -3,6 +3,7 @@
 
 module Main (main) where
 
+import Control.Applicative ((<$>))
 import Control.Exception (Exception)
 import Control.Lens ((^.), (^?))
 import Control.Monad (unless)
@@ -12,6 +13,7 @@ import Data.Maybe (isJust)
 import Data.Monoid ((<>))
 import Network.HTTP.Client (HttpException(..))
 import Network.HTTP.Types.Status (status200)
+import Network.HTTP.Types.Version (http11)
 import Network.WReq
 import Prelude hiding (head)
 import Test.Framework (defaultMain, testGroup)
@@ -21,10 +23,18 @@ import qualified Control.Exception as E
 
 basicGet site = do
   r <- get (site "/get") >>= json
-  assertEqual "GET succeeds" status200 (r ^. responseStatus)
   let body = r ^. responseBody :: Value
   assertBool "GET request has User-Agent header" $
     isJust (body ^? key "headers" . key "User-Agent")
+  -- test the various lenses
+  assertEqual "GET succeeds" status200 (r ^. responseStatus)
+  assertEqual "GET succeeds 200" 200 (r ^. responseStatus . statusCode)
+  assertEqual "GET succeeds OK" "OK" (r ^. responseStatus . statusMessage)
+  assertEqual "GET response has HTTP/1.1 version" http11 (r ^. responseVersion)
+  assertBool "GET response has Content-Type header" $
+    isJust (r ^? responseHeader "Content-Type")
+  assertBool "GET response has Date header" $
+    isJust (lookup "Date" <$> r ^? responseHeaders)
 
 basicPost site = do
   r <- post (site "/post") (binary "wibble") >>= json
