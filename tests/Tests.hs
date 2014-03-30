@@ -89,6 +89,9 @@ testsWith site = [
     , testCase "delete" $ basicDelete site
     , testCase "404" $ throwsStatusCode site
     ]
+  , testGroup "fancy" [
+      testCase "basic auth" $ getBasicAuth site
+    ]
   ]
 
 tests = [
