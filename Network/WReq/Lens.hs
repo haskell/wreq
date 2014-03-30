@@ -8,6 +8,7 @@ module Network.WReq.Lens
     , proxy
     , auth
     , headers
+    , param
     , params
     , HTTP.Proxy
     , proxyHost
@@ -25,9 +26,10 @@ module Network.WReq.Lens
     , statusMessage
     ) where
 
-import Control.Applicative (Applicative(..), (<$>))
+import Control.Applicative (Applicative)
 import Data.ByteString (ByteString)
 import Lens.Family.TH (mkLensesBy)
+import Network.WReq.Internal.Lens (assoc, assoc2)
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types.Header as HTTP
 import qualified Network.HTTP.Types.Status as HTTP
@@ -43,9 +45,7 @@ responseHeader :: Applicative f =>
                -> HTTP.Response body -> f (HTTP.Response body)
 responseHeader n = responseHeaders . assoc n
 
-assoc :: (Eq k, Applicative f) => k -> (a -> f a) -> [(k, a)] -> f [(k, a)]
-assoc n f = go
-  where go []         = pure []
-        go (ab@(a,b):as)
-          | a == n    = ((:).(,) a) <$> f b <*> go as
-          | otherwise = (ab:) <$> go as
+param :: Functor f =>
+         ByteString -> ([ByteString] -> f [ByteString]) -> Types.Options
+      -> f Types.Options
+param n = params . assoc2 n

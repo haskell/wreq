@@ -7,7 +7,7 @@ import Control.Applicative ((<$>))
 import Control.Exception (Exception)
 import Control.Lens ((^.), (^?), (.~), (&))
 import Control.Monad (unless)
-import Data.Aeson (Value(..))
+import Data.Aeson (Value(..), object)
 import Data.Aeson.Lens (key)
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
@@ -22,10 +22,9 @@ import Test.HUnit (assertBool, assertEqual, assertFailure)
 import qualified Control.Exception as E
 
 basicGet site = do
-  r <- get (site "/get") >>= json
-  let body = r ^. responseBody :: Value
+  r <- get (site "/get")
   assertBool "GET request has User-Agent header" $
-    isJust (body ^? key "headers" . key "User-Agent")
+    isJust (r ^. responseBody ^? key "headers" . key "User-Agent")
   -- test the various lenses
   assertEqual "GET succeeds" status200 (r ^. responseStatus)
   assertEqual "GET succeeds 200" 200 (r ^. responseStatus . statusCode)
@@ -37,8 +36,8 @@ basicGet site = do
     isJust (lookup "Date" <$> r ^? responseHeaders)
 
 basicPost site = do
-  r <- post (site "/post") (binary "wibble") >>= json
-  let body = r^.responseBody :: Value
+  r <- post (site "/post") (binary "wibble") >>= jsonValue
+  let body = r ^. responseBody
   assertEqual "POST succeeds" status200 (r ^. responseStatus)
   assertEqual "POST echoes input" (Just "wibble") (body ^? key "data")
   assertEqual "POST is binary" (Just "application/octet-stream")
@@ -75,11 +74,20 @@ getBasicAuth site = do
   assertThrows "basic auth GET fails if password is bad" inspect $
     getWith opts (site "/basic-auth/user/asswd")
 
-redirect site = do
-  r <- get (site "/redirect/3") >>= json
-  let body = r ^. responseBody :: Value
+getRedirect site = do
+  r <- get (site "/redirect/3")
   assertEqual "redirect goes to /get" (Just "http://httpbin.org/get")
-    (body ^? key "url")
+    (r ^. responseBody ^? key "url")
+
+getParams site = do
+  let opts = defaults & param "foo" .~ ["bar"]
+  r1 <- getWith opts (site "/get")
+  assertEqual "params set correctly 1" (Just (object [("foo","bar")]))
+    (r1 ^. responseBody ^? key "args")
+  let opts = defaults & params .~ [("quux","baz")]
+  r2 <- getWith opts (site "/get")
+  assertEqual "params set correctly 2" (Just (object [("quux","baz")]))
+    (r2 ^. responseBody ^? key "args")
 
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
@@ -97,7 +105,8 @@ testsWith site = [
     ]
   , testGroup "fancy" [
       testCase "basic auth" $ getBasicAuth site
-    , testCase "redirect" $ redirect site
+    , testCase "redirect" $ getRedirect site
+    , testCase "params" $ getParams site
     ]
   ]
 

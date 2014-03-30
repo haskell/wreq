@@ -38,12 +38,14 @@ module Network.WReq
     -- ** Decoding responses
     , JSONError(..)
     , json
+    , jsonValue
 
     -- * Configuration
     , Options
     , defaults
     , Lens.manager
     , Lens.headers
+    , Lens.param
     , Lens.params
     -- ** Proxy settings
     , Lens.proxy
@@ -145,6 +147,10 @@ json resp = do
   case Aeson.eitherDecode' (responseBody resp) of
     Left err  -> failure (JSONError err)
     Right val -> return (fmap (const val) resp)
+
+jsonValue :: (Failure JSONError m) =>
+             Response L.ByteString -> m (Response Aeson.Value)
+jsonValue = json
 
 basicAuth :: S.ByteString -> S.ByteString -> Maybe Auth
 basicAuth user pass = Just (BasicAuth user pass)
