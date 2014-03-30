@@ -26,6 +26,7 @@ data Options = Options {
   , auth :: Maybe Auth
   , headers :: [Header]
   , params :: [(S.ByteString, S.ByteString)]
+  , redirects :: Int
   } deriving (Typeable)
 
 data Auth = BasicAuth S.ByteString S.ByteString
@@ -42,6 +43,7 @@ instance Show Options where
                               , ", auth = ", show auth
                               , ", headers = ", show headers
                               , ", params = ", show params
+                              , ", redirects = ", show redirects
                               , " }"
                               ]
 

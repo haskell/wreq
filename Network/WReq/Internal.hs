@@ -45,11 +45,12 @@ version = Version [0] ["wip"]
 
 defaults :: Options
 defaults = Options {
-    manager = Left tlsManagerSettings
-  , proxy   = Nothing
-  , auth    = Nothing
-  , headers = [("User-Agent",userAgent)]
-  , params  = []
+    manager   = Left tlsManagerSettings
+  , proxy     = Nothing
+  , auth      = Nothing
+  , headers   = [("User-Agent", userAgent)]
+  , params    = []
+  , redirects = 10
   }
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
 
@@ -62,6 +63,11 @@ setPayload payload =
     Params ps -> HTTP.urlEncodedBody ps
     JSON val  -> setHeader "Content-Type" "application/json" .
                  (Int.requestBody .~ HTTP.RequestBodyLBS (Aeson.encode val))
+
+setRedirects :: Options -> Request -> Request
+setRedirects opts req
+  | redirects opts == HTTP.redirectCount req = req
+  | otherwise = req { HTTP.redirectCount = redirects opts }
 
 setHeader :: HeaderName -> S.ByteString -> Request -> Request
 setHeader name value =
@@ -94,7 +100,8 @@ request modify opts url body =
     either (flip HTTP.withManager go) go (manager opts)
   where
     go mgr = do
-      let mods = setHeaders . setQuery opts . setAuth opts . setProxy opts
+      let mods = setHeaders . setQuery opts . setAuth opts . setProxy opts .
+                 setRedirects opts
       req <- (modify . mods) <$> HTTP.parseUrl url
       HTTP.withResponse req mgr body
     setHeaders = Int.requestHeaders %~ (headers opts ++)

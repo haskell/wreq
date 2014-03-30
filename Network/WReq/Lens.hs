@@ -11,6 +11,7 @@ module Network.WReq.Lens
     , headers
     , param
     , params
+    , redirects
     , HTTP.Proxy
     , proxyHost
     , proxyPort

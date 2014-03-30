@@ -48,6 +48,7 @@ module Network.WReq
     , Lens.headers
     , Lens.param
     , Lens.params
+    , Lens.redirects
     -- ** Proxy settings
     , Lens.proxy
     , Proxy(Proxy)
