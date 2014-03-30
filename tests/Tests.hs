@@ -7,7 +7,7 @@ import Control.Applicative ((<$>))
 import Control.Exception (Exception)
 import Control.Lens ((^.), (^?), (.~), (&))
 import Control.Monad (unless)
-import Data.Aeson (object)
+import Data.Aeson (Value(..), object)
 import Data.Aeson.Lens (key)
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
@@ -96,6 +96,11 @@ getHeaders site = do
     (Just "bar")
     (r ^. responseBody ^? key "headers" . key "X-Wibble")
 
+getGzip site = do
+  r <- get (site "/gzip")
+  assertEqual "gzip decoded for us" (Just (Bool True))
+    (r ^. responseBody ^? key "gzipped")
+
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
   caught <- (act >> return False) `E.catch` \e -> inspect e >> return True
@@ -115,6 +120,7 @@ testsWith site = [
     , testCase "redirect" $ getRedirect site
     , testCase "params" $ getParams site
     , testCase "headers" $ getHeaders site
+    , testCase "gzip" $ getGzip site
     ]
   ]
 
