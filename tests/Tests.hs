@@ -5,14 +5,14 @@ module Main (main) where
 
 import Control.Applicative ((<$>))
 import Control.Exception (Exception)
-import Control.Lens ((^.), (^?))
+import Control.Lens ((^.), (^?), (.~), (&))
 import Control.Monad (unless)
 import Data.Aeson (Value(..))
 import Data.Aeson.Lens (key)
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
 import Network.HTTP.Client (HttpException(..))
-import Network.HTTP.Types.Status (status200)
+import Network.HTTP.Types.Status (status200, status401)
 import Network.HTTP.Types.Version (http11)
 import Network.WReq
 import Prelude hiding (head)
@@ -62,6 +62,18 @@ throwsStatusCode site =
   where inspect e = case e of
                       StatusCodeException _ _ _ -> return ()
                       _ -> assertFailure "unexpected exception thrown"
+
+getBasicAuth site = do
+  let opts = defaults & auth .~ basicAuth "user" "passwd"
+  r <- getWith opts (site "/basic-auth/user/passwd")
+  assertEqual "basic auth GET succeeds" status200 (r ^. responseStatus)
+  let inspect e = case e of
+                    StatusCodeException status _ _ ->
+                         assertEqual "failed basic auth failed GET gives 401"
+                           status401 status
+                    _ -> assertFailure "unexpected exception thrown"
+  assertThrows "basic auth GET fails if password is bad" inspect $
+    getWith opts (site "/basic-auth/user/asswd")
 
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
