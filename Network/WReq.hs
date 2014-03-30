@@ -72,19 +72,9 @@ import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
-import qualified Network.HTTP.Client.TLS as TLS
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.WReq.Internal.Lens as Int
 import qualified Network.WReq.Lens as Lens
-
-defaults :: Options
-defaults = Options {
-    manager = Left TLS.tlsManagerSettings
-  , proxy   = Nothing
-  , auth    = Nothing
-  , headers = []
-  , params  = []
-  }
 
 get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url

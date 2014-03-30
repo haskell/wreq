@@ -2,7 +2,8 @@
 
 module Network.WReq.Internal
     (
-      emptyMethodWith
+      defaults
+    , emptyMethodWith
     , foldResponseBody
     , ignoreResponse
     , readResponse
@@ -20,6 +21,7 @@ import Data.Version (showVersion)
 import Lens.Family ((.~), (%~))
 import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
+import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.HTTP.Types (HeaderName)
 import Network.WReq.Types (Auth(..), Options(..), Payload(..))
 import Prelude hiding (head)
@@ -40,6 +42,16 @@ import Paths_wreq (version)
 import Data.Version (Version(..))
 version = Version [0] ["wip"]
 #endif
+
+defaults :: Options
+defaults = Options {
+    manager = Left tlsManagerSettings
+  , proxy   = Nothing
+  , auth    = Nothing
+  , headers = [("User-Agent",userAgent)]
+  , params  = []
+  }
+  where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
 
 setPayload :: Payload -> Request -> Request
 setPayload payload =
@@ -82,12 +94,10 @@ request modify opts url body =
     either (flip HTTP.withManager go) go (manager opts)
   where
     go mgr = do
-      let mods = setQuery opts . setAuth opts . setProxy opts . setUserAgent
+      let mods = setHeaders . setQuery opts . setAuth opts . setProxy opts
       req <- (modify . mods) <$> HTTP.parseUrl url
       HTTP.withResponse req mgr body
-    setUserAgent = setHeader "User-Agent" $
-                   "haskell wreq-" <>
-                   Char8.pack (showVersion version)
+    setHeaders = Int.requestHeaders %~ (headers opts ++)
 
 setQuery :: Options -> Request -> Request
 setQuery opts =
