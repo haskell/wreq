@@ -101,6 +101,16 @@ getGzip site = do
   assertEqual "gzip decoded for us" (Just (Bool True))
     (r ^. responseBody ^? key "gzipped")
 
+headRedirect site =
+  assertThrows "HEAD of redirect throws exception" inspect $
+    head (site "/redirect/3")
+  where inspect e = case e of
+                      StatusCodeException status _ _ ->
+                        let code = status ^. statusCode
+                        in assertBool "code is redirect"
+                           (code >= 300 && code < 400)
+                      _ -> assertFailure "unexpected exception thrown"
+
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
   caught <- (act >> return False) `E.catch` \e -> inspect e >> return True
@@ -114,6 +124,7 @@ testsWith site = [
     , testCase "put" $ basicPut site
     , testCase "delete" $ basicDelete site
     , testCase "404" $ throwsStatusCode site
+    , testCase "headRedirect" $ headRedirect site
     ]
   , testGroup "fancy" [
       testCase "basic auth" $ getBasicAuth site

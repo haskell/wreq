@@ -66,7 +66,7 @@ import Control.Failure (Failure(failure))
 import Control.Monad (unless)
 import Data.Aeson (FromJSON)
 import Data.Maybe (fromMaybe)
-import Lens.Family ((.~))
+import Lens.Family ((.~), (&))
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
 import Network.WReq.Internal
 import Network.WReq.Types (Auth(..), JSONError(..), Options(..), Payload(..))
@@ -96,7 +96,7 @@ postWith opts url payload =
     readResponse
 
 head :: String -> IO (Response ())
-head = headWith defaults
+head = headWith (defaults & Lens.redirects .~ 0)
 
 headWith :: Options -> String -> IO (Response ())
 headWith = emptyMethodWith HTTP.methodHead
