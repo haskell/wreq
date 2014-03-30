@@ -114,6 +114,7 @@ testsWith site = [
       testCase "basic auth" $ getBasicAuth site
     , testCase "redirect" $ getRedirect site
     , testCase "params" $ getParams site
+    , testCase "headers" $ getHeaders site
     ]
   ]
 
