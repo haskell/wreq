@@ -7,6 +7,7 @@ module Network.WReq.Lens
     , manager
     , proxy
     , auth
+    , header
     , headers
     , param
     , params
@@ -49,3 +50,8 @@ param :: Functor f =>
          ByteString -> ([ByteString] -> f [ByteString]) -> Types.Options
       -> f Types.Options
 param n = params . assoc2 n
+
+header :: Functor f =>
+          HTTP.HeaderName -> ([ByteString] -> f [ByteString]) -> Types.Options
+       -> f Types.Options
+header n = headers . assoc2 n

@@ -44,6 +44,7 @@ module Network.WReq
     , Options
     , defaults
     , Lens.manager
+    , Lens.header
     , Lens.headers
     , Lens.param
     , Lens.params
