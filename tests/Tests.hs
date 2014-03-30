@@ -111,6 +111,13 @@ headRedirect site =
                            (code >= 300 && code < 400)
                       _ -> assertFailure "unexpected exception thrown"
 
+redirectOverflow site =
+  assertThrows "GET with too many redirects throws exception" inspect $
+    getWith (defaults & redirects .~ 3) (site "/redirect/5")
+  where inspect e = case e of
+                      TooManyRedirects _ -> return ()
+                      _ -> assertFailure "unexpected exception thrown"
+
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
   caught <- (act >> return False) `E.catch` \e -> inspect e >> return True
@@ -125,6 +132,7 @@ testsWith site = [
     , testCase "delete" $ basicDelete site
     , testCase "404" $ throwsStatusCode site
     , testCase "headRedirect" $ headRedirect site
+    , testCase "redirectOverflow" $ redirectOverflow site
     ]
   , testGroup "fancy" [
       testCase "basic auth" $ getBasicAuth site
