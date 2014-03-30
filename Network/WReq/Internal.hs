@@ -65,7 +65,7 @@ setPayload payload =
 
 setHeader :: HeaderName -> S.ByteString -> Request -> Request
 setHeader name value =
-  Int.requestHeaders %~ ((name,value) :) . filter ((/= name) . fst)
+  Int.requestHeaders %~ ((name,value) :)
 
 emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
 emptyMethodWith method opts url =
