@@ -68,9 +68,8 @@ getBasicAuth site = do
   assertEqual "basic auth GET succeeds" status200 (r ^. responseStatus)
   let inspect e = case e of
                     StatusCodeException status _ _ ->
-                         assertEqual "failed basic auth failed GET gives 401"
-                           status401 status
-                    _ -> assertFailure "unexpected exception thrown"
+                      assertEqual "failed basic auth failed GET gives 401"
+                        status401 status
   assertThrows "basic auth GET fails if password is bad" inspect $
     getWith opts (site "/basic-auth/user/asswd")
 
@@ -109,21 +108,20 @@ headRedirect site =
                         let code = status ^. statusCode
                         in assertBool "code is redirect"
                            (code >= 300 && code < 400)
-                      _ -> assertFailure "unexpected exception thrown"
 
 redirectOverflow site =
   assertThrows "GET with too many redirects throws exception" inspect $
     getWith (defaults & redirects .~ 3) (site "/redirect/5")
-  where inspect e = case e of
-                      TooManyRedirects _ -> return ()
-                      _ -> assertFailure "unexpected exception thrown"
+  where inspect e = case e of TooManyRedirects _ -> return ()
 
 invalidURL = assertThrows "invalid URL throws exception" inspect (get "wheeee")
   where inspect (InvalidUrlException _ _) = return ()
 
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
-  caught <- (act >> return False) `E.catch` \e -> inspect e >> return True
+  let myInspect e = inspect e `E.catch` \(ee :: E.PatternMatchFail) ->
+        assertFailure ("unexpected exception: " <> show ee)
+  caught <- (act >> return False) `E.catch` \e -> myInspect e >> return True
   unless caught (assertFailure desc)
 
 testsWith site = [
