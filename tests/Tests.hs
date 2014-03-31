@@ -118,6 +118,9 @@ redirectOverflow site =
                       TooManyRedirects _ -> return ()
                       _ -> assertFailure "unexpected exception thrown"
 
+invalidURL = assertThrows "invalid URL throws exception" inspect (get "wheeee")
+  where inspect (InvalidUrlException _ _) = return ()
+
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
   caught <- (act >> return False) `E.catch` \e -> inspect e >> return True
@@ -133,6 +136,7 @@ testsWith site = [
     , testCase "404" $ throwsStatusCode site
     , testCase "headRedirect" $ headRedirect site
     , testCase "redirectOverflow" $ redirectOverflow site
+    , testCase "invalidURL" $ invalidURL
     ]
   , testGroup "fancy" [
       testCase "basic auth" $ getBasicAuth site
