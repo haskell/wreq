@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# LANGUAGE CPP, OverloadedStrings, ScopedTypeVariables #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns -fno-warn-missing-signatures #-}
 
 module Main (main) where
 
@@ -117,9 +117,10 @@ redirectOverflow site =
 invalidURL = do
   let noProto (InvalidUrlException _ _) = return ()
   assertThrows "exception if no protocol" noProto (get "wheeee")
+#if MIN_VERSION_http_client(0,2,3)
   let noHost (InvalidDestinationHost _) = return ()
   assertThrows "exception if no host" noHost (get "http://")
-
+#endif
 
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
