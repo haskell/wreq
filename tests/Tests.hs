@@ -114,8 +114,12 @@ redirectOverflow site =
     getWith (defaults & redirects .~ 3) (site "/redirect/5")
   where inspect e = case e of TooManyRedirects _ -> return ()
 
-invalidURL = assertThrows "invalid URL throws exception" inspect (get "wheeee")
-  where inspect (InvalidUrlException _ _) = return ()
+invalidURL = do
+  let noProto (InvalidUrlException _ _) = return ()
+  assertThrows "exception if no protocol" noProto (get "wheeee")
+  let noHost (InvalidUrlException _ _) = return ()
+  assertThrows "exception if no host" noProto (get "http://")
+
 
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
