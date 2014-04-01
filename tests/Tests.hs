@@ -117,14 +117,14 @@ redirectOverflow site =
 invalidURL = do
   let noProto (InvalidUrlException _ _) = return ()
   assertThrows "exception if no protocol" noProto (get "wheeee")
-  let noHost (InvalidUrlException _ _) = return ()
-  assertThrows "exception if no host" noProto (get "http://")
+  let noHost (InvalidDestinationHost _) = return ()
+  assertThrows "exception if no host" noHost (get "http://")
 
 
 assertThrows :: Exception e => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
   let myInspect e = inspect e `E.catch` \(ee :: E.PatternMatchFail) ->
-        assertFailure ("unexpected exception: " <> show ee)
+        assertFailure (desc <> ": unexpected exception: " <> show ee)
   caught <- (act >> return False) `E.catch` \e -> myInspect e >> return True
   unless caught (assertFailure desc)
 
