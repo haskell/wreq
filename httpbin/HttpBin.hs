@@ -13,6 +13,7 @@ import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Read (decimal)
 import Snap.Core
 import Snap.Http.Server
+import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as Map
 import qualified Data.Text.Lazy.Encoding as Lazy
 
@@ -30,12 +31,26 @@ put = post
 delete = respond return
 
 status = do
-  val <- rqParam "val" <$> getRequest
-  let code = case decimal . decodeUtf8 . head . fromMaybe ["200"] $ val of
-               Right (n, "")
-                 | n >= 200 && n <= 505 -> n
-               _                        -> 400
+  val <- (fromMaybe 200 . rqIntParam "val") <$> getRequest
+  let code | val >= 200 && val <= 505 = val
+           | otherwise                = 400
   modifyResponse $ setResponseCode code
+
+redirect_ = do
+  req <- getRequest
+  let n   = fromMaybe (-1) . rqIntParam "n" $ req
+      prefix = B.reverse . B.dropWhile (/='/') . B.reverse . rqURI $ req
+  case undefined of
+    _| n > 1     -> redirect $ prefix <> pack (show (n-1))
+     | n == 1    -> redirect "/get"
+     | otherwise -> modifyResponse $ setResponseCode 400
+
+rqIntParam name req =
+  case rqParam name req of
+    Just (str:_) -> case decimal (decodeUtf8 str) of
+                      Right (n, "") -> Just n
+                      _             -> Nothing
+    _            -> Nothing
 
 respond act = do
   req <- getRequest
@@ -66,5 +81,6 @@ main = do
     , ("/post", method POST post)
     , ("/put", method PUT put)
     , ("/delete", method DELETE delete)
+    , ("/redirect/:n", redirect_)
     , ("/status/:val", status)
     ]
