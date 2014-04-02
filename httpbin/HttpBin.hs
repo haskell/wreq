@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
+-- TBD: basic-auth, gzip
+
 module Main (main) where
 
 import Control.Applicative ((<$>))

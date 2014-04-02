@@ -6,9 +6,10 @@ module Main (main) where
 import Control.Applicative ((<$>))
 import Control.Exception (Exception)
 import Control.Lens ((^.), (^?), (.~), (&))
-import Control.Monad (unless)
+import Control.Monad (unless, void)
 import Data.Aeson (Value(..), object)
 import Data.Aeson.Lens (key)
+import Data.Char (toUpper)
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
 import Network.HTTP.Client (HttpException(..))
@@ -114,11 +115,16 @@ redirectOverflow site =
     getWith (defaults & redirects .~ 3) (site "/redirect/5")
   where inspect e = case e of TooManyRedirects _ -> return ()
 
-invalidURL = do
+invalidURL _site = do
   let noProto (InvalidUrlException _ _) = return ()
   assertThrows "exception if no protocol" noProto (get "wheeee")
   let noHost (InvalidDestinationHost _) = return ()
   assertThrows "exception if no host" noHost (get "http://")
+
+funkyScheme site = do
+  -- schemes are case insensitive, per RFC 3986 section 3.1
+  let (scheme, rest) = break (==':') $ site "/get"
+  void . get $ map toUpper scheme <> rest
 
 assertThrows :: (Show e, Exception e) => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
@@ -138,7 +144,8 @@ testsWith site = [
     , testCase "404" $ throwsStatusCode site
     , testCase "headRedirect" $ headRedirect site
     , testCase "redirectOverflow" $ redirectOverflow site
-    , testCase "invalidURL" $ invalidURL
+    , testCase "invalidURL" $ invalidURL site
+    , testCase "funkyScheme" $ funkyScheme site
     ]
   , testGroup "fancy" [
       testCase "basic auth" $ getBasicAuth site
