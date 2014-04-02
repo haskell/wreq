@@ -3,14 +3,18 @@
 
 module Main (main) where
 
+import Control.Applicative ((<$>))
 import Data.Aeson (Value(..), eitherDecode, encode, object, toJSON)
+import Data.ByteString.Char8 (pack)
 import Data.CaseInsensitive (original)
+import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
 import Data.Text.Encoding (decodeUtf8)
-import qualified Data.Text.Lazy.Encoding as Lazy
+import Data.Text.Read (decimal)
 import Snap.Core
 import Snap.Http.Server
 import qualified Data.Map as Map
+import qualified Data.Text.Lazy.Encoding as Lazy
 
 get = respond return
 
@@ -24,6 +28,14 @@ post = respond $ \obj -> do
 put = post
 
 delete = respond return
+
+status = do
+  val <- rqParam "val" <$> getRequest
+  let code = case decimal . decodeUtf8 . head . fromMaybe ["200"] $ val of
+               Right (n, "")
+                 | n >= 200 && n <= 505 -> n
+               _                        -> 400
+  modifyResponse $ setResponseCode code
 
 respond act = do
   req <- getRequest
@@ -54,4 +66,5 @@ main = do
     , ("/post", method POST post)
     , ("/put", method PUT put)
     , ("/delete", method DELETE delete)
+    , ("/status/:val", status)
     ]
