@@ -18,8 +18,12 @@ post = respond $ \obj -> do
   body <- readRequestBody 65536
   return $ obj <> [("data", toJSON (Lazy.decodeUtf8 body))] <>
            case eitherDecode body of
-             Left _ -> [("json", Null)]
+             Left _    -> [("json", Null)]
              Right val -> [("json", val)]
+
+put = post
+
+delete = respond return
 
 respond act = do
   req <- getRequest
@@ -38,8 +42,7 @@ respond act = do
             , ("origin", toJSON . decodeUtf8 . rqRemoteAddr $ req)
             ] <> url
   modifyResponse $ setContentType "application/json"
-  obj' <- act obj
-  writeLBS . encode . object $ obj'
+  (writeLBS . encode . object) =<< act obj
 
 main = do
   cfg <- commandLineConfig
@@ -47,6 +50,8 @@ main = do
        . setErrorLog ConfigNoLog
        $ defaultConfig
   httpServe cfg $ route [
-      ("/get", method GET get)
+      ("/get", methods [GET,HEAD] get)
     , ("/post", method POST post)
+    , ("/put", method PUT put)
+    , ("/delete", method DELETE delete)
     ]
