@@ -3,15 +3,25 @@
 
 module Main (main) where
 
-import Data.Aeson (encode, object, toJSON)
+import Data.Aeson (Value(..), eitherDecode, encode, object, toJSON)
 import Data.CaseInsensitive (original)
 import Data.Monoid ((<>))
 import Data.Text.Encoding (decodeUtf8)
+import qualified Data.Text.Lazy.Encoding as Lazy
 import Snap.Core
 import Snap.Http.Server
 import qualified Data.Map as Map
 
-get = do
+get = respond return
+
+post = respond $ \obj -> do
+  body <- readRequestBody 65536
+  return $ obj <> [("data", toJSON (Lazy.decodeUtf8 body))] <>
+           case eitherDecode body of
+             Left _ -> [("json", Null)]
+             Right val -> [("json", val)]
+
+respond act = do
   req <- getRequest
   let step m k v = Map.insert (decodeUtf8 k) (decodeUtf8 (head v)) m
       params = Map.foldlWithKey' step Map.empty .
@@ -23,13 +33,13 @@ get = do
               Nothing   -> []
               Just host -> [("url", toJSON . decodeUtf8 $
                                     "http://" <> host <> rqURI req)]
-  let obj = object $ [
-              ("args", toJSON params)
+  let obj = [ ("args", toJSON params)
             , ("headers", toJSON hdrs)
             , ("origin", toJSON . decodeUtf8 . rqRemoteAddr $ req)
             ] <> url
   modifyResponse $ setContentType "application/json"
-  writeLBS (encode obj)
+  obj' <- act obj
+  writeLBS . encode . object $ obj'
 
 main = do
   cfg <- commandLineConfig
@@ -37,5 +47,6 @@ main = do
        . setErrorLog ConfigNoLog
        $ defaultConfig
   httpServe cfg $ route [
-      ("/get", get)
+      ("/get", method GET get)
+    , ("/post", method POST post)
     ]
