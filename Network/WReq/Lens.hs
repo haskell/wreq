@@ -61,27 +61,19 @@ makeLenses ''HTTP.Proxy
 makeLenses ''HTTP.Response
 makeLenses ''HTTP.Status
 
-responseHeader :: Applicative f =>
-                  HTTP.HeaderName -> (ByteString -> f ByteString)
-               -> HTTP.Response body -> f (HTTP.Response body)
+responseHeader :: HTTP.HeaderName -> Traversal' (HTTP.Response body) ByteString
 responseHeader n = responseHeaders . assoc n
 
-param :: Functor f =>
-         ByteString -> ([ByteString] -> f [ByteString]) -> Types.Options
-      -> f Types.Options
+param :: ByteString -> Lens' Types.Options [ByteString]
 param n = params . assoc2 n
 
-header :: Functor f =>
-          HTTP.HeaderName -> ([ByteString] -> f [ByteString]) -> Types.Options
-       -> f Types.Options
+header :: HTTP.HeaderName -> Lens' Types.Options [ByteString]
 header n = headers . assoc2 n
 
 _CookieJar :: Iso' HTTP.CookieJar [HTTP.Cookie]
 _CookieJar = iso HTTP.destroyCookieJar HTTP.createCookieJar
 
 -- N.B. This is an "illegal" lens because we can change its cookie_name.
-responseCookie :: Applicative f =>
-                  ByteString -> (HTTP.Cookie -> f HTTP.Cookie)
-               -> HTTP.Response body -> f (HTTP.Response body)
+responseCookie :: ByteString -> Traversal' (HTTP.Response body) HTTP.Cookie
 responseCookie name = responseCookieJar._CookieJar.traverse.filtered
                       (\c -> HTTP.cookie_name c == name)
