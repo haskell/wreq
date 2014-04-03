@@ -51,6 +51,7 @@ executable httpbin
 
   build-depends:
     aeson >= 0.7,
+    aeson-pretty >= 0.7.1,
     base >= 4.5 && < 5,
     bytestring,
     case-insensitive,

@@ -6,7 +6,8 @@
 module Main (main) where
 
 import Control.Applicative ((<$>))
-import Data.Aeson (Value(..), eitherDecode, encode, object, toJSON)
+import Data.Aeson (Value(..), eitherDecode, object, toJSON)
+import Data.Aeson.Encode.Pretty (Config(..), encodePretty')
 import Data.ByteString.Char8 (pack)
 import Data.CaseInsensitive (original)
 import Data.Maybe (fromMaybe)
@@ -40,7 +41,7 @@ status = do
 
 redirect_ = do
   req <- getRequest
-  let n   = fromMaybe (-1) . rqIntParam "n" $ req
+  let n   = fromMaybe (-1::Int) . rqIntParam "n" $ req
       prefix = B.reverse . B.dropWhile (/='/') . B.reverse . rqURI $ req
   case undefined of
     _| n > 1     -> redirect $ prefix <> pack (show (n-1))
@@ -71,7 +72,7 @@ respond act = do
             , ("origin", toJSON . decodeUtf8 . rqRemoteAddr $ req)
             ] <> url
   modifyResponse $ setContentType "application/json"
-  (writeLBS . encode . object) =<< act obj
+  (writeLBS . (<> "\n") . encodePretty' (Config 2 compare) . object) =<< act obj
 
 main = do
   cfg <- commandLineConfig
