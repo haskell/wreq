@@ -110,7 +110,9 @@ setQuery :: Options -> Request -> Request
 setQuery opts =
   case params opts of
     [] -> id
-    ps -> Int.queryString .~ HTTP.renderSimpleQuery True ps
+    ps -> Int.queryString %~ \qs ->
+          let n = S.length qs in
+          qs <> (if n > 1 then "&" else "") <> HTTP.renderSimpleQuery (n==0) ps
 
 setAuth :: Options -> Request -> Request
 setAuth = maybe id f . auth

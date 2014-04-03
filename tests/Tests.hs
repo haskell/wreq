@@ -88,6 +88,10 @@ getParams site = do
   r2 <- getWith opts2 (site "/get")
   assertEqual "params set correctly 2" (Just (object [("quux","baz")]))
     (r2 ^. responseBody ^? key "args")
+  r3 <- getWith opts2 (site "/get?whee=wat")
+  assertEqual "correctly handle mix of params from URI and Options"
+    (Just (object [("quux","baz"),("whee","wat")]))
+    (r3 ^. responseBody ^? key "args")
 
 getHeaders site = do
   let opts = defaults & header "X-Wibble" .~ ["bar"]
