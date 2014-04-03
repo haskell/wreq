@@ -130,6 +130,11 @@ funkyScheme site = do
   let (scheme, rest) = break (==':') $ site "/get"
   void . get $ map toUpper scheme <> rest
 
+cookiesSet site = do
+  r <- get (site "/cookies/set?x=y")
+  assertEqual "cookies are set correctly" (Just "y")
+    (r ^? responseCookie "x" . cookie_value)
+
 assertThrows :: (Show e, Exception e) => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
   let myInspect e = inspect e `E.catch` \(ee :: E.PatternMatchFail) ->
@@ -157,6 +162,7 @@ testsWith site = [
     , testCase "params" $ getParams site
     , testCase "headers" $ getHeaders site
     , testCase "gzip" $ getGzip site
+    , testCase "cookiesSet" $ cookiesSet site
     ]
   ]
 
