@@ -40,6 +40,20 @@ module Network.WReq
     , json
     , jsonValue
 
+    -- * Cookies
+    , Lens.Cookie
+    , Lens.cookie_name
+    , Lens.cookie_value
+    , Lens.cookie_expiry_time
+    , Lens.cookie_domain
+    , Lens.cookie_path
+    , Lens.cookie_creation_time
+    , Lens.cookie_last_access_time
+    , Lens.cookie_persistent
+    , Lens.cookie_host_only
+    , Lens.cookie_secure_only
+    , Lens.cookie_http_only
+
     -- * Configuration
     , Options
     , defaults

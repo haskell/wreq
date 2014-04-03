@@ -12,9 +12,24 @@ module Network.WReq.Lens
     , param
     , params
     , redirects
+
+    , HTTP.Cookie
+    , cookie_name
+    , cookie_value
+    , cookie_expiry_time
+    , cookie_domain
+    , cookie_path
+    , cookie_creation_time
+    , cookie_last_access_time
+    , cookie_persistent
+    , cookie_host_only
+    , cookie_secure_only
+    , cookie_http_only
+
     , HTTP.Proxy
     , proxyHost
     , proxyPort
+
     , HTTP.Response
     , responseStatus
     , responseVersion
@@ -23,6 +38,7 @@ module Network.WReq.Lens
     , responseBody
     , responseCookieJar
     , responseClose'
+
     , HTTP.Status
     , statusCode
     , statusMessage
@@ -38,6 +54,7 @@ import qualified Network.HTTP.Types.Status as HTTP
 import qualified Network.WReq.Types as Types
 
 mkLensesBy Just ''Types.Options
+mkLensesBy Just ''HTTP.Cookie
 mkLensesBy Just ''HTTP.Proxy
 mkLensesBy Just ''HTTP.Response
 mkLensesBy Just ''HTTP.Status
