@@ -8,15 +8,11 @@ module Network.WReq.Internal
     , ignoreResponse
     , readResponse
     , request
-    , setAuth
-    , setHeader
     , setPayload
-    , setProxy
-    , setQuery
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Lens ((.~), (%~))
+import Control.Lens ((&), (.~), (%~))
 import Data.Monoid ((<>))
 import Data.Version (showVersion)
 import Network.HTTP.Client (BodyReader)
@@ -56,14 +52,14 @@ defaults = Options {
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
 
 setPayload :: Payload -> Request -> Request
-setPayload payload =
+setPayload payload req =
   case payload of
-    NoPayload -> id
-    Raw ct bs -> setHeader "Content-Type" ct .
-                 (Int.requestBody .~ HTTP.RequestBodyBS bs)
-    Params ps -> HTTP.urlEncodedBody ps
-    JSON val  -> setHeader "Content-Type" "application/json" .
-                 (Int.requestBody .~ HTTP.RequestBodyLBS (Aeson.encode val))
+    NoPayload -> req
+    Raw ct bs -> req & setHeader "Content-Type" ct &
+                 Int.requestBody .~ HTTP.RequestBodyBS bs
+    Params ps -> HTTP.urlEncodedBody ps req
+    JSON val  -> req & setHeader "Content-Type" "application/json" &
+                 Int.requestBody .~ HTTP.RequestBodyLBS (Aeson.encode val)
 
 setRedirects :: Options -> Request -> Request
 setRedirects opts req
@@ -71,8 +67,7 @@ setRedirects opts req
   | otherwise = req { HTTP.redirectCount = redirects opts }
 
 setHeader :: HeaderName -> S.ByteString -> Request -> Request
-setHeader name value =
-  Int.requestHeaders %~ ((name,value) :)
+setHeader name value = Int.requestHeaders %~ ((name,value) :)
 
 emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
 emptyMethodWith method opts url =
@@ -101,12 +96,15 @@ request modify opts url body =
     either (flip HTTP.withManager go) go (manager opts)
   where
     go mgr = do
-      let mods = setHeaders . setQuery opts . setAuth opts . setProxy opts .
-                 setRedirects opts . setCookies
-      req <- (modify . mods) <$> HTTP.parseUrl url
+      let frob req = req & modify
+                   & Int.requestHeaders %~ (headers opts ++)
+                   & setQuery opts
+                   & setAuth opts
+                   & setProxy opts
+                   & setRedirects opts
+                   & Int.cookieJar .~ Just (cookies opts)
+      req <- frob <$> HTTP.parseUrl url
       HTTP.withResponse req mgr body
-    setHeaders = Int.requestHeaders %~ (headers opts ++)
-    setCookies = Int.cookieJar .~ Just (cookies opts)
 
 setQuery :: Options -> Request -> Request
 setQuery opts =
