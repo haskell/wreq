@@ -45,7 +45,6 @@ module Network.WReq.Lens
     , statusMessage
     ) where
 
-import Control.Applicative (Applicative)
 import Control.Lens hiding (makeLenses)
 import Data.ByteString (ByteString)
 import Network.WReq.Lens.Internal (assoc, assoc2)
