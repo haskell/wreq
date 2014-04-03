@@ -135,6 +135,10 @@ cookiesSet site = do
   assertEqual "cookies are set correctly" (Just "y")
     (r ^? responseCookie "x" . cookie_value)
 
+getWithManager site = withManager $ \opts -> do
+  void $ getWith opts (site "/get?a=b")
+  void $ getWith opts (site "/get?b=c")
+
 assertThrows :: (Show e, Exception e) => String -> (e -> IO ()) -> IO a -> IO ()
 assertThrows desc inspect act = do
   let myInspect e = inspect e `E.catch` \(ee :: E.PatternMatchFail) ->
@@ -163,6 +167,7 @@ testsWith site = [
     , testCase "headers" $ getHeaders site
     , testCase "gzip" $ getGzip site
     , testCase "cookiesSet" $ cookiesSet site
+    , testCase "getWithManager" $ getWithManager site
     ]
   ]
 

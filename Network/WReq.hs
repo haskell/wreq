@@ -65,6 +65,8 @@ module Network.WReq
     , Lens.params
     , Lens.redirects
     , Lens.cookies
+    -- ** Using a manager with defaults
+    , withManager
     -- ** Proxy settings
     , Lens.proxy
     , Proxy(Proxy)
@@ -90,12 +92,17 @@ import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
+import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.WReq.Lens as Lens
 import qualified Network.WReq.Lens.Internal as Int
 
 get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url
+
+withManager :: (Options -> IO a) -> IO a
+withManager act = HTTP.withManager HTTP.defaultManagerSettings $ \mgr ->
+  act defaults { manager = Right mgr }
 
 getWith :: Options -> String -> IO (Response L.ByteString)
 getWith opts url = request id opts url readResponse
