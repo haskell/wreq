@@ -64,6 +64,7 @@ module Network.WReq
     , Lens.param
     , Lens.params
     , Lens.redirects
+    , Lens.cookies
     -- ** Proxy settings
     , Lens.proxy
     , Proxy(Proxy)

@@ -12,6 +12,7 @@ module Network.WReq.Lens
     , param
     , params
     , redirects
+    , cookies
 
     , HTTP.Cookie
     , cookie_name

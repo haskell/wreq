@@ -11,7 +11,8 @@ module Network.WReq.Types
 
 import Control.Exception (Exception)
 import Data.Typeable (Typeable)
-import Network.HTTP.Client (Manager, ManagerSettings)
+import Network.HTTP.Client (CookieJar, Manager, ManagerSettings,
+                            destroyCookieJar)
 import Network.HTTP.Client.Internal (Proxy)
 import Network.HTTP.Types (Header)
 import Prelude hiding (head)
@@ -27,6 +28,7 @@ data Options = Options {
   , headers :: [Header]
   , params :: [(S.ByteString, S.ByteString)]
   , redirects :: Int
+  , cookies :: CookieJar
   } deriving (Typeable)
 
 data Auth = BasicAuth S.ByteString S.ByteString
@@ -44,6 +46,7 @@ instance Show Options where
                               , ", headers = ", show headers
                               , ", params = ", show params
                               , ", redirects = ", show redirects
+                              , ", cookies = ", show (destroyCookieJar cookies)
                               , " }"
                               ]
 

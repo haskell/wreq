@@ -51,6 +51,7 @@ defaults = Options {
   , headers   = [("User-Agent", userAgent)]
   , params    = []
   , redirects = 10
+  , cookies   = HTTP.createCookieJar []
   }
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
 
@@ -101,10 +102,11 @@ request modify opts url body =
   where
     go mgr = do
       let mods = setHeaders . setQuery opts . setAuth opts . setProxy opts .
-                 setRedirects opts
+                 setRedirects opts . setCookies
       req <- (modify . mods) <$> HTTP.parseUrl url
       HTTP.withResponse req mgr body
     setHeaders = Int.requestHeaders %~ (headers opts ++)
+    setCookies = Int.cookieJar .~ Just (cookies opts)
 
 setQuery :: Options -> Request -> Request
 setQuery opts =
