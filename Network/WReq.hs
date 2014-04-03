@@ -77,10 +77,10 @@ module Network.WReq
     ) where
 
 import Control.Failure (Failure(failure))
+import Control.Lens ((.~), (&))
 import Control.Monad (unless)
 import Data.Aeson (FromJSON)
 import Data.Maybe (fromMaybe)
-import Lens.Family ((.~), (&))
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
 import Network.WReq.Internal
 import Network.WReq.Types (Auth(..), JSONError(..), Options(..), Payload(..))
@@ -89,8 +89,8 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Types as HTTP
-import qualified Network.WReq.Internal.Lens as Int
 import qualified Network.WReq.Lens as Lens
+import qualified Network.WReq.Lens.Internal as Int
 
 get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url

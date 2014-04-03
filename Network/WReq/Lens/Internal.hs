@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Network.WReq.Internal.Lens
+module Network.WReq.Lens.Internal
     (
       HTTP.Request
     , method
@@ -27,12 +27,12 @@ module Network.WReq.Internal.Lens
     ) where
 
 import Control.Applicative (Applicative(..), (<$>))
+import Control.Lens (_1)
 import Data.List (partition)
-import Lens.Family.Stock (_1)
-import Lens.Family.TH (mkLensesBy)
+import Network.WReq.Lens.Machinery (makeLenses)
 import qualified Network.HTTP.Client as HTTP
 
-mkLensesBy Just ''HTTP.Request
+makeLenses ''HTTP.Request
 
 assoc :: (Eq k, Applicative f) => k -> (a -> f a) -> [(k, a)] -> f [(k, a)]
 assoc n f = go

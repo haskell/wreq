@@ -46,18 +46,18 @@ module Network.WReq.Lens
 
 import Control.Applicative (Applicative)
 import Data.ByteString (ByteString)
-import Lens.Family.TH (mkLensesBy)
-import Network.WReq.Internal.Lens (assoc, assoc2)
+import Network.WReq.Lens.Internal (assoc, assoc2)
+import Network.WReq.Lens.Machinery (makeLenses)
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types.Header as HTTP
 import qualified Network.HTTP.Types.Status as HTTP
 import qualified Network.WReq.Types as Types
 
-mkLensesBy Just ''Types.Options
-mkLensesBy Just ''HTTP.Cookie
-mkLensesBy Just ''HTTP.Proxy
-mkLensesBy Just ''HTTP.Response
-mkLensesBy Just ''HTTP.Status
+makeLenses ''Types.Options
+makeLenses ''HTTP.Cookie
+makeLenses ''HTTP.Proxy
+makeLenses ''HTTP.Response
+makeLenses ''HTTP.Status
 
 responseHeader :: Applicative f =>
                   HTTP.HeaderName -> (ByteString -> f ByteString)

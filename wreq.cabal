@@ -26,10 +26,11 @@ library
   exposed-modules:
     Network.WReq
     Network.WReq.Internal
-    Network.WReq.Internal.Lens
     Network.WReq.Lens
+    Network.WReq.Lens.Internal
     Network.WReq.Types
   other-modules:
+    Network.WReq.Lens.Machinery
     Paths_wreq
   build-depends:
     aeson >= 0.7,
@@ -39,8 +40,8 @@ library
     http-client >= 0.3.0.2,
     http-client-tls >= 0.2,
     http-types >= 0.8,
-    lens-family-core >= 1.0,
-    lens-family-th >= 0.2
+    lens >= 4.1,
+    template-haskell
 
 executable httpbin
   hs-source-dirs: httpbin
