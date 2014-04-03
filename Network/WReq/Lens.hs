@@ -73,7 +73,7 @@ header n = headers . assoc2 n
 _CookieJar :: Iso' HTTP.CookieJar [HTTP.Cookie]
 _CookieJar = iso HTTP.destroyCookieJar HTTP.createCookieJar
 
--- N.B. This is an "illegal" lens because we can change its cookie_name.
+-- N.B. This is an "illegal" traversal because we can change its cookie_name.
 responseCookie :: ByteString -> Traversal' (HTTP.Response body) HTTP.Cookie
 responseCookie name = responseCookieJar._CookieJar.traverse.filtered
                       (\c -> HTTP.cookie_name c == name)
