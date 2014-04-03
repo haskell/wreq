@@ -36,6 +36,7 @@ module Network.WReq.Lens
     , responseHeader
     , responseHeaders
     , responseBody
+    , responseCookie
     , responseCookieJar
     , responseClose'
 
@@ -45,6 +46,7 @@ module Network.WReq.Lens
     ) where
 
 import Control.Applicative (Applicative)
+import Control.Lens hiding (makeLenses)
 import Data.ByteString (ByteString)
 import Network.WReq.Lens.Internal (assoc, assoc2)
 import Network.WReq.Lens.Machinery (makeLenses)
@@ -73,3 +75,13 @@ header :: Functor f =>
           HTTP.HeaderName -> ([ByteString] -> f [ByteString]) -> Types.Options
        -> f Types.Options
 header n = headers . assoc2 n
+
+_CookieJar :: Iso' HTTP.CookieJar [HTTP.Cookie]
+_CookieJar = iso HTTP.destroyCookieJar HTTP.createCookieJar
+
+-- N.B. This is an "illegal" lens because we can change its cookie_name.
+responseCookie :: Applicative f =>
+                  ByteString -> (HTTP.Cookie -> f HTTP.Cookie)
+               -> HTTP.Response body -> f (HTTP.Response body)
+responseCookie name = responseCookieJar._CookieJar.traverse.filtered
+                      (\c -> HTTP.cookie_name c == name)

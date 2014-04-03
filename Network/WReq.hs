@@ -31,6 +31,7 @@ module Network.WReq
     , Lens.responseHeader
     , Lens.responseHeaders
     , Lens.responseBody
+    , Lens.responseCookie
     , Lens.responseCookieJar
     , Lens.Status
     , Lens.statusCode
