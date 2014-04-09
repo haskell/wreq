@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns -fno-warn-missing-signatures
+    -fno-warn-unused-binds #-}
 
 module Main (main) where
 
@@ -178,3 +179,5 @@ tests = [
   ]
 
 main = defaultMain tests
+
+localtest = defaultMain (testsWith ("http://localhost:8000" <>))
