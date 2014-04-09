@@ -16,6 +16,7 @@ import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Read (decimal)
 import Snap.Core
 import Snap.Http.Server
+import Snap.Util.GZip (withCompression)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as Map
 import qualified Data.Text.Lazy.Encoding as Lazy
@@ -38,6 +39,10 @@ status = do
   let code | val >= 200 && val <= 505 = val
            | otherwise                = 400
   modifyResponse $ setResponseCode code
+
+gzip =
+  localRequest (setHeader "Accept-Encoding" "gzip") . withCompression .
+  respond $ \obj -> return $ obj <> [("gzipped", Bool True)]
 
 redirect_ = do
   req <- getRequest
@@ -86,4 +91,5 @@ main = do
     , ("/delete", method DELETE delete)
     , ("/redirect/:n", redirect_)
     , ("/status/:val", status)
+    , ("/gzip", methods [GET,HEAD] gzip)
     ]
