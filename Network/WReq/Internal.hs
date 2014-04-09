@@ -3,6 +3,7 @@
 module Network.WReq.Internal
     (
       defaults
+    , defaultManagerSettings
     , emptyMethodWith
     , foldResponseBody
     , ignoreResponse
@@ -39,9 +40,12 @@ import Data.Version (Version(..))
 version = Version [0] ["wip"]
 #endif
 
+defaultManagerSettings :: HTTP.ManagerSettings
+defaultManagerSettings = tlsManagerSettings
+
 defaults :: Options
 defaults = Options {
-    manager   = Left tlsManagerSettings
+    manager   = Left defaultManagerSettings
   , proxy     = Nothing
   , auth      = Nothing
   , headers   = [("User-Agent", userAgent)]

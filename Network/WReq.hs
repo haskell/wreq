@@ -101,7 +101,7 @@ get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url
 
 withManager :: (Options -> IO a) -> IO a
-withManager act = HTTP.withManager HTTP.defaultManagerSettings $ \mgr ->
+withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
   act defaults { manager = Right mgr }
 
 getWith :: Options -> String -> IO (Response L.ByteString)
