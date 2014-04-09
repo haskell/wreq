@@ -12,6 +12,7 @@ import Data.Aeson.Lens (key)
 import Data.Char (toUpper)
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
+import Data.Text (pack)
 import Network.HTTP.Client (HttpException(..))
 import Network.HTTP.Types.Status (status200, status401)
 import Network.HTTP.Types.Version (http11)
@@ -76,7 +77,7 @@ getBasicAuth site = do
 
 getRedirect site = do
   r <- get (site "/redirect/3")
-  assertEqual "redirect goes to /get" (Just "http://httpbin.org/get")
+  assertEqual "redirect goes to /get" (Just (String (pack (site "/get"))))
     (r ^. responseBody ^? key "url")
 
 getParams site = do
