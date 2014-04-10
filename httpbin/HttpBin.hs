@@ -67,11 +67,11 @@ basicAuth = do
                      setHeader "WWW-Authenticate" "Basic realm=\"Fake Realm\"" .
                      setResponseCode 401
   case (rqParam "user" req, rqParam "pass" req) of
-    (Just [user], Just [pass]) | not (':' `B.elem` user) ->
+    (Just [user], Just [passwd]) | not (':' `B.elem` user) ->
       case getHeader "Authorization" (headers req) of
         Nothing -> unauthorized
         Just auth -> do
-          let expected = "Basic " <> B64.encode (user <> ":" <> pass)
+          let expected = "Basic " <> B64.encode (user <> ":" <> passwd)
           if auth /= expected
             then unauthorized
             else writeJSON [ ("user", toJSON (B.unpack user))
