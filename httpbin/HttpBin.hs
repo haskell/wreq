@@ -8,6 +8,7 @@ module Main (main) where
 import Control.Applicative ((<$>))
 import Data.Aeson (Value(..), eitherDecode, object, toJSON)
 import Data.Aeson.Encode.Pretty (Config(..), encodePretty')
+import qualified Data.ByteString.Base64 as B64
 import Data.ByteString.Char8 (pack)
 import Data.CaseInsensitive (original)
 import Data.Maybe (fromMaybe)
@@ -60,12 +61,33 @@ redirect_ = do
      | n == 1    -> redirect "/get"
      | otherwise -> modifyResponse $ setResponseCode 400
 
+basicAuth = do
+  req <- getRequest
+  let unauthorized = modifyResponse $
+                     setHeader "WWW-Authenticate" "Basic realm=\"Fake Realm\"" .
+                     setResponseCode 401
+  case (rqParam "user" req, rqParam "pass" req) of
+    (Just [user], Just [pass]) | not (':' `B.elem` user) ->
+      case getHeader "Authorization" (headers req) of
+        Nothing -> unauthorized
+        Just auth -> do
+          let expected = "Basic " <> B64.encode (user <> ":" <> pass)
+          if auth /= expected
+            then unauthorized
+            else writeJSON [ ("user", toJSON (B.unpack user))
+                           , ("authenticated", Bool True) ]
+    _ -> modifyResponse $ setResponseCode 400
+
 rqIntParam name req =
   case rqParam name req of
     Just (str:_) -> case decimal (decodeUtf8 str) of
                       Right (n, "") -> Just n
                       _             -> Nothing
     _            -> Nothing
+
+writeJSON obj = do
+  modifyResponse $ setContentType "application/json"
+  writeLBS . (<> "\n") . encodePretty' (Config 2 compare) . object $ obj
 
 respond act = do
   req <- getRequest
@@ -79,12 +101,10 @@ respond act = do
               Nothing   -> []
               Just host -> [("url", toJSON . decodeUtf8 $
                                     "http://" <> host <> rqURI req)]
-  let obj = [ ("args", toJSON params)
-            , ("headers", toJSON hdrs)
-            , ("origin", toJSON . decodeUtf8 . rqRemoteAddr $ req)
-            ] <> url
-  modifyResponse $ setContentType "application/json"
-  (writeLBS . (<> "\n") . encodePretty' (Config 2 compare) . object) =<< act obj
+  writeJSON =<< act ([ ("args", toJSON params)
+                     , ("headers", toJSON hdrs)
+                     , ("origin", toJSON . decodeUtf8 . rqRemoteAddr $ req)
+                     ] <> url)
 
 main = do
   cfg <- commandLineConfig
@@ -100,4 +120,5 @@ main = do
     , ("/status/:val", status)
     , ("/gzip", methods [GET,HEAD] gzip)
     , ("/cookies/set", methods [GET,HEAD] setCookies)
+    , ("/basic-auth/:user/:pass", methods [GET,HEAD] basicAuth)
     ]
