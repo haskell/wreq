@@ -23,6 +23,7 @@ import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool, assertEqual, assertFailure)
 import qualified Control.Exception as E
+import qualified Data.Text as T
 
 basicGet site = do
   r <- get (site "/get")
@@ -78,8 +79,11 @@ getBasicAuth site = do
 
 getRedirect site = do
   r <- get (site "/redirect/3")
-  assertEqual "redirect goes to /get" (Just (String (pack (site "/get"))))
-    (r ^. responseBody ^? key "url")
+  let stripProto = T.dropWhile (/=':')
+      smap f (String s) = String (f s)
+  assertEqual "redirect goes to /get"
+    (Just . String . stripProto . pack . site $ "/get")
+    (smap stripProto <$> (r ^. responseBody ^? key "url"))
 
 getParams site = do
   let opts1 = defaults & param "foo" .~ ["bar"]
