@@ -44,6 +44,13 @@ gzip =
   localRequest (setHeader "Accept-Encoding" "gzip") . withCompression .
   respond $ \obj -> return $ obj <> [("gzipped", Bool True)]
 
+setCookies = do
+  params <- rqQueryParams <$> getRequest
+  modifyResponse . foldr (.) id . map addResponseCookie $
+    [Cookie k v Nothing Nothing (Just "/") False False
+     | (k,vs) <- Map.toList params, v <- vs]
+  redirect "/cookies"
+
 redirect_ = do
   req <- getRequest
   let n   = fromMaybe (-1::Int) . rqIntParam "n" $ req
@@ -92,4 +99,5 @@ main = do
     , ("/redirect/:n", redirect_)
     , ("/status/:val", status)
     , ("/gzip", methods [GET,HEAD] gzip)
+    , ("/cookies/set", methods [GET,HEAD] setCookies)
     ]
