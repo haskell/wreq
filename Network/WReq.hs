@@ -1,5 +1,16 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 
+-- |
+-- Module      : Network.WReq
+-- Copyright   : (c) 2014 Bryan O'Sullivan
+--
+-- License     : BSD-style
+-- Maintainer  : bos@serpentine.com
+-- Stability   : experimental
+-- Portability : GHC
+--
+-- A library for client-side HTTP requests, focused on ease of use.
+
 module Network.WReq
     (
     -- * HTTP verbs
