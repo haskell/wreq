@@ -78,15 +78,12 @@ param n = params . assoc2 n
 header :: HTTP.HeaderName -> Lens' Types.Options [ByteString]
 header n = headers . assoc2 n
 
-_CookieJar :: Iso' HTTP.CookieJar [HTTP.Cookie]
-_CookieJar = iso HTTP.destroyCookieJar HTTP.createCookieJar
-
--- N.B. This is an "illegal" traversal because we can change its cookie_name.
-responseCookie :: ByteString -> Traversal' (HTTP.Response body) HTTP.Cookie
-responseCookie name = responseCookieJar._CookieJar.traverse.filtered
-                      (\c -> HTTP.cookie_name c == name)
+responseCookie :: ByteString -> Fold (HTTP.Response body) HTTP.Cookie
+responseCookie name =
+  responseCookieJar . folding HTTP.destroyCookieJar . filtered
+  ((==name) . HTTP.cookie_name)
 
 responseLink :: ByteString -> ByteString -> Fold (HTTP.Response body) Types.Link
 responseLink name val =
-  responseHeader "Link" . to links . folded .
+  responseHeader "Link" . folding links .
   filtered (has (linkParams . folded . filtered (== (name,val))))
