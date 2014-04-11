@@ -7,6 +7,7 @@ module Network.WReq.Types
     , ContentType
     , Payload(..)
     , JSONError(..)
+    , Link(..)
     ) where
 
 import Control.Exception (Exception)
@@ -61,3 +62,8 @@ data JSONError = JSONError String
                deriving (Show, Typeable)
 
 instance Exception JSONError
+
+data Link = Link {
+      linkURL :: S.ByteString
+    , linkParams :: [(S.ByteString, S.ByteString)]
+    } deriving (Eq, Show, Typeable)

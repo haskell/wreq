@@ -1,4 +1,5 @@
-{-# LANGUAGE RankNTypes, TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, RankNTypes,
+    TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Network.WReq.Lens
@@ -36,6 +37,7 @@ module Network.WReq.Lens
     , responseVersion
     , responseHeader
     , responseHeaders
+    , responseLink
     , responseBody
     , responseCookie
     , responseCookieJar
@@ -44,6 +46,10 @@ module Network.WReq.Lens
     , HTTP.Status
     , statusCode
     , statusMessage
+
+    , Types.Link
+    , linkURL
+    , linkParams
     ) where
 
 import Control.Lens hiding (makeLenses)
@@ -54,12 +60,14 @@ import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types.Header as HTTP
 import qualified Network.HTTP.Types.Status as HTTP
 import qualified Network.WReq.Types as Types
+import Network.WReq.Internal.Link
 
 makeLenses ''Types.Options
 makeLenses ''HTTP.Cookie
 makeLenses ''HTTP.Proxy
 makeLenses ''HTTP.Response
 makeLenses ''HTTP.Status
+makeLenses ''Types.Link
 
 responseHeader :: HTTP.HeaderName -> Traversal' (HTTP.Response body) ByteString
 responseHeader n = responseHeaders . assoc n
@@ -77,3 +85,8 @@ _CookieJar = iso HTTP.destroyCookieJar HTTP.createCookieJar
 responseCookie :: ByteString -> Traversal' (HTTP.Response body) HTTP.Cookie
 responseCookie name = responseCookieJar._CookieJar.traverse.filtered
                       (\c -> HTTP.cookie_name c == name)
+
+responseLink :: ByteString -> ByteString -> Fold (HTTP.Response body) Types.Link
+responseLink name val =
+  responseHeader "Link" . to links . folded .
+  filtered (has (linkParams . folded . filtered (== (name,val))))
