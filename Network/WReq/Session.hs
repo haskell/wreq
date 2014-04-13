@@ -45,13 +45,14 @@ post = postWith defaults
 
 getWith :: Options -> Session -> String -> IO (Response L.ByteString)
 getWith opts sesh url =
-  modifyMVar (seshCookies sesh) $ \cj -> do
-    resp <- WReq.getWith (opts & WReq.cookies .~ cj) url
-    return (resp ^. WReq.responseCookieJar, resp)
+  override opts sesh $ \opts' -> WReq.getWith opts' url
 
 postWith :: Options -> Session -> String -> Payload
          -> IO (Response L.ByteString)
 postWith opts sesh url payload =
+  override opts sesh $ \opts' -> WReq.postWith opts' url payload
+
+override opts sesh act =
   modifyMVar (seshCookies sesh) $ \cj -> do
-    resp <- WReq.postWith (opts & WReq.cookies .~ cj) url payload
+    resp <- act (opts & WReq.cookies .~ cj)
     return (resp ^. WReq.responseCookieJar, resp)
