@@ -76,6 +76,7 @@ module Network.WReq
     , Lens.param
     , Lens.params
     , Lens.redirects
+    , Lens.cookie
     , Lens.cookies
     -- ** Using a manager with defaults
     , withManager

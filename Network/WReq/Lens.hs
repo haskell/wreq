@@ -13,6 +13,7 @@ module Network.WReq.Lens
     , param
     , params
     , redirects
+    , cookie
     , cookies
 
     , HTTP.Cookie
@@ -77,6 +78,14 @@ param n = params . assoc2 n
 
 header :: HTTP.HeaderName -> Lens' Types.Options [ByteString]
 header n = headers . assoc2 n
+
+_CookieJar :: Iso' HTTP.CookieJar [HTTP.Cookie]
+_CookieJar = iso HTTP.destroyCookieJar HTTP.createCookieJar
+
+-- N.B. This is an "illegal" traversal because we can change its cookie_name.
+cookie :: ByteString -> Traversal' Types.Options HTTP.Cookie
+cookie name = cookies . _CookieJar . traverse . filtered
+              (\c -> HTTP.cookie_name c == name)
 
 responseCookie :: ByteString -> Fold (HTTP.Response body) HTTP.Cookie
 responseCookie name =
