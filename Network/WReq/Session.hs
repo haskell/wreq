@@ -1,7 +1,9 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Network.WReq.Session
     (
       Session
-    , new
+    , withSession
     -- * HTTP verbs
     , get
     , post
@@ -21,22 +23,25 @@ module Network.WReq.Session
 import Control.Concurrent.MVar (MVar, modifyMVar, newMVar)
 import Control.Lens ((&), (.~), (^.))
 import Network.WReq (Options, Payload, Response, defaults)
+import Network.WReq.Internal (defaultManagerSettings)
 import Prelude hiding (head)
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.WReq as WReq
 
-newtype Session = Session {
+data Session = Session {
       seshCookies :: MVar HTTP.CookieJar
-    } deriving (Eq)
+    , seshManager :: HTTP.Manager
+    }
 
 instance Show Session where
     show _ = "Session"
 
-new :: IO Session
-new = do
-  ref <- newMVar $ HTTP.createCookieJar []
-  return Session { seshCookies = ref }
+withSession :: (Session -> IO a) -> IO a
+withSession act = do
+  mv <- newMVar $ HTTP.createCookieJar []
+  HTTP.withManager defaultManagerSettings $ \mgr ->
+    act Session { seshCookies = mv, seshManager = mgr }
 
 get :: Session -> String -> IO (Response L.ByteString)
 get = getWith defaults
@@ -83,7 +88,8 @@ deleteWith opts sesh url =
 
 override :: Options -> Session -> (Options -> IO (Response body))
          -> IO (Response body)
-override opts sesh act =
-  modifyMVar (seshCookies sesh) $ \cj -> do
-    resp <- act (opts & WReq.cookies .~ cj)
+override opts Session{..} act =
+  modifyMVar seshCookies $ \cj -> do
+    resp <- act $ opts & WReq.cookies .~ cj &
+                         WReq.manager .~ Right seshManager
     return (resp ^. WReq.responseCookieJar, resp)

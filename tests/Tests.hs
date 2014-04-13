@@ -142,8 +142,7 @@ cookiesSet site = do
   assertEqual "cookies are set correctly" (Just "y")
     (r ^? responseCookie "x" . cookie_value)
 
-cookieSession site = do
-  s <- Session.new
+cookieSession site = Session.withSession $ \s -> do
   void $ Session.get s (site "/cookies/set?foo=bar")
   r <- Session.get s (site "/cookies")
   assertEqual "cookies are set correctly" (Just "bar")
