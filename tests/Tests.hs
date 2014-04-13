@@ -18,6 +18,7 @@ import Network.HTTP.Client (HttpException(..))
 import Network.HTTP.Types.Status (status200, status401)
 import Network.HTTP.Types.Version (http11)
 import Network.WReq
+import qualified Network.WReq.Session as Session
 import Prelude hiding (head)
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
@@ -141,6 +142,15 @@ cookiesSet site = do
   assertEqual "cookies are set correctly" (Just "y")
     (r ^? responseCookie "x" . cookie_value)
 
+cookieSession site = do
+  s <- Session.new
+  void $ Session.get s (site "/cookies/set?foo=bar")
+  r <- Session.get s (site "/cookies")
+  assertEqual "cookies are set correctly" (Just "bar")
+    (r ^? responseCookie "foo" . cookie_value)
+  assertEqual "whee" (Just "bar")
+    (r ^. responseBody ^? key "cookies" . key "foo")
+
 getWithManager site = withManager $ \opts -> do
   void $ getWith opts (site "/get?a=b")
   void $ getWith opts (site "/get?b=c")
@@ -173,6 +183,7 @@ testsWith site = [
     , testCase "headers" $ getHeaders site
     , testCase "gzip" $ getGzip site
     , testCase "cookiesSet" $ cookiesSet site
+    , testCase "cookieSession" $ cookieSession site
     , testCase "getWithManager" $ getWithManager site
     ]
   ]

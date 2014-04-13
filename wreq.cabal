@@ -29,6 +29,7 @@ library
     Network.WReq.Internal.Link
     Network.WReq.Lens
     Network.WReq.Lens.Internal
+    Network.WReq.Session
     Network.WReq.Types
   other-modules:
     Network.WReq.Lens.Machinery
