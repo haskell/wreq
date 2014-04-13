@@ -178,6 +178,8 @@ json resp = do
 
 jsonValue :: (Failure JSONError m) =>
              Response L.ByteString -> m (Response Aeson.Value)
+{-# SPECIALIZE jsonValue :: Response L.ByteString
+                         -> IO (Response Aeson.Value) #-}
 jsonValue = json
 
 basicAuth :: S.ByteString -> S.ByteString -> Maybe Auth
