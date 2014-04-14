@@ -15,6 +15,7 @@ import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings,
                             destroyCookieJar)
 import Network.HTTP.Client.Internal (Proxy)
+import Network.HTTP.Client.MultipartFormData (Part)
 import Network.HTTP.Types (Header)
 import Prelude hiding (head)
 import qualified Data.ByteString as S
@@ -56,6 +57,7 @@ data Payload where
     Raw       :: ContentType -> S.ByteString -> Payload
     Params    :: [(S.ByteString, S.ByteString)] -> Payload
     JSON      :: ToJSON a => a -> Payload
+    FormData  :: [Part] -> Payload
   deriving (Typeable)
 
 data JSONError = JSONError String

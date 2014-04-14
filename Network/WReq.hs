@@ -34,6 +34,12 @@ module Network.WReq
     -- * Payloads for POST and PUT
     , Payload(..)
     , binary
+    -- ** Multipart form data
+    , Form.Part
+    , Form.partBS
+    , Form.partLBS
+    , Form.partFile
+    , Form.partFileSource
 
     -- * Responses
     , Response
@@ -106,6 +112,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
+import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.WReq.Lens as Lens
 import qualified Network.WReq.Lens.Internal as Int
@@ -128,7 +135,7 @@ post url payload = postWith defaults url payload
 
 postWith :: Options -> String -> Payload -> IO (Response L.ByteString)
 postWith opts url payload =
-  request (setPayload payload . (Int.method .~ HTTP.methodPost)) opts url
+  requestIO (setPayload payload . (Int.method .~ HTTP.methodPost)) opts url
     readResponse
 
 head :: String -> IO (Response ())
@@ -142,7 +149,9 @@ put = putWith defaults
 
 putWith :: Options -> String -> Payload -> IO (Response L.ByteString)
 putWith opts url payload =
-  request (setPayload payload . (Int.method .~ HTTP.methodPut)) opts url
+  -- XXX this erroneously sets the method to POST if we try to PUT
+  -- multipart form data
+  requestIO (setPayload payload . (Int.method .~ HTTP.methodPut)) opts url
     readResponse
 
 options :: String -> IO (Response ())

@@ -9,6 +9,7 @@ module Network.WReq.Internal
     , ignoreResponse
     , readResponse
     , request
+    , requestIO
     , setPayload
     ) where
 
@@ -18,6 +19,7 @@ import Data.Monoid ((<>))
 import Data.Version (showVersion)
 import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
+import Network.HTTP.Client.MultipartFormData (formDataBody)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.HTTP.Types (HeaderName)
 import Network.WReq.Types (Auth(..), Options(..), Payload(..))
@@ -55,15 +57,17 @@ defaults = Options {
   }
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
 
-setPayload :: Payload -> Request -> Request
+setPayload :: Payload -> Request -> IO Request
 setPayload payload req =
   case payload of
-    NoPayload -> req
-    Raw ct bs -> req & setHeader "Content-Type" ct &
-                 Int.requestBody .~ HTTP.RequestBodyBS bs
-    Params ps -> HTTP.urlEncodedBody ps req
-    JSON val  -> req & setHeader "Content-Type" "application/json" &
-                 Int.requestBody .~ HTTP.RequestBodyLBS (Aeson.encode val)
+    NoPayload   -> return req
+    Raw ct bs   -> return $ req & setHeader "Content-Type" ct &
+                            Int.requestBody .~ HTTP.RequestBodyBS bs
+    Params ps   -> return $ HTTP.urlEncodedBody ps req
+    JSON val    -> return $
+                   req & setHeader "Content-Type" "application/json" &
+                   Int.requestBody .~ HTTP.RequestBodyLBS (Aeson.encode val)
+    FormData ps -> formDataBody ps req
 
 setRedirects :: Options -> Request -> Request
 setRedirects opts req
@@ -94,21 +98,25 @@ foldResponseBody f z0 resp = go z0
             then return z
             else f z bs >>= go
 
-request :: (Request -> Request) -> Options -> String
-        -> (Response BodyReader -> IO a) -> IO a
-request modify opts url body =
+requestIO :: (Request -> IO Request) -> Options -> String
+          -> (Response BodyReader -> IO a) -> IO a
+requestIO modify opts url body =
     either (flip HTTP.withManager go) go (manager opts)
   where
     go mgr = do
-      let frob req = req & modify
+      let frob req = req
                    & Int.requestHeaders %~ (headers opts ++)
                    & setQuery opts
                    & setAuth opts
                    & setProxy opts
                    & setRedirects opts
                    & Int.cookieJar .~ Just (cookies opts)
-      req <- frob <$> HTTP.parseUrl url
+      req <- modify =<< (frob <$> HTTP.parseUrl url)
       HTTP.withResponse req mgr body
+
+request :: (Request -> Request) -> Options -> String
+        -> (Response BodyReader -> IO a) -> IO a
+request f = requestIO (return . f)
 
 setQuery :: Options -> Request -> Request
 setQuery opts =
