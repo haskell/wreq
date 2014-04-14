@@ -51,6 +51,12 @@ module Network.WReq.Lens
     , Types.Link
     , linkURL
     , linkParams
+
+    , Form.Part
+    , partName
+    , partFilename
+    , partContentType
+    , partGetBody
     ) where
 
 import Control.Lens hiding (makeLenses)
@@ -58,6 +64,7 @@ import Data.ByteString (ByteString)
 import Network.WReq.Lens.Internal (assoc, assoc2)
 import Network.WReq.Lens.Machinery (makeLenses)
 import qualified Network.HTTP.Client as HTTP
+import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.HTTP.Types.Header as HTTP
 import qualified Network.HTTP.Types.Status as HTTP
 import qualified Network.WReq.Types as Types
@@ -69,6 +76,7 @@ makeLenses ''HTTP.Proxy
 makeLenses ''HTTP.Response
 makeLenses ''HTTP.Status
 makeLenses ''Types.Link
+makeLenses ''Form.Part
 
 responseHeader :: HTTP.HeaderName -> Traversal' (HTTP.Response body) ByteString
 responseHeader n = responseHeaders . assoc n

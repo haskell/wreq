@@ -36,6 +36,11 @@ module Network.WReq
     , binary
     -- ** Multipart form data
     , Form.Part
+    , Lens.partName
+    , Lens.partFilename
+    , Lens.partContentType
+    , Lens.partGetBody
+    -- *** Smart constructors
     , Form.partBS
     , Form.partLBS
     , Form.partFile
