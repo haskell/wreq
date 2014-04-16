@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, GADTs, RecordWildCards #-}
+{-# LANGUAGE FlexibleInstances, OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.WReq.Types
     (
@@ -6,89 +7,48 @@ module Network.WReq.Types
     , Auth(..)
     , ContentType
     , Payload(..)
+    , SimplePayload(..)
     , JSONError(..)
     , Link(..)
     , Put
+    , Postable(..)
+    , Putable(..)
     ) where
 
-import Control.Exception (Exception)
-import Data.Aeson (ToJSON(toJSON), Value)
-import Data.Monoid (Monoid(..))
-import Data.Typeable (Typeable)
-import Network.HTTP.Client (CookieJar, Manager, ManagerSettings,
-                            destroyCookieJar)
-import Network.HTTP.Client.Internal (Proxy)
-import Network.HTTP.Client.MultipartFormData (Part)
-import Network.HTTP.Types (Header)
-import Prelude hiding (head)
-import qualified Data.ByteString as S
+import Control.Lens ((&), (.~))
+import Data.Aeson (ToJSON(..), Value, encode)
+import Network.HTTP.Client (Request)
+import Network.HTTP.Client.MultipartFormData (Part, formDataBody)
+import Network.WReq.Internal.Types
+import qualified Network.HTTP.Client as HTTP
+import qualified Network.WReq.Lens.Internal as Int
 
-type ContentType = S.ByteString
+instance Postable Part where
+    postPayload a = postPayload [a]
 
-data Options = Options {
-    manager :: Either ManagerSettings Manager
-  , proxy :: Maybe Proxy
-  , auth :: Maybe Auth
-  , headers :: [Header]
-  , params :: [(S.ByteString, S.ByteString)]
-  , redirects :: Int
-  , cookies :: CookieJar
-  } deriving (Typeable)
+instance Postable [Part] where
+    postPayload = formDataBody
 
-data Auth = BasicAuth S.ByteString S.ByteString
-          | OAuth2Bearer S.ByteString
-          | OAuth2Token S.ByteString
-          deriving (Eq, Show, Typeable)
+instance Postable [Param] where
+    postPayload ps req = return $ HTTP.urlEncodedBody ps req
 
-instance Show Options where
-  show (Options{..}) = concat ["Options { "
-                              , "manager = ", case manager of
-                                                Left _  -> "Left _"
-                                                Right _ -> "Right _"
-                              , ", proxy = ", show proxy
-                              , ", auth = ", show auth
-                              , ", headers = ", show headers
-                              , ", params = ", show params
-                              , ", redirects = ", show redirects
-                              , ", cookies = ", show (destroyCookieJar cookies)
-                              , " }"
-                              ]
+instance Postable Param where
+    postPayload p = postPayload [p]
 
-type Param = (S.ByteString, S.ByteString)
+instance Postable SimplePayload where
+    postPayload = simplePayload
 
-data Payload a where
-    Raw       :: ContentType -> S.ByteString -> Payload S.ByteString
-    Params    :: [Param] -> Payload [Param]
-    JSON      :: ToJSON a => a -> Payload Value
-    FormData  :: [Part] -> Payload [Part]
-  deriving (Typeable)
+instance Putable SimplePayload where
+    putPayload = simplePayload
 
-class Put a where
-    _hidden :: a -> ()
+simplePayload :: SimplePayload -> Request -> IO Request
+simplePayload payload req =
+  case payload of
+    SimpleRaw ct bs   -> return $ req & Int.setHeader "Content-Type" ct &
+                         Int.requestBody .~ HTTP.RequestBodyBS bs
+    SimpleJSON js    -> postPayload (toJSON js) req
 
-instance Put S.ByteString where _hidden _ = ()
-instance Put Value where _hidden _ = ()
-
-instance Show (Payload a) where
-    show (Raw contentType body) = "Raw " ++ show contentType ++ show body
-    show (Params ps) = "Params " ++ show ps
-    show (JSON js) = "JSON " ++ show (toJSON js)
-    show (FormData fs) = "FormData " ++ show fs
-
-instance Monoid (Payload [Param]) where
-    mempty = Params []
-    mappend (Params xs) (Params ys) = Params (xs ++ ys)
-
-instance Monoid (Payload [Part]) where
-    mempty = FormData []
-    mappend (FormData xs) (FormData ys) = FormData (xs ++ ys)
-
-data JSONError = JSONError String
-               deriving (Show, Typeable)
-
-instance Exception JSONError
-
-data Link = Link {
-      linkURL :: S.ByteString
-    , linkParams :: [(S.ByteString, S.ByteString)]
-    } deriving (Eq, Show, Typeable)
+instance Postable Value where
+    postPayload js req =
+      return $ req & Int.setHeader "Content-Type" "application/json" &
+               Int.requestBody .~ HTTP.RequestBodyLBS (encode js)

@@ -22,9 +22,9 @@ module Network.WReq.Session
 
 import Control.Concurrent.MVar (MVar, modifyMVar, newMVar)
 import Control.Lens ((&), (.~), (^.))
-import Network.WReq (Options, Payload, Response, defaults)
+import Network.WReq (Options, Response, defaults)
 import Network.WReq.Internal (defaultManagerSettings)
-import Network.WReq.Types (Put)
+import Network.WReq.Types (Postable, Putable)
 import Prelude hiding (head)
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
@@ -47,7 +47,7 @@ withSession act = do
 get :: Session -> String -> IO (Response L.ByteString)
 get = getWith defaults
 
-post :: Session -> String -> Payload a -> IO (Response L.ByteString)
+post :: Postable a => Session -> String -> a -> IO (Response L.ByteString)
 post = postWith defaults
 
 head :: Session -> String -> IO (Response ())
@@ -56,7 +56,7 @@ head = headWith defaults
 options :: Session -> String -> IO (Response ())
 options = optionsWith defaults
 
-put :: Put a => Session -> String -> Payload a -> IO (Response L.ByteString)
+put :: Putable a => Session -> String -> a -> IO (Response L.ByteString)
 put = putWith defaults
 
 delete :: Session -> String -> IO (Response ())
@@ -66,7 +66,7 @@ getWith :: Options -> Session -> String -> IO (Response L.ByteString)
 getWith opts sesh url =
   override opts sesh $ \opts' -> WReq.getWith opts' url
 
-postWith :: Options -> Session -> String -> Payload a
+postWith :: Postable a => Options -> Session -> String -> a
          -> IO (Response L.ByteString)
 postWith opts sesh url payload =
   override opts sesh $ \opts' -> WReq.postWith opts' url payload
@@ -79,7 +79,7 @@ optionsWith :: Options -> Session -> String -> IO (Response ())
 optionsWith opts sesh url =
   override opts sesh $ \opts' -> WReq.optionsWith opts' url
 
-putWith :: Put a => Options -> Session -> String -> Payload a
+putWith :: Putable a => Options -> Session -> String -> a
         -> IO (Response L.ByteString)
 putWith opts sesh url payload =
   override opts sesh $ \opts' -> WReq.putWith opts' url payload

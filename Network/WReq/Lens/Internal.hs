@@ -24,12 +24,16 @@ module Network.WReq.Lens.Internal
     -- * Useful functions
     , assoc
     , assoc2
+    , setHeader
     ) where
 
 import Control.Lens hiding (makeLenses)
 import Data.List (partition)
 import Network.WReq.Lens.Machinery (makeLenses)
+import Network.HTTP.Types (HeaderName)
+import Network.HTTP.Client (Request)
 import qualified Network.HTTP.Client as HTTP
+import qualified Data.ByteString as S
 
 makeLenses ''HTTP.Request
 
@@ -42,3 +46,6 @@ assoc2 :: Eq k => k -> Lens' [(k,a)] [a]
 -- assoc2 :: (Eq b, Functor f) => b -> ([a] -> f [a]) -> [(b, a)] -> f [(b, a)]
 assoc2 k f = fmap (uncurry ((++) . fmap ((,) k))) .
              _1 (f . fmap snd) . partition ((==k) . fst)
+
+setHeader :: HeaderName -> S.ByteString -> Request -> Request
+setHeader name value = requestHeaders %~ ((name,value) :)

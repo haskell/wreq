@@ -32,6 +32,7 @@ library
     Network.WReq.Session
     Network.WReq.Types
   other-modules:
+    Network.WReq.Internal.Types
     Network.WReq.Lens.Machinery
     Paths_wreq
   build-depends:

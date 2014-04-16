@@ -21,7 +21,6 @@ import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Client.MultipartFormData (formDataBody)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Network.HTTP.Types (HeaderName)
 import Network.WReq.Types (Auth(..), Options(..), Payload(..))
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
@@ -32,6 +31,7 @@ import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.WReq.Lens as Lens
 import qualified Network.WReq.Lens.Internal as Int
+import Network.WReq.Lens.Internal (setHeader)
 
 -- This mess allows this module to continue to load during interactive
 -- development in ghci :-(
@@ -72,9 +72,6 @@ setRedirects :: Options -> Request -> Request
 setRedirects opts req
   | redirects opts == HTTP.redirectCount req = req
   | otherwise = req { HTTP.redirectCount = redirects opts }
-
-setHeader :: HeaderName -> S.ByteString -> Request -> Request
-setHeader name value = Int.requestHeaders %~ ((name,value) :)
 
 emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
 emptyMethodWith method opts url =
