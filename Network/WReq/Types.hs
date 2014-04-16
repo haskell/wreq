@@ -14,12 +14,14 @@ module Network.WReq.Types
     ) where
 
 import Control.Lens ((&), (.~))
-import Data.Aeson (ToJSON(..), Value, encode)
+import Data.Aeson (Value, encode)
 import Network.HTTP.Client (Request)
 import Network.HTTP.Client.MultipartFormData (Part, formDataBody)
 import Network.WReq.Internal.Types
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.WReq.Lens.Internal as Int
+import qualified Data.ByteString as S
+import qualified Data.ByteString.Lazy as L
 
 instance Postable Part where
     postPayload a = postPayload [a]
@@ -34,19 +36,33 @@ instance Postable Param where
     postPayload p = postPayload [p]
 
 instance Postable Payload where
-    postPayload = preparePayload
+    postPayload = putPayload
 
-instance Putable Payload where
-    putPayload = preparePayload
+instance Postable S.ByteString where
+    postPayload = putPayload
 
-preparePayload :: Payload -> Request -> IO Request
-preparePayload payload req =
-  case payload of
-    Raw ct bs -> return $ req & Int.setHeader "Content-Type" ct &
-                 Int.requestBody .~ HTTP.RequestBodyBS bs
-    JSON js   -> postPayload (toJSON js) req
+instance Postable L.ByteString where
+    postPayload = putPayload
 
 instance Postable Value where
-    postPayload js req =
-      return $ req & Int.setHeader "Content-Type" "application/json" &
-               Int.requestBody .~ HTTP.RequestBodyLBS (encode js)
+    postPayload = putPayload
+
+
+instance Putable Payload where
+    putPayload pl =
+      case pl of
+        Raw ct rb -> payload ct rb
+
+instance Putable S.ByteString where
+    putPayload = payload "application/octet-stream" . HTTP.RequestBodyBS
+
+instance Putable L.ByteString where
+    putPayload = payload "application/octet-stream" . HTTP.RequestBodyLBS
+
+instance Putable Value where
+    putPayload = payload "application/json" . HTTP.RequestBodyLBS . encode
+
+
+payload :: ContentType -> HTTP.RequestBody -> Request -> IO Request
+payload ct body req = return $ req & Int.setHeader "Content-Type" ct &
+                      Int.requestBody .~ body

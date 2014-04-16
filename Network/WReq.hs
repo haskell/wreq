@@ -33,8 +33,6 @@ module Network.WReq
 
     -- * Payloads for POST and PUT
     , Payload(..)
-    , binary
-    , json
     -- ** Multipart form data
     , Form.Part
     , Lens.partName
@@ -132,12 +130,6 @@ withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
 
 getWith :: Options -> String -> IO (Response L.ByteString)
 getWith opts url = request id opts url readResponse
-
-binary :: S.ByteString -> Payload
-binary = Raw "application/octet-stream"
-
-json :: Aeson.ToJSON a => a -> Payload
-json = JSON
 
 post :: Postable a => String -> a -> IO (Response L.ByteString)
 post url payload = postWith defaults url payload

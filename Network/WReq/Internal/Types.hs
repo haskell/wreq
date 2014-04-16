@@ -14,10 +14,9 @@ module Network.WReq.Internal.Types
     ) where
 
 import Control.Exception (Exception)
-import Data.Aeson (ToJSON(toJSON))
 import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
-                            destroyCookieJar)
+                            RequestBody, destroyCookieJar)
 import Network.HTTP.Client.Internal (Proxy)
 import Network.HTTP.Types (Header)
 import Prelude hiding (head)
@@ -63,13 +62,8 @@ class Putable a where
     putPayload :: a -> Request -> IO Request
 
 data Payload where
-    Raw  :: ContentType -> S.ByteString -> Payload
-    JSON :: ToJSON a => a -> Payload
+    Raw  :: ContentType -> RequestBody -> Payload
   deriving (Typeable)
-
-instance Show Payload where
-    show (Raw contentType body) = "Raw " ++ show contentType ++ show body
-    show (JSON js) = "JSON " ++ show (toJSON js)
 
 data JSONError = JSONError String
                deriving (Show, Typeable)

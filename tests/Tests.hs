@@ -10,6 +10,7 @@ import Control.Lens ((^.), (^?), (.~), (&))
 import Control.Monad (unless, void)
 import Data.Aeson (Value(..), object)
 import Data.Aeson.Lens (key)
+import Data.ByteString (ByteString)
 import Data.Char (toUpper)
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
@@ -43,7 +44,7 @@ basicGet site = do
     isJust (lookup "Date" <$> r ^? responseHeaders)
 
 basicPost site = do
-  r <- post (site "/post") (binary "wibble") >>= asValue
+  r <- post (site "/post") ("wibble" :: ByteString) >>= asValue
   let body = r ^. responseBody
   assertEqual "POST succeeds" status200 (r ^. responseStatus)
   assertEqual "POST echoes input" (Just "wibble") (body ^? key "data")
@@ -62,7 +63,7 @@ basicHead site = do
   assertEqual "HEAD succeeds" status200 (r ^. responseStatus)
 
 basicPut site = do
-  r <- put (site "/put") (binary "wibble")
+  r <- put (site "/put") ("wibble" :: ByteString)
   assertEqual "PUT succeeds" status200 (r ^. responseStatus)
 
 basicDelete site = do
