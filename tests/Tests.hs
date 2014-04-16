@@ -20,6 +20,8 @@ import Network.HTTP.Types.Version (http11)
 import Network.WReq
 import qualified Network.WReq.Session as Session
 import Prelude hiding (head)
+import System.IO (hClose, hPutStr)
+import System.IO.Temp (withSystemTempFile)
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool, assertEqual, assertFailure)
@@ -47,6 +49,13 @@ basicPost site = do
   assertEqual "POST echoes input" (Just "wibble") (body ^? key "data")
   assertEqual "POST is binary" (Just "application/octet-stream")
                                (body ^? key "headers" . key "Content-Type")
+
+multipartPost site =
+  withSystemTempFile "foo.html" $ \name handle -> do
+    hPutStr handle "<!DOCTYPE html><html></html"
+    hClose handle
+    r <- post (site "/post") (partFile "html" name)
+    assertEqual "POST succeeds" status200 (r ^. responseStatus)
 
 basicHead site = do
   r <- head (site "/get")

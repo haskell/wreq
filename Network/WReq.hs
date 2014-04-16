@@ -41,10 +41,10 @@ module Network.WReq
     , Lens.partContentType
     , Lens.partGetBody
     -- *** Smart constructors
-    , Form.partBS
-    , Form.partLBS
-    , Form.partFile
-    , Form.partFileSource
+    , partBS
+    , partLBS
+    , partFile
+    , partFileSource
 
     -- * Responses
     , Response
@@ -109,9 +109,10 @@ import Control.Lens ((.~), (&))
 import Control.Monad (unless)
 import Data.Aeson (FromJSON)
 import Data.Maybe (fromMaybe)
+import Data.Text (Text)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
 import Network.WReq.Internal
-import Network.WReq.Types (Auth(..), JSONError(..), Options(..), Payload(..))
+import Network.WReq.Types (Auth(..), JSONError(..), Options(..), Payload(..), Put)
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
@@ -132,13 +133,25 @@ withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
 getWith :: Options -> String -> IO (Response L.ByteString)
 getWith opts url = request id opts url readResponse
 
-binary :: S.ByteString -> Payload
+binary :: S.ByteString -> Payload S.ByteString
 binary = Raw "application/octet-stream"
 
-post :: String -> Payload -> IO (Response L.ByteString)
+partBS :: Text -> S.ByteString -> Payload [Form.Part]
+partBS name body = FormData [Form.partBS name body]
+
+partLBS :: Text -> L.ByteString -> Payload [Form.Part]
+partLBS name body = FormData [Form.partLBS name body]
+
+partFile :: Text -> FilePath -> Payload [Form.Part]
+partFile name path = FormData [Form.partFile name path]
+
+partFileSource :: Text -> FilePath -> Payload [Form.Part]
+partFileSource name path = FormData [Form.partFile name path]
+
+post :: String -> Payload a -> IO (Response L.ByteString)
 post url payload = postWith defaults url payload
 
-postWith :: Options -> String -> Payload -> IO (Response L.ByteString)
+postWith :: Options -> String -> Payload a -> IO (Response L.ByteString)
 postWith opts url payload =
   requestIO (setPayload payload . (Int.method .~ HTTP.methodPost)) opts url
     readResponse
@@ -149,10 +162,10 @@ head = headWith (defaults & Lens.redirects .~ 0)
 headWith :: Options -> String -> IO (Response ())
 headWith = emptyMethodWith HTTP.methodHead
 
-put :: String -> Payload -> IO (Response L.ByteString)
-put = putWith defaults
+put :: Put a => String -> Payload a -> IO (Response L.ByteString)
+put url payload = putWith defaults url payload
 
-putWith :: Options -> String -> Payload -> IO (Response L.ByteString)
+putWith :: Put a => Options -> String -> Payload a -> IO (Response L.ByteString)
 putWith opts url payload =
   -- XXX this erroneously sets the method to POST if we try to PUT
   -- multipart form data

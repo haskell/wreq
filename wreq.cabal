@@ -44,7 +44,8 @@ library
     http-client-tls >= 0.2,
     http-types >= 0.8,
     lens >= 4.1,
-    template-haskell
+    template-haskell,
+    text
 
 executable httpbin
   hs-source-dirs: httpbin
@@ -60,6 +61,7 @@ executable httpbin
     bytestring,
     case-insensitive,
     containers,
+    dlist,
     snap-core,
     snap-server >= 0.9.4.2,
     text
@@ -79,6 +81,7 @@ test-suite tests
     http-client,
     http-types,
     lens >= 4.1,
+    temporary,
     test-framework,
     test-framework-hunit,
     text,

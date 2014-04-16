@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, OverloadedStrings #-}
+{-# LANGUAGE CPP, GADTs, OverloadedStrings #-}
 
 module Network.WReq.Internal
     (
@@ -57,10 +57,9 @@ defaults = Options {
   }
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
 
-setPayload :: Payload -> Request -> IO Request
+setPayload :: Payload a -> Request -> IO Request
 setPayload payload req =
   case payload of
-    NoPayload   -> return req
     Raw ct bs   -> return $ req & setHeader "Content-Type" ct &
                             Int.requestBody .~ HTTP.RequestBodyBS bs
     Params ps   -> return $ HTTP.urlEncodedBody ps req
