@@ -150,8 +150,6 @@ put url payload = putWith defaults url payload
 
 putWith :: Putable a => Options -> String -> a -> IO (Response L.ByteString)
 putWith opts url payload =
-  -- XXX this erroneously sets the method to POST if we try to PUT
-  -- multipart form data
   requestIO (putPayload payload . (Int.method .~ HTTP.methodPut)) opts url
     readResponse
 
