@@ -34,6 +34,7 @@ module Network.WReq
     -- * Payloads for POST and PUT
     , Payload(..)
     , binary
+    , json
     -- ** Multipart form data
     , Form.Part
     , Lens.partName
@@ -134,6 +135,9 @@ getWith opts url = request id opts url readResponse
 
 binary :: S.ByteString -> Payload
 binary = Raw "application/octet-stream"
+
+json :: Aeson.ToJSON a => a -> Payload
+json = JSON
 
 post :: Postable a => String -> a -> IO (Response L.ByteString)
 post url payload = postWith defaults url payload
