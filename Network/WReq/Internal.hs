@@ -27,7 +27,7 @@ import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
-import qualified Network.WReq.Internal.Lens as Int
+import qualified Network.WReq.Internal.Lens as Lens
 import qualified Network.WReq.Lens as Lens
 
 -- This mess allows this module to continue to load during interactive
@@ -61,7 +61,7 @@ setRedirects opts req
 
 emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
 emptyMethodWith method opts url =
-  request (Int.method .~ method) opts url ignoreResponse
+  request (Lens.method .~ method) opts url ignoreResponse
 
 ignoreResponse :: Response BodyReader -> IO (Response ())
 ignoreResponse resp = (Lens.responseBody .~ ()) <$> readResponse resp
@@ -87,12 +87,12 @@ requestIO modify opts url body =
   where
     go mgr = do
       let frob req = req
-                   & Int.requestHeaders %~ (headers opts ++)
+                   & Lens.requestHeaders %~ (headers opts ++)
                    & setQuery opts
                    & setAuth opts
                    & setProxy opts
                    & setRedirects opts
-                   & Int.cookieJar .~ Just (cookies opts)
+                   & Lens.cookieJar .~ Just (cookies opts)
       req <- modify =<< (frob <$> HTTP.parseUrl url)
       HTTP.withResponse req mgr body
 
@@ -104,7 +104,7 @@ setQuery :: Options -> Request -> Request
 setQuery opts =
   case params opts of
     [] -> id
-    ps -> Int.queryString %~ \qs ->
+    ps -> Lens.queryString %~ \qs ->
           let n = S.length qs in
           qs <> (if n > 1 then "&" else "") <> HTTP.renderSimpleQuery (n==0) ps
 

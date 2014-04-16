@@ -21,7 +21,7 @@ import Network.WReq.Internal.Types
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
-import qualified Network.WReq.Internal.Lens as Int
+import qualified Network.WReq.Internal.Lens as Lens
 
 instance Postable Part where
     postPayload a = postPayload [a]
@@ -64,5 +64,5 @@ instance Putable Value where
 
 
 payload :: ContentType -> HTTP.RequestBody -> Request -> IO Request
-payload ct body req = return $ req & Int.setHeader "Content-Type" ct &
-                      Int.requestBody .~ body
+payload ct body req = return $ req & Lens.setHeader "Content-Type" ct &
+                      Lens.requestBody .~ body
