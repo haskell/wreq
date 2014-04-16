@@ -5,7 +5,6 @@ module Network.WReq.Internal.Types
       Options(..)
     , Auth(..)
     , ContentType
-    , Payload(..)
     , SimplePayload(..)
     , JSONError(..)
     , Link(..)
@@ -17,12 +16,10 @@ module Network.WReq.Internal.Types
 
 import Control.Exception (Exception)
 import Data.Aeson (ToJSON(toJSON), Value)
-import Data.Monoid (Monoid(..))
 import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
                             destroyCookieJar)
 import Network.HTTP.Client.Internal (Proxy)
-import Network.HTTP.Client.MultipartFormData (Part)
 import Network.HTTP.Types (Header)
 import Prelude hiding (head)
 import qualified Data.ByteString as S
@@ -66,13 +63,6 @@ class Postable a where
 class Putable a where
     putPayload :: a -> Request -> IO Request
 
-data Payload a where
-    Raw       :: ContentType -> S.ByteString -> Payload S.ByteString
-    Params    :: [Param] -> Payload [Param]
-    JSON      :: ToJSON a => a -> Payload Value
-    FormData  :: [Part] -> Payload [Part]
-  deriving (Typeable)
-
 data SimplePayload where
     SimpleRaw       :: ContentType -> S.ByteString -> SimplePayload
     SimpleJSON      :: ToJSON a => a -> SimplePayload
@@ -84,19 +74,9 @@ class Put a where
 instance Put S.ByteString where _hidden _ = ()
 instance Put Value where _hidden _ = ()
 
-instance Show (Payload a) where
-    show (Raw contentType body) = "Raw " ++ show contentType ++ show body
-    show (Params ps) = "Params " ++ show ps
-    show (JSON js) = "JSON " ++ show (toJSON js)
-    show (FormData fs) = "FormData " ++ show fs
-
-instance Monoid (Payload [Param]) where
-    mempty = Params []
-    mappend (Params xs) (Params ys) = Params (xs ++ ys)
-
-instance Monoid (Payload [Part]) where
-    mempty = FormData []
-    mappend (FormData xs) (FormData ys) = FormData (xs ++ ys)
+instance Show SimplePayload where
+    show (SimpleRaw contentType body) = "Raw " ++ show contentType ++ show body
+    show (SimpleJSON js) = "JSON " ++ show (toJSON js)
 
 data JSONError = JSONError String
                deriving (Show, Typeable)

@@ -10,7 +10,6 @@ module Network.WReq.Internal
     , readResponse
     , request
     , requestIO
-    , setPayload
     ) where
 
 import Control.Applicative ((<$>))
@@ -19,11 +18,9 @@ import Data.Monoid ((<>))
 import Data.Version (showVersion)
 import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
-import Network.HTTP.Client.MultipartFormData (formDataBody)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Network.WReq.Types (Auth(..), Options(..), Payload(..))
+import Network.WReq.Types (Auth(..), Options(..))
 import Prelude hiding (head)
-import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.Lazy as L
@@ -56,17 +53,6 @@ defaults = Options {
   , cookies   = HTTP.createCookieJar []
   }
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
-
-setPayload :: Payload a -> Request -> IO Request
-setPayload payload req =
-  case payload of
-    Raw ct bs   -> return $ req & setHeader "Content-Type" ct &
-                            Int.requestBody .~ HTTP.RequestBodyBS bs
-    Params ps   -> return $ HTTP.urlEncodedBody ps req
-    JSON val    -> return $
-                   req & setHeader "Content-Type" "application/json" &
-                   Int.requestBody .~ HTTP.RequestBodyLBS (Aeson.encode val)
-    FormData ps -> formDataBody ps req
 
 setRedirects :: Options -> Request -> Request
 setRedirects opts req

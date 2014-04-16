@@ -6,7 +6,6 @@ module Network.WReq.Types
       Options(..)
     , Auth(..)
     , ContentType
-    , Payload(..)
     , SimplePayload(..)
     , JSONError(..)
     , Link(..)
