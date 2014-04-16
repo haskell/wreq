@@ -43,7 +43,7 @@ basicGet site = do
     isJust (lookup "Date" <$> r ^? responseHeaders)
 
 basicPost site = do
-  r <- post (site "/post") (binary "wibble") >>= jsonValue
+  r <- post (site "/post") (binary "wibble") >>= asValue
   let body = r ^. responseBody
   assertEqual "POST succeeds" status200 (r ^. responseStatus)
   assertEqual "POST echoes input" (Just "wibble") (body ^? key "data")

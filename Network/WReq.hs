@@ -61,8 +61,8 @@ module Network.WReq
     , Lens.statusMessage
     -- ** Decoding responses
     , JSONError(..)
-    , json
-    , jsonValue
+    , asJSON
+    , asValue
 
     -- * Cookies
     , Lens.Cookie
@@ -177,11 +177,11 @@ foldGet f z url = foldGetWith defaults f z url
 foldGetWith :: Options -> (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGetWith opts f z0 url = request id opts url (foldResponseBody f z0)
 
-json :: (Failure JSONError m, FromJSON a) =>
-        Response L.ByteString -> m (Response a)
-{-# SPECIALIZE json :: (FromJSON a) =>
-                       Response L.ByteString -> IO (Response a) #-}
-json resp = do
+asJSON :: (Failure JSONError m, FromJSON a) =>
+          Response L.ByteString -> m (Response a)
+{-# SPECIALIZE asJSON :: (FromJSON a) =>
+                         Response L.ByteString -> IO (Response a) #-}
+asJSON resp = do
   let contentType = fst . S.break (==59) . fromMaybe "unknown" .
                     lookup "Content-Type" . responseHeaders $ resp
   unless ("application/json" `S.isPrefixOf` contentType) $
@@ -190,11 +190,11 @@ json resp = do
     Left err  -> failure (JSONError err)
     Right val -> return (fmap (const val) resp)
 
-jsonValue :: (Failure JSONError m) =>
-             Response L.ByteString -> m (Response Aeson.Value)
-{-# SPECIALIZE jsonValue :: Response L.ByteString
-                         -> IO (Response Aeson.Value) #-}
-jsonValue = json
+asValue :: (Failure JSONError m) =>
+           Response L.ByteString -> m (Response Aeson.Value)
+{-# SPECIALIZE asValue :: Response L.ByteString
+                       -> IO (Response Aeson.Value) #-}
+asValue = asJSON
 
 basicAuth :: S.ByteString -> S.ByteString -> Maybe Auth
 basicAuth user pass = Just (BasicAuth user pass)
