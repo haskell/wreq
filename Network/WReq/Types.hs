@@ -6,10 +6,9 @@ module Network.WReq.Types
       Options(..)
     , Auth(..)
     , ContentType
-    , SimplePayload(..)
+    , Payload(..)
     , JSONError(..)
     , Link(..)
-    , Put
     , Postable(..)
     , Putable(..)
     ) where
@@ -34,18 +33,18 @@ instance Postable [Param] where
 instance Postable Param where
     postPayload p = postPayload [p]
 
-instance Postable SimplePayload where
-    postPayload = simplePayload
+instance Postable Payload where
+    postPayload = preparePayload
 
-instance Putable SimplePayload where
-    putPayload = simplePayload
+instance Putable Payload where
+    putPayload = preparePayload
 
-simplePayload :: SimplePayload -> Request -> IO Request
-simplePayload payload req =
+preparePayload :: Payload -> Request -> IO Request
+preparePayload payload req =
   case payload of
-    SimpleRaw ct bs   -> return $ req & Int.setHeader "Content-Type" ct &
-                         Int.requestBody .~ HTTP.RequestBodyBS bs
-    SimpleJSON js    -> postPayload (toJSON js) req
+    Raw ct bs -> return $ req & Int.setHeader "Content-Type" ct &
+                 Int.requestBody .~ HTTP.RequestBodyBS bs
+    JSON js   -> postPayload (toJSON js) req
 
 instance Postable Value where
     postPayload js req =

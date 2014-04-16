@@ -32,7 +32,7 @@ module Network.WReq
     , foldGetWith
 
     -- * Payloads for POST and PUT
-    , SimplePayload(..)
+    , Payload(..)
     , binary
     -- ** Multipart form data
     , Form.Part
@@ -111,7 +111,7 @@ import Data.Aeson (FromJSON)
 import Data.Maybe (fromMaybe)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
 import Network.WReq.Internal
-import Network.WReq.Types (Auth(..), JSONError(..), Options(..), SimplePayload(..), Postable(..), Putable(..))
+import Network.WReq.Types (Auth(..), JSONError(..), Options(..), Payload(..), Postable(..), Putable(..))
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
@@ -132,8 +132,8 @@ withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
 getWith :: Options -> String -> IO (Response L.ByteString)
 getWith opts url = request id opts url readResponse
 
-binary :: S.ByteString -> SimplePayload
-binary = SimpleRaw "application/octet-stream"
+binary :: S.ByteString -> Payload
+binary = Raw "application/octet-stream"
 
 post :: Postable a => String -> a -> IO (Response L.ByteString)
 post url payload = postWith defaults url payload

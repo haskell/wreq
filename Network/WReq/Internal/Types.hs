@@ -5,17 +5,16 @@ module Network.WReq.Internal.Types
       Options(..)
     , Auth(..)
     , ContentType
-    , SimplePayload(..)
+    , Payload(..)
     , JSONError(..)
     , Link(..)
-    , Put
     , Param
     , Putable(..)
     , Postable(..)
     ) where
 
 import Control.Exception (Exception)
-import Data.Aeson (ToJSON(toJSON), Value)
+import Data.Aeson (ToJSON(toJSON))
 import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
                             destroyCookieJar)
@@ -63,20 +62,14 @@ class Postable a where
 class Putable a where
     putPayload :: a -> Request -> IO Request
 
-data SimplePayload where
-    SimpleRaw       :: ContentType -> S.ByteString -> SimplePayload
-    SimpleJSON      :: ToJSON a => a -> SimplePayload
+data Payload where
+    Raw  :: ContentType -> S.ByteString -> Payload
+    JSON :: ToJSON a => a -> Payload
   deriving (Typeable)
 
-class Put a where
-    _hidden :: a -> ()
-
-instance Put S.ByteString where _hidden _ = ()
-instance Put Value where _hidden _ = ()
-
-instance Show SimplePayload where
-    show (SimpleRaw contentType body) = "Raw " ++ show contentType ++ show body
-    show (SimpleJSON js) = "JSON " ++ show (toJSON js)
+instance Show Payload where
+    show (Raw contentType body) = "Raw " ++ show contentType ++ show body
+    show (JSON js) = "JSON " ++ show (toJSON js)
 
 data JSONError = JSONError String
                deriving (Show, Typeable)
