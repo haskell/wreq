@@ -110,7 +110,8 @@ import Data.Aeson (FromJSON)
 import Data.Maybe (fromMaybe)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
 import Network.WReq.Internal
-import Network.WReq.Types (Auth(..), JSONError(..), Options(..), Payload(..), Postable(..), Putable(..))
+import Network.WReq.Types (Auth(..), JSONError(..), Options(..), Payload(..),
+                           Postable(..), Putable(..))
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
