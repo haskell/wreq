@@ -25,13 +25,13 @@ library
 
   exposed-modules:
     Network.WReq
-    Network.WReq.Internal
-    Network.WReq.Internal.Link
     Network.WReq.Lens
-    Network.WReq.Lens.Internal
     Network.WReq.Session
     Network.WReq.Types
   other-modules:
+    Network.WReq.Internal
+    Network.WReq.Internal.Lens
+    Network.WReq.Internal.Link
     Network.WReq.Internal.Types
     Network.WReq.Lens.Machinery
     Paths_wreq

@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes, TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Network.WReq.Lens.Internal
+module Network.WReq.Internal.Lens
     (
       HTTP.Request
     , method

@@ -19,6 +19,7 @@ import Data.Version (showVersion)
 import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Network.WReq.Internal.Lens (setHeader)
 import Network.WReq.Types (Auth(..), Options(..))
 import Prelude hiding (head)
 import qualified Data.ByteString as S
@@ -26,9 +27,8 @@ import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
+import qualified Network.WReq.Internal.Lens as Int
 import qualified Network.WReq.Lens as Lens
-import qualified Network.WReq.Lens.Internal as Int
-import Network.WReq.Lens.Internal (setHeader)
 
 -- This mess allows this module to continue to load during interactive
 -- development in ghci :-(

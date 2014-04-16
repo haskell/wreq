@@ -61,7 +61,7 @@ module Network.WReq.Lens
 
 import Control.Lens hiding (makeLenses)
 import Data.ByteString (ByteString)
-import Network.WReq.Lens.Internal (assoc, assoc2)
+import Network.WReq.Internal.Lens (assoc, assoc2)
 import Network.WReq.Lens.Machinery (makeLenses)
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form

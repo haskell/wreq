@@ -118,8 +118,8 @@ import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.HTTP.Types as HTTP
+import qualified Network.WReq.Internal.Lens as Int
 import qualified Network.WReq.Lens as Lens
-import qualified Network.WReq.Lens.Internal as Int
 
 get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url

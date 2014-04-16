@@ -21,7 +21,7 @@ import Network.WReq.Internal.Types
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
-import qualified Network.WReq.Lens.Internal as Int
+import qualified Network.WReq.Internal.Lens as Int
 
 instance Postable Part where
     postPayload a = postPayload [a]
