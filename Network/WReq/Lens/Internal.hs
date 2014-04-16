@@ -29,11 +29,11 @@ module Network.WReq.Lens.Internal
 
 import Control.Lens hiding (makeLenses)
 import Data.List (partition)
-import Network.WReq.Lens.Machinery (makeLenses)
-import Network.HTTP.Types (HeaderName)
 import Network.HTTP.Client (Request)
-import qualified Network.HTTP.Client as HTTP
+import Network.HTTP.Types (HeaderName)
+import Network.WReq.Lens.Machinery (makeLenses)
 import qualified Data.ByteString as S
+import qualified Network.HTTP.Client as HTTP
 
 makeLenses ''HTTP.Request
 

@@ -18,10 +18,10 @@ import Data.Aeson (Value, encode)
 import Network.HTTP.Client (Request)
 import Network.HTTP.Client.MultipartFormData (Part, formDataBody)
 import Network.WReq.Internal.Types
-import qualified Network.HTTP.Client as HTTP
-import qualified Network.WReq.Lens.Internal as Int
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
+import qualified Network.HTTP.Client as HTTP
+import qualified Network.WReq.Lens.Internal as Int
 
 instance Postable Part where
     postPayload a = postPayload [a]
