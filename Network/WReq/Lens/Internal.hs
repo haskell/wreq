@@ -48,4 +48,5 @@ assoc2 k f = fmap (uncurry ((++) . fmap ((,) k))) .
              _1 (f . fmap snd) . partition ((==k) . fst)
 
 setHeader :: HeaderName -> S.ByteString -> Request -> Request
-setHeader name value = requestHeaders %~ ((name,value) :)
+setHeader name value = requestHeaders %~ ((name,value) :) .
+                       filter ((/= name) . fst)
