@@ -5,8 +5,9 @@
 {-# LANGUAGE DeriveGeneric, OverloadedStrings, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 
-import Control.Lens ((&), (^.), (.~))
+import Control.Lens ((&), (^.), (^?), (.~))
 import Data.Aeson (FromJSON)
+import Data.Aeson.Lens (key)
 import Data.Map (Map)
 import Data.Text (Text)
 import GHC.Generics (Generic)
@@ -36,7 +37,11 @@ instance FromJSON GetBody
 basic_asJSON :: IO ()
 basic_asJSON = do
   let opts = defaults & param "foo" .~ ["bar"]
-  r <- getWith opts "http://httpbin.org/get" >>= asJSON
+  r <- asJSON =<< getWith opts "http://httpbin.org/get"
+
+  -- The fact that we want a GetBody here will be inferred by our use
+  -- of the "headers" accessor function.
+
   putStrLn $ "args: " ++ show (args (r ^. responseBody))
 
 
@@ -46,7 +51,7 @@ basic_asJSON = do
 
 failing_asJSON :: IO ()
 failing_asJSON = do
-  (r :: Response [Int]) <- get "http://httpbin.org/get" >>= asJSON
+  (r :: Response [Int]) <- asJSON =<< get "http://httpbin.org/get"
   putStrLn $ "response: " ++ show (r ^. responseBody)
 
 
@@ -82,11 +87,36 @@ either_asJSON = do
 
   -- Our second conversion attempt will succeed.
   let succeeding = asJSON r :: Either E.SomeException (Response GetBody)
-  print (succeeding ^. responseBody)
+  print succeeding
 
 
 
+-- The lens package defines some handy combinators for use with the
+-- aeson package, with which we can easily traverse parts of a JSON
+-- response.
+
+lens_aeson :: IO ()
+lens_aeson = do
+  r <- get "http://httpbin.org/get"
+  print $ r ^? responseBody . key "headers" . key "User-Agent"
+
+  -- If we maintain the ResponseBody as a ByteString, the lens
+  -- combinators will have to convert the body to a Value every time
+  -- we start a new traversal.
+
+  -- When we need to poke at several parts of a response, it's more
+  -- efficient to use asValue to perform the conversion to a Value
+  -- once.
+
+  let opts = defaults & param "baz" .~ ["quux"]
+  v <- asValue =<< getWith opts "http://httpbin.org/get"
+  print $ v ^? responseBody . key "args" . key "baz"
+
+
+
+main :: IO ()
 main = do
   basic_asJSON
   failing_asJSON_catch
   either_asJSON
+  lens_aeson

@@ -12,7 +12,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 executable wreq-example-json-response
-  main-is:        AsJSON.hs
+  main-is:        JsonResponse.hs
   ghc-options:    -Wall -fwarn-tabs -threaded
   default-language: Haskell98
 

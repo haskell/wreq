@@ -276,6 +276,40 @@ foldGetWith opts f z0 url = request id opts url (foldResponseBody f z0)
 
 -- | Convert the body of an HTTP response from JSON to a suitable
 -- Haskell type.
+--
+-- In this example, we use 'asJSON' in the @IO@ monad, where it will
+-- throw a 'JSONError' exception if conversion to the desired type
+-- fails.
+--
+-- @
+--\{-\# LANGUAGE DeriveGeneric \#-\}
+--import "GHC.Generics" ('GHC.Generics.Generic')
+--
+-- \{- This Haskell type corresponds to the structure of a
+--   response body from httpbin.org. -\}
+--
+--data GetBody = GetBody {
+--    headers :: 'Data.Map.Map' 'Data.Text.Text' 'Data.Text.Text'
+--  , args :: 'Data.Map.Map' 'Data.Text.Text' 'Data.Text.Text'
+--  , origin :: 'Data.Text.Text'
+--  , url :: 'Data.Text.Text'
+--  } deriving (Show, 'GHC.Generics.Generic')
+--
+-- \-\- Get GHC to derive a 'FromJSON' instance for us.
+--instance 'FromJSON' GetBody
+--
+-- \{- The fact that we want a GetBody below will be inferred by our
+--   use of the \"headers\" accessor function. -\}
+--
+--foo = do
+--  r <- 'asJSON' =<< 'get' \"http:\/\/httpbin.org\/get\"
+--  print (headers (r 'Control.Lens.^.' 'responseBody'))
+-- @
+--
+-- If we use 'asJSON' in the 'Either' monad, it will return 'Left'
+-- with a 'JSONError' payload if conversion fails, and 'Right' with a
+-- 'Response' whose 'responseBody' is the converted value on success.
+
 asJSON :: (MonadThrow m, FromJSON a) =>
           Response L.ByteString -> m (Response a)
 {-# SPECIALIZE asJSON :: (FromJSON a) =>
