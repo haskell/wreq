@@ -1,16 +1,32 @@
 {-# LANGUAGE FlexibleInstances, OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- |
+-- Module      : Network.WReq.Types
+-- Copyright   : (c) 2014 Bryan O'Sullivan
+--
+-- License     : BSD-style
+-- Maintainer  : bos@serpentine.com
+-- Stability   : experimental
+-- Portability : GHC
+--
+-- HTTP client types.
+
 module Network.WReq.Types
     (
+    -- * Client configuration
       Options(..)
     , Auth(..)
-    , ContentType
+    -- * Request payloads
     , Payload(..)
-    , JSONError(..)
-    , Link(..)
     , Postable(..)
     , Putable(..)
+    -- * Headers
+    , ContentType
+    , Param
+    , Link(..)
+    -- * Errors
+    , JSONError(..)
     ) where
 
 import Control.Lens ((&), (.~))
