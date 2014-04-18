@@ -104,9 +104,9 @@ module Network.WReq
     , oauth2Token
     ) where
 
-import Control.Failure (Failure(failure))
 import Control.Lens ((.~), (&))
 import Control.Monad (unless)
+import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Aeson (FromJSON)
 import Data.Maybe (fromMaybe)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
@@ -175,21 +175,21 @@ foldGetWith opts f z0 url = request id opts url (foldResponseBody f z0)
 
 -- | Convert the body of an HTTP response from JSON to a suitable
 -- Haskell type.
-asJSON :: (Failure JSONError m, FromJSON a) =>
+asJSON :: (MonadThrow m, FromJSON a) =>
           Response L.ByteString -> m (Response a)
 {-# SPECIALIZE asJSON :: (FromJSON a) =>
                          Response L.ByteString -> IO (Response a) #-}
+{-# SPECIALIZE asJSON :: Response L.ByteString -> IO (Response Aeson.Value) #-}
 asJSON resp = do
   let contentType = fst . S.break (==59) . fromMaybe "unknown" .
                     lookup "Content-Type" . responseHeaders $ resp
   unless ("application/json" `S.isPrefixOf` contentType) $
-    failure (JSONError $ "content type of response is " ++ show contentType)
+    throwM . JSONError $ "content type of response is " ++ show contentType
   case Aeson.eitherDecode' (responseBody resp) of
-    Left err  -> failure (JSONError err)
+    Left err  -> throwM (JSONError err)
     Right val -> return (fmap (const val) resp)
 
-asValue :: (Failure JSONError m) =>
-           Response L.ByteString -> m (Response Aeson.Value)
+asValue :: (MonadThrow m) => Response L.ByteString -> m (Response Aeson.Value)
 {-# SPECIALIZE asValue :: Response L.ByteString
                        -> IO (Response Aeson.Value) #-}
 asValue = asJSON
