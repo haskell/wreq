@@ -282,7 +282,7 @@ foldGetWith opts f z0 url = request id opts url (foldResponseBody f z0)
 -- fails.
 --
 -- @
---\{-\# LANGUAGE DeriveGeneric \#-\}
+-- \{-\# LANGUAGE DeriveGeneric \#-\}
 --import "GHC.Generics" ('GHC.Generics.Generic')
 --
 -- \{- This Haskell type corresponds to the structure of a
