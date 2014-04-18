@@ -150,13 +150,13 @@ funkyScheme site = do
 cookiesSet site = do
   r <- get (site "/cookies/set?x=y")
   assertEqual "cookies are set correctly" (Just "y")
-    (r ^? responseCookie "x" . cookie_value)
+    (r ^? responseCookie "x" . cookieValue)
 
 cookieSession site = Session.withSession $ \s -> do
   void $ Session.get s (site "/cookies/set?foo=bar")
   r <- Session.get s (site "/cookies")
   assertEqual "cookies are set correctly" (Just "bar")
-    (r ^? responseCookie "foo" . cookie_value)
+    (r ^? responseCookie "foo" . cookieValue)
   assertEqual "whee" (Just "bar")
     (r ^. responseBody ^? key "cookies" . key "foo")
 

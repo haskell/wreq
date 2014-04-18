@@ -129,9 +129,21 @@ data Options = Options {
   -- changes made for subsequent requests will be ignored.
   } deriving (Typeable)
 
+-- | Supported authentication types.
+--
+-- HTTP authentication should not be considered secure.  Do not use
+-- authentication unless you are operating over TLS.
 data Auth = BasicAuth S.ByteString S.ByteString
+            -- ^ Basic authentication. This consists of a plain
+            -- username and password.
           | OAuth2Bearer S.ByteString
+            -- ^ An OAuth2 bearer token. This is treated by many
+            -- services as the equivalent of a username and password.
           | OAuth2Token S.ByteString
+            -- ^ A not-quite-standard OAuth2 bearer token (that seems
+            -- to be used only by GitHub). This is treated by whoever
+            -- accepts it as the equivalent of a username and
+            -- password.
           deriving (Eq, Show, Typeable)
 
 instance Show Options where

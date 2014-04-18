@@ -1,10 +1,8 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, RankNTypes,
-    TemplateHaskell #-}
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Network.WReq.Lens
     (
-      Types.Options
+      Options
     , manager
     , proxy
     , auth
@@ -16,24 +14,24 @@ module Network.WReq.Lens
     , cookie
     , cookies
 
-    , HTTP.Cookie
-    , cookie_name
-    , cookie_value
-    , cookie_expiry_time
-    , cookie_domain
-    , cookie_path
-    , cookie_creation_time
-    , cookie_last_access_time
-    , cookie_persistent
-    , cookie_host_only
-    , cookie_secure_only
-    , cookie_http_only
+    , Cookie
+    , cookieName
+    , cookieValue
+    , cookieExpiryTime
+    , cookieDomain
+    , cookiePath
+    , cookieCreationTime
+    , cookieLastAccessTime
+    , cookiePersistent
+    , cookieHostOnly
+    , cookieSecureOnly
+    , cookieHttpOnly
 
-    , HTTP.Proxy
+    , Proxy
     , proxyHost
     , proxyPort
 
-    , HTTP.Response
+    , Response
     , responseStatus
     , responseVersion
     , responseHeader
@@ -42,65 +40,149 @@ module Network.WReq.Lens
     , responseBody
     , responseCookie
     , responseCookieJar
-    , responseClose'
 
-    , HTTP.Status
+    , Status
     , statusCode
     , statusMessage
 
-    , Types.Link
+    , Link
     , linkURL
     , linkParams
 
-    , Form.Part
+    , Part
     , partName
     , partFilename
     , partContentType
     , partGetBody
     ) where
 
-import Control.Lens hiding (makeLenses)
+import Control.Lens (Fold, Lens, Lens', Traversal')
 import Data.ByteString (ByteString)
-import Network.WReq.Internal.Lens (assoc, assoc2)
-import Network.WReq.Lens.Machinery (makeLenses)
-import qualified Network.HTTP.Client as HTTP
-import qualified Network.HTTP.Client.MultipartFormData as Form
-import qualified Network.HTTP.Types.Header as HTTP
-import qualified Network.HTTP.Types.Status as HTTP
-import qualified Network.WReq.Types as Types
-import Network.WReq.Internal.Link
+import Data.Text (Text)
+import Data.Time.Clock (UTCTime)
+import Network.HTTP.Client (Cookie, CookieJar, Manager, ManagerSettings, Proxy)
+import Network.HTTP.Client (RequestBody, Response)
+import Network.HTTP.Client.MultipartFormData (Part)
+import Network.HTTP.Types.Header (Header, HeaderName, ResponseHeaders)
+import Network.HTTP.Types.Status (Status)
+import Network.HTTP.Types.Version (HttpVersion)
+import Network.Mime (MimeType)
+import Network.WReq.Types (Auth, Link, Options, Param)
+import qualified Network.WReq.Lens.TH as TH
 
-makeLenses ''Types.Options
-makeLenses ''HTTP.Cookie
-makeLenses ''HTTP.Proxy
-makeLenses ''HTTP.Response
-makeLenses ''HTTP.Status
-makeLenses ''Types.Link
-makeLenses ''Form.Part
+manager :: Lens' Options (Either ManagerSettings Manager)
+manager = TH.manager
 
-responseHeader :: HTTP.HeaderName -> Traversal' (HTTP.Response body) ByteString
-responseHeader n = responseHeaders . assoc n
+proxy :: Lens' Options (Maybe Proxy)
+proxy = TH.proxy
 
-param :: ByteString -> Lens' Types.Options [ByteString]
-param n = params . assoc2 n
+auth :: Lens' Options (Maybe Auth)
+auth = TH.auth
 
-header :: HTTP.HeaderName -> Lens' Types.Options [ByteString]
-header n = headers . assoc2 n
+header :: HeaderName -> Lens' Options [ByteString]
+header = TH.header
 
-_CookieJar :: Iso' HTTP.CookieJar [HTTP.Cookie]
-_CookieJar = iso HTTP.destroyCookieJar HTTP.createCookieJar
+headers :: Lens' Options [Header]
+headers = TH.headers
 
--- N.B. This is an "illegal" traversal because we can change its cookie_name.
-cookie :: ByteString -> Traversal' Types.Options HTTP.Cookie
-cookie name = cookies . _CookieJar . traverse . filtered
-              (\c -> HTTP.cookie_name c == name)
+param :: ByteString -> Lens' Options [ByteString]
+param = TH.param
 
-responseCookie :: ByteString -> Fold (HTTP.Response body) HTTP.Cookie
-responseCookie name =
-  responseCookieJar . folding HTTP.destroyCookieJar . filtered
-  ((==name) . HTTP.cookie_name)
+params :: Lens' Options [(ByteString, ByteString)]
+params = TH.params
 
-responseLink :: ByteString -> ByteString -> Fold (HTTP.Response body) Types.Link
-responseLink name val =
-  responseHeader "Link" . folding links .
-  filtered (has (linkParams . folded . filtered (== (name,val))))
+redirects :: Lens' Options Int
+redirects = TH.redirects
+
+cookie :: ByteString -> Traversal' Options Cookie
+cookie = TH.cookie
+
+cookies :: Lens' Options CookieJar
+cookies = TH.cookies
+
+cookieName :: Lens' Cookie ByteString
+cookieName = TH.cookieName
+
+cookieValue :: Lens' Cookie ByteString
+cookieValue = TH.cookieValue
+
+cookieExpiryTime :: Lens' Cookie UTCTime
+cookieExpiryTime = TH.cookieExpiryTime
+
+cookieDomain :: Lens' Cookie ByteString
+cookieDomain = TH.cookieDomain
+
+cookiePath :: Lens' Cookie ByteString
+cookiePath = TH.cookiePath
+
+cookieCreationTime :: Lens' Cookie UTCTime
+cookieCreationTime = TH.cookieCreationTime
+
+cookieLastAccessTime :: Lens' Cookie UTCTime
+cookieLastAccessTime = TH.cookieLastAccessTime
+
+cookiePersistent :: Lens' Cookie Bool
+cookiePersistent = TH.cookiePersistent
+
+cookieHostOnly :: Lens' Cookie Bool
+cookieHostOnly = TH.cookieHostOnly
+
+cookieSecureOnly :: Lens' Cookie Bool
+cookieSecureOnly = TH.cookieSecureOnly
+
+cookieHttpOnly :: Lens' Cookie Bool
+cookieHttpOnly = TH.cookieHttpOnly
+
+proxyHost :: Lens' Proxy ByteString
+proxyHost = TH.proxyHost
+
+proxyPort :: Lens' Proxy Int
+proxyPort = TH.proxyPort
+
+responseStatus :: Lens' (Response body) Status
+responseStatus = TH.responseStatus
+
+responseVersion :: Lens' (Response body) HttpVersion
+responseVersion = TH.responseVersion
+
+responseHeader :: HeaderName -> Traversal' (Response body) ByteString
+responseHeader = TH.responseHeader
+
+responseHeaders :: Lens' (Response body) ResponseHeaders
+responseHeaders = TH.responseHeaders
+
+responseLink :: ByteString -> ByteString -> Fold (Response body) Link
+responseLink = TH.responseLink
+
+responseBody :: Lens (Response body0) (Response body1) body0 body1
+responseBody = TH.responseBody
+
+responseCookie :: ByteString -> Fold (Response body) Cookie
+responseCookie = TH.responseCookie
+
+responseCookieJar :: Lens' (Response body) CookieJar
+responseCookieJar = TH.responseCookieJar
+
+statusCode :: Lens' Status Int
+statusCode = TH.statusCode
+
+statusMessage :: Lens' Status ByteString
+statusMessage = TH.statusMessage
+
+linkURL :: Lens' Link ByteString
+linkURL = TH.linkURL
+
+linkParams :: Lens' Link [Param]
+linkParams = TH.linkParams
+
+partName :: Lens' Part Text
+partName = TH.partName
+
+partFilename :: Lens' Part (Maybe String)
+partFilename = TH.partFilename
+
+partContentType :: Lens' Part (Maybe MimeType)
+partContentType = TH.partContentType
+
+partGetBody :: Lens' Part (IO RequestBody)
+partGetBody = TH.partGetBody

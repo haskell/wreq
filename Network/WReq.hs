@@ -65,17 +65,17 @@ module Network.WReq
 
     -- * Cookies
     , Lens.Cookie
-    , Lens.cookie_name
-    , Lens.cookie_value
-    , Lens.cookie_expiry_time
-    , Lens.cookie_domain
-    , Lens.cookie_path
-    , Lens.cookie_creation_time
-    , Lens.cookie_last_access_time
-    , Lens.cookie_persistent
-    , Lens.cookie_host_only
-    , Lens.cookie_secure_only
-    , Lens.cookie_http_only
+    , Lens.cookieName
+    , Lens.cookieValue
+    , Lens.cookieExpiryTime
+    , Lens.cookieDomain
+    , Lens.cookiePath
+    , Lens.cookieCreationTime
+    , Lens.cookieLastAccessTime
+    , Lens.cookiePersistent
+    , Lens.cookieHostOnly
+    , Lens.cookieSecureOnly
+    , Lens.cookieHttpOnly
 
     -- * Configuration
     , Options

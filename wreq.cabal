@@ -33,6 +33,7 @@ library
     Network.WReq.Internal.Lens
     Network.WReq.Internal.Link
     Network.WReq.Internal.Types
+    Network.WReq.Lens.TH
     Network.WReq.Lens.Machinery
     Paths_wreq
   build-depends:
@@ -45,8 +46,10 @@ library
     http-client-tls >= 0.2,
     http-types >= 0.8,
     lens >= 4.1,
+    mime-types,
     template-haskell,
-    text
+    text,
+    time
 
 executable httpbin
   hs-source-dirs: httpbin
