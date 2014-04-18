@@ -75,8 +75,8 @@ either_asJSON :: IO ()
 either_asJSON = do
   r <- get "http://httpbin.org/get"
 
-  -- This first conversion attempt will fail, but will not throw an
-  -- exception that kills execution.
+  -- This first conversion attempt will fail, but because we're using
+  -- Either, it will not throw an exception that kills execution.
   let failing = asJSON r :: Either E.SomeException (Response [Int])
   print failing
 
