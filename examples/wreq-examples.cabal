@@ -20,6 +20,7 @@ executable wreq-example-json-response
     aeson,
     base >= 4.5 && < 5,
     containers,
+    ghc-prim,
     lens,
     text,
     wreq
