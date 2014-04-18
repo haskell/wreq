@@ -1,7 +1,19 @@
 {-# LANGUAGE RankNTypes #-}
 
+-- |
+-- Module      : Network.WReq.Lens
+-- Copyright   : (c) 2014 Bryan O'Sullivan
+--
+-- License     : BSD-style
+-- Maintainer  : bos@serpentine.com
+-- Stability   : experimental
+-- Portability : GHC
+--
+-- HTTP client lens machinery.
+
 module Network.WReq.Lens
     (
+    -- * Configuration
       Options
     , manager
     , proxy
@@ -14,6 +26,12 @@ module Network.WReq.Lens
     , cookie
     , cookies
 
+    -- ** Proxy setup
+    , Proxy
+    , proxyHost
+    , proxyPort
+
+    -- * Cookie
     , Cookie
     , cookieName
     , cookieValue
@@ -27,10 +45,7 @@ module Network.WReq.Lens
     , cookieSecureOnly
     , cookieHttpOnly
 
-    , Proxy
-    , proxyHost
-    , proxyPort
-
+    -- * Response
     , Response
     , responseStatus
     , responseVersion
@@ -41,14 +56,17 @@ module Network.WReq.Lens
     , responseCookie
     , responseCookieJar
 
+    -- ** Status
     , Status
     , statusCode
     , statusMessage
 
+    -- * Link header
     , Link
     , linkURL
     , linkParams
 
+    -- * POST body part
     , Part
     , partName
     , partFilename

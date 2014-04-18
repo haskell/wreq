@@ -16,8 +16,9 @@ maintainer:          bos@serpentine.com
 -- copyright:
 category:            Web
 build-type:          Simple
--- extra-source-files:
 cabal-version:       >=1.10
+extra-source-files:
+  examples/*.hs
 
 library
   ghc-options: -Wall -fwarn-tabs -funbox-strict-fields

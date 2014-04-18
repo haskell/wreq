@@ -96,6 +96,7 @@ module Network.WReq
     , Lens.proxyHost
     , Lens.proxyPort
     -- ** Authentication
+    -- $auth
     , Lens.auth
     , Auth
     , basicAuth
@@ -172,6 +173,8 @@ foldGet f z url = foldGetWith defaults f z url
 foldGetWith :: Options -> (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGetWith opts f z0 url = request id opts url (foldResponseBody f z0)
 
+-- | Convert the body of an HTTP response from JSON to a suitable
+-- Haskell type.
 asJSON :: (Failure JSONError m, FromJSON a) =>
           Response L.ByteString -> m (Response a)
 {-# SPECIALIZE asJSON :: (FromJSON a) =>
@@ -191,11 +194,50 @@ asValue :: (Failure JSONError m) =>
                        -> IO (Response Aeson.Value) #-}
 asValue = asJSON
 
-basicAuth :: S.ByteString -> S.ByteString -> Maybe Auth
+-- $auth
+--
+-- Do not use HTTP authentication unless you are using TLS encryption.
+-- These authentication tokens can easily be captured and reused by an
+-- attacker if transmitted in the clear.
+
+-- | Basic authentication. This consists of a plain username and
+-- password.
+--
+-- Example (note the use of TLS):
+--
+-- @
+--{-\# LANGUAGE OverloadedStrings \#-}
+--let opts = 'defaults' '&' 'Lens.auth' '.~' 'basicAuth' \"user\" \"pass\"
+--'getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
+-- @
+basicAuth :: S.ByteString       -- ^ Username.
+          -> S.ByteString       -- ^ Password.
+          -> Maybe Auth
 basicAuth user pass = Just (BasicAuth user pass)
 
+-- | An OAuth2 bearer token. This is treated by many services as the
+-- equivalent of a username and password.
+--
+-- Example (note the use of TLS):
+--
+-- @
+--{-\# LANGUAGE OverloadedStrings \#-}
+--let opts = 'defaults' '&' 'Lens.auth' '.~' 'oauth2Bearer' \"1234abcd\"
+--'getWith' opts \"https:\/\/public-api.wordpress.com\/rest\/v1\/me\/\"
+-- @
 oauth2Bearer :: S.ByteString -> Maybe Auth
 oauth2Bearer token = Just (OAuth2Bearer token)
 
+-- | A not-quite-standard OAuth2 bearer token (that seems to be used
+-- only by GitHub). This will be treated by whatever services accept
+-- it as the equivalent of a username and password.
+--
+-- Example (note the use of TLS):
+--
+-- @
+--{-\# LANGUAGE OverloadedStrings \#-}
+--let opts = 'defaults' '&' 'Lens.auth' '.~' 'oauth2Token' \"abcd1234\"
+--'getWith' opts \"https:\/\/api.github.com\/user\"
+-- @
 oauth2Token :: S.ByteString -> Maybe Auth
 oauth2Token token = Just (OAuth2Token token)

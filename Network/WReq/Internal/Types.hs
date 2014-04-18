@@ -79,11 +79,11 @@ data Options = Options {
   , auth :: Maybe Auth
   -- ^ Authentication information.
   --
-  -- Example:
+  -- Example (note the use of TLS):
   --
   -- @
   --let opts = 'Network.WReq.defaults' { 'auth' = 'Network.WReq.basicAuth' \"user\" \"pass\" }
-  --'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/basic-auth\/user\/pass\"
+  --'Network.WReq.getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
   -- @
   , headers :: [Header]
   -- ^ Additional headers to send with each request.
@@ -131,8 +131,9 @@ data Options = Options {
 
 -- | Supported authentication types.
 --
--- HTTP authentication should not be considered secure.  Do not use
--- authentication unless you are operating over TLS.
+-- Do not use HTTP authentication unless you are using TLS encryption.
+-- These authentication tokens can easily be captured and reused by an
+-- attacker if transmitted in the clear.
 data Auth = BasicAuth S.ByteString S.ByteString
             -- ^ Basic authentication. This consists of a plain
             -- username and password.
