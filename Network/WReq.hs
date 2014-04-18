@@ -10,24 +10,45 @@
 -- Portability : GHC
 --
 -- A library for client-side HTTP requests, focused on ease of use.
+--
+-- When reading the examples in this module, you should assume the
+-- following environment:
+--
+-- @
+-- \-\- Make it easy to write literal 'S.ByteString' values.
+-- \{\-\# LANGUAGE OverloadedStrings \#\-\}
+--
+-- \-\- Import this module with a short name, so we can easily refer
+-- \-\- to WReq.'head'.
+-- import "Network.WReq" as WReq
+--
+-- \-\- Operators such as ('&') and ('.~').
+-- import "Control.Lens"
+-- @
 
 module Network.WReq
     (
     -- * HTTP verbs
+    -- ** GET
       get
-    , post
-    , head
-    , options
-    , put
-    , delete
-    -- ** Configurable verbs
     , getWith
+    -- ** POST
+    , post
     , postWith
+    -- ** HEAD
+    , head
     , headWith
+    -- ** OPTIONS
+    , options
     , optionsWith
+    -- ** PUT
+    , put
     , putWith
+    -- ** DELETE
+    , delete
     , deleteWith
-    -- ** Incremental consumption of responses
+    -- * Incremental consumption of responses
+    -- ** GET
     , foldGet
     , foldGetWith
 
@@ -108,6 +129,7 @@ import Control.Lens ((.~), (&))
 import Control.Monad (unless)
 import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Aeson (FromJSON)
+import Data.ByteString.Char8 ()
 import Data.Maybe (fromMaybe)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
 import Network.WReq.Internal
@@ -123,6 +145,13 @@ import qualified Network.HTTP.Types as HTTP
 import qualified Network.WReq.Internal.Lens as Int
 import qualified Network.WReq.Lens as Lens
 
+-- | Issue a GET request.
+--
+-- Example:
+--
+-- @
+--'get' \"http:\/\/httpbin.org\/get\"
+-- @
 get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url
 
@@ -130,20 +159,62 @@ withManager :: (Options -> IO a) -> IO a
 withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
   act defaults { manager = Right mgr }
 
+-- | Issue a GET request, using the supplied 'Options'.
+--
+-- Example:
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
+--'getWith' opts \"http:\/\/httpbin.org\/get\"
+-- @
 getWith :: Options -> String -> IO (Response L.ByteString)
 getWith opts url = request id opts url readResponse
 
+-- | Issue a POST request.
+--
+-- Example:
+--
+-- @
+--'post' \"http:\/\/httpbin.org\/post\" ('Aeson.toJSON' [1,2,3])
+-- @
 post :: Postable a => String -> a -> IO (Response L.ByteString)
 post url payload = postWith defaults url payload
 
+-- | Issue a POST request, using the supplied 'Options'.
+--
+-- Example:
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
+--'postWith' opts \"http:\/\/httpbin.org\/post\" ('Aeson.toJSON' [1,2,3])
+-- @
 postWith :: Postable a => Options -> String -> a -> IO (Response L.ByteString)
 postWith opts url payload =
   requestIO (postPayload payload . (Int.method .~ HTTP.methodPost)) opts url
     readResponse
 
+-- | Issue a HEAD request.
+--
+-- Since the name of this function clashes with the "Prelude" function
+-- 'Prelude.head', you will need to either use it qualified or hide
+-- the import of 'Prelude.head' from "Prelude".
+--
+-- Example:
+--
+-- @
+--WReq.'head' \"http:\/\/httpbin.org\/get\"
+-- @
 head :: String -> IO (Response ())
 head = headWith (defaults & Lens.redirects .~ 0)
 
+-- | Issue a HEAD request, using the supplied 'Options'.
+--
+-- Example:
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
+--'headWith' opts \"http:\/\/httpbin.org\/get\"
+-- @
 headWith :: Options -> String -> IO (Response ())
 headWith = emptyMethodWith HTTP.methodHead
 
@@ -155,15 +226,45 @@ putWith opts url payload =
   requestIO (putPayload payload . (Int.method .~ HTTP.methodPut)) opts url
     readResponse
 
+-- | Issue an OPTIONS request.
+--
+-- Example:
+--
+-- @
+--'options' \"http:\/\/httpbin.org\/get\"
+-- @
 options :: String -> IO (Response ())
 options = optionsWith defaults
 
+-- | Issue an OPTIONS request, using the supplied 'Options'.
+--
+-- Example:
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
+--'optionsWith' opts \"http:\/\/httpbin.org\/get\"
+-- @
 optionsWith :: Options -> String -> IO (Response ())
 optionsWith = emptyMethodWith HTTP.methodOptions
 
+-- | Issue a DELETE request.
+--
+-- Example:
+--
+-- @
+--'delete' \"http:\/\/httpbin.org\/delete\"
+-- @
 delete :: String -> IO (Response ())
 delete = deleteWith defaults
 
+-- | Issue a DELETE request, using the supplied 'Options'.
+--
+-- Example:
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.redirects' '.~' 0
+--'deleteWith' opts \"http:\/\/httpbin.org\/delete\"
+-- @
 deleteWith :: Options -> String -> IO (Response ())
 deleteWith = emptyMethodWith HTTP.methodDelete
 
@@ -206,7 +307,6 @@ asValue = asJSON
 -- Example (note the use of TLS):
 --
 -- @
---{-\# LANGUAGE OverloadedStrings \#-}
 --let opts = 'defaults' '&' 'Lens.auth' '.~' 'basicAuth' \"user\" \"pass\"
 --'getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
 -- @
@@ -221,7 +321,6 @@ basicAuth user pass = Just (BasicAuth user pass)
 -- Example (note the use of TLS):
 --
 -- @
---{-\# LANGUAGE OverloadedStrings \#-}
 --let opts = 'defaults' '&' 'Lens.auth' '.~' 'oauth2Bearer' \"1234abcd\"
 --'getWith' opts \"https:\/\/public-api.wordpress.com\/rest\/v1\/me\/\"
 -- @
@@ -235,7 +334,6 @@ oauth2Bearer token = Just (OAuth2Bearer token)
 -- Example (note the use of TLS):
 --
 -- @
---{-\# LANGUAGE OverloadedStrings \#-}
 --let opts = 'defaults' '&' 'Lens.auth' '.~' 'oauth2Token' \"abcd1234\"
 --'getWith' opts \"https:\/\/api.github.com\/user\"
 -- @

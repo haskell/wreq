@@ -1,0 +1,33 @@
+name:                wreq-examples
+version:             0
+synopsis:            wreq examples, not for installing
+description:
+homepage:            https://github.com/bos/wreq
+bug-reports:         https://github.com/bos/wreq/issues
+license:             BSD3
+license-file:        ../LICENSE
+maintainer:          bos@serpentine.com
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable wreq-example-json-response
+  main-is:        AsJSON.hs
+  ghc-options:    -Wall -fwarn-tabs -threaded
+  default-language: Haskell98
+
+  build-depends:
+    aeson,
+    base >= 4.5 && < 5,
+    containers,
+    lens,
+    text,
+    wreq
+
+source-repository head
+  type:     git
+  location: https://github.com/bos/wreq
+
+source-repository head
+  type:     mercurial
+  location: https://bitbucket.org/bos/wreq
