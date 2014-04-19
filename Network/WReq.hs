@@ -25,6 +25,9 @@
 -- \-\- Operators such as ('&') and ('.~').
 -- import "Control.Lens"
 -- @
+--
+-- Some less useful lenses are not exported from this module, and can
+-- instead be found in "Network.WReq.Lens".
 
 module Network.WReq
     (
@@ -65,8 +68,8 @@ module Network.WReq
     , Lens.cookies
     -- ** Authentication
     -- $auth
-    , Lens.auth
     , Auth
+    , Lens.auth
     , basicAuth
     , oauth2Bearer
     , oauth2Token
@@ -74,8 +77,6 @@ module Network.WReq
     , Proxy(Proxy)
     , Lens.proxy
     , httpProxy
-    , Lens.proxyHost
-    , Lens.proxyPort
     -- ** Using a manager with defaults
     , withManager
 
@@ -102,10 +103,8 @@ module Network.WReq
     , Lens.responseHeaders
     , Lens.responseCookieJar
     , Lens.responseStatus
-    , Lens.responseVersion
     , Lens.Status
     , Lens.statusCode
-    , Lens.statusMessage
     -- ** Link headers
     , Lens.Link
     , Lens.linkURL
@@ -116,18 +115,13 @@ module Network.WReq
     , asValue
 
     -- * Cookies
+    -- See "Network.WReq.Lens" for several more cookie-related lenses.
     , Lens.Cookie
     , Lens.cookieName
     , Lens.cookieValue
     , Lens.cookieExpiryTime
     , Lens.cookieDomain
     , Lens.cookiePath
-    , Lens.cookieCreationTime
-    , Lens.cookieLastAccessTime
-    , Lens.cookiePersistent
-    , Lens.cookieHostOnly
-    , Lens.cookieSecureOnly
-    , Lens.cookieHttpOnly
     ) where
 
 import Control.Lens ((.~), (&))
