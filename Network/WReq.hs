@@ -26,8 +26,8 @@
 -- import "Control.Lens"
 -- @
 --
--- Some less useful lenses are not exported from this module, and can
--- instead be found in "Network.WReq.Lens".
+-- There exist some less frequently used lenses that are not exported
+-- from this module, and can instead be found in "Network.WReq.Lens".
 
 module Network.WReq
     (
@@ -115,7 +115,7 @@ module Network.WReq
     , asValue
 
     -- * Cookies
-    -- See "Network.WReq.Lens" for several more cookie-related lenses.
+    -- $cookielenses
     , Lens.Cookie
     , Lens.cookieName
     , Lens.cookieValue
@@ -323,6 +323,19 @@ asJSON resp = do
     Left err  -> throwM (JSONError err)
     Right val -> return (fmap (const val) resp)
 
+
+-- | Convert the body of an HTTP response from JSON to a 'Value'.
+--
+-- In this example, we use 'asValue' in the @IO@ monad, where it will
+-- throw a 'JSONError' exception if the conversion to 'Value' fails.
+--
+-- @
+--import "Data.Aeson.Lens" ('Data.Aeson.Lens.key')
+--
+--foo = do
+--  r <- 'asValue' =<< 'get' \"http:\/\/httpbin.org\/get\"
+--  print (r 'Control.Lens.^?' 'responseBody' . key \"headers\" . key \"User-Agent\")
+-- @
 asValue :: (MonadThrow m) => Response L.ByteString -> m (Response Aeson.Value)
 {-# SPECIALIZE asValue :: Response L.ByteString
                        -> IO (Response Aeson.Value) #-}
@@ -383,3 +396,7 @@ oauth2Token token = Just (OAuth2Token token)
 -- @
 httpProxy :: S.ByteString -> Int -> Maybe Proxy
 httpProxy host port = Just (Proxy host port)
+
+-- $cookielenses
+--
+-- See "Network.WReq.Lens" for several more cookie-related lenses.
