@@ -52,6 +52,33 @@ module Network.WReq
     , foldGet
     , foldGetWith
 
+    -- * Configuration
+    , Options
+    , defaults
+    , Lens.manager
+    , Lens.header
+    , Lens.param
+    , Lens.redirects
+    , Lens.headers
+    , Lens.params
+    , Lens.cookie
+    , Lens.cookies
+    -- ** Authentication
+    -- $auth
+    , Lens.auth
+    , Auth
+    , basicAuth
+    , oauth2Bearer
+    , oauth2Token
+    -- ** Proxy settings
+    , Proxy(Proxy)
+    , Lens.proxy
+    , httpProxy
+    , Lens.proxyHost
+    , Lens.proxyPort
+    -- ** Using a manager with defaults
+    , withManager
+
     -- * Payloads for POST and PUT
     , Payload(..)
     -- ** Multipart form data
@@ -68,17 +95,21 @@ module Network.WReq
 
     -- * Responses
     , Response
+    , Lens.responseBody
+    , Lens.responseHeader
+    , Lens.responseLink
+    , Lens.responseCookie
+    , Lens.responseHeaders
+    , Lens.responseCookieJar
     , Lens.responseStatus
     , Lens.responseVersion
-    , Lens.responseHeader
-    , Lens.responseHeaders
-    , Lens.responseLink
-    , Lens.responseBody
-    , Lens.responseCookie
-    , Lens.responseCookieJar
     , Lens.Status
     , Lens.statusCode
     , Lens.statusMessage
+    -- ** Link headers
+    , Lens.Link
+    , Lens.linkURL
+    , Lens.linkParams
     -- ** Decoding responses
     , JSONError(..)
     , asJSON
@@ -97,32 +128,6 @@ module Network.WReq
     , Lens.cookieHostOnly
     , Lens.cookieSecureOnly
     , Lens.cookieHttpOnly
-
-    -- * Configuration
-    , Options
-    , defaults
-    , Lens.manager
-    , Lens.header
-    , Lens.headers
-    , Lens.param
-    , Lens.params
-    , Lens.redirects
-    , Lens.cookie
-    , Lens.cookies
-    -- ** Using a manager with defaults
-    , withManager
-    -- ** Proxy settings
-    , Lens.proxy
-    , Proxy(Proxy)
-    , Lens.proxyHost
-    , Lens.proxyPort
-    -- ** Authentication
-    -- $auth
-    , Lens.auth
-    , Auth
-    , basicAuth
-    , oauth2Bearer
-    , oauth2Token
     ) where
 
 import Control.Lens ((.~), (&))
@@ -373,3 +378,14 @@ oauth2Bearer token = Just (OAuth2Bearer token)
 -- @
 oauth2Token :: S.ByteString -> Maybe Auth
 oauth2Token token = Just (OAuth2Token token)
+
+-- | Proxy configuration.
+--
+-- Example:
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.proxy' '.~' 'httpProxy' \"localhost\" 8000
+--'getWith' opts \"http:\/\/httpbin.org\/get\"
+-- @
+httpProxy :: S.ByteString -> Int -> Maybe Proxy
+httpProxy host port = Just (Proxy host port)

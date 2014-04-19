@@ -92,7 +92,7 @@ data Options = Options {
   --let opts = 'Network.WReq.defaults' { 'headers' = [(\"Accept\", \"*\/*\")] }
   --'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
   -- @
-  , params :: [(S.ByteString, S.ByteString)]
+  , params :: [Param]
   -- ^ Key-value pairs to assemble into a query string to add to the
   -- end of a URL.
   --
@@ -189,7 +189,7 @@ data JSONError = JSONError String
 
 instance Exception JSONError
 
--- | An element of a @Link:@ header.
+-- | An element of a @Link@ header.
 data Link = Link {
       linkURL :: S.ByteString
     , linkParams :: [Param]

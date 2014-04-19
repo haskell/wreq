@@ -19,10 +19,10 @@ module Network.WReq.Lens
     , proxy
     , auth
     , header
-    , headers
     , param
-    , params
     , redirects
+    , headers
+    , params
     , cookie
     , cookies
 
@@ -47,14 +47,14 @@ module Network.WReq.Lens
 
     -- * Response
     , Response
+    , responseBody
+    , responseHeader
+    , responseLink
+    , responseCookie
+    , responseHeaders
+    , responseCookieJar
     , responseStatus
     , responseVersion
-    , responseHeader
-    , responseHeaders
-    , responseLink
-    , responseBody
-    , responseCookie
-    , responseCookieJar
 
     -- ** Status
     , Status
@@ -88,119 +88,286 @@ import Network.Mime (MimeType)
 import Network.WReq.Types (Auth, Link, Options, Param)
 import qualified Network.WReq.Lens.TH as TH
 
+-- | A lens onto configuration of the connection manager provided by
+-- the http-client package.
+--
+-- In this example, we enable the use of OpenSSL for (hopefully)
+-- secure connections:
+--
+-- @
+--import "OpenSSL.Session" ('OpenSSL.Session.context')
+--import "Network.HTTP.Client.OpenSSL"
+--
+--let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'manager' 'Control.Lens..~' Left ('Network.HTTP.Client.OpenSSL.opensslManagerSettings' 'OpenSSL.Session.context')
+--'Network.HTTP.Client.OpenSSL.withOpenSSL' $
+--  'Network.WReq.getWith' opts \"https:\/\/httpbin.org\/get\"
+-- @
 manager :: Lens' Options (Either ManagerSettings Manager)
 manager = TH.manager
 
+-- | A lens onto proxy configuration.
+--
+-- Example:
+--
+-- @
+--let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'proxy' 'Control.Lens..~' 'Network.WReq.httpProxy' \"localhost\" 8000
+--'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+-- @
 proxy :: Lens' Options (Maybe Proxy)
 proxy = TH.proxy
 
+-- | A lens onto request authentication.
+--
+-- Example (note the use of TLS):
+--
+-- @
+--let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'Lens.auth' 'Control.Lens..~' 'Network.WReq.basicAuth' \"user\" \"pass\"
+--'Network.WReq.getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
+-- @
 auth :: Lens' Options (Maybe Auth)
 auth = TH.auth
 
+-- | A lens onto all headers with the given name (there can
+-- legitimately be zero or more).
+--
+-- Example:
+--
+-- @
+--let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'header' \"Accept\" 'Control.Lens..~' [\"*\/*\"]
+--'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+-- @
 header :: HeaderName -> Lens' Options [ByteString]
 header = TH.header
 
+-- | A lens onto all headers (there can legitimately be zero or more).
+--
+-- In this example, we print all the headers sent by default with
+-- every request.
+--
+-- @
+--print ('Network.WReq.defaults' 'Control.Lens.^.' 'headers')
+-- @
 headers :: Lens' Options [Header]
 headers = TH.headers
 
+-- | A lens onto all query parameters with the given name (there can
+-- legitimately be zero or more).
+--
+-- In this example, we construct the query URL
+-- \"@http:\/\/httpbin.org\/get?foo=bar&foo=quux@\".
+--
+-- @
+--let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'param' \"foo\" 'Control.Lens..~' [\"bar\", \"quux\"]
+--'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+-- @
 param :: ByteString -> Lens' Options [ByteString]
 param = TH.param
 
-params :: Lens' Options [(ByteString, ByteString)]
+-- | A lens onto all query parameters.
+params :: Lens' Options [Param]
 params = TH.params
 
+-- | A lens onto the maximum number of redirects that will be followed
+-- before an exception is thrown.
+--
+-- In this example, a 'Network.HTTP.Client.HttpException' will be
+-- thrown with a 'Network.HTTP.Client.TooManyRedirects' constructor,
+-- because the maximum number of redirects allowed will be exceeded.
+--
+-- @
+--let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'redirects' 'Control.Lens..~' 3
+--'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/redirect\/5\"
+-- @
 redirects :: Lens' Options Int
 redirects = TH.redirects
 
+-- | A traversal onto the cookie with the given name, if one exists.
 cookie :: ByteString -> Traversal' Options Cookie
 cookie = TH.cookie
 
+-- | A lens onto all cookies.
 cookies :: Lens' Options CookieJar
 cookies = TH.cookies
 
+-- | A lens onto the name of a cookie.
 cookieName :: Lens' Cookie ByteString
 cookieName = TH.cookieName
 
+-- | A lens onto the value of a cookie.
 cookieValue :: Lens' Cookie ByteString
 cookieValue = TH.cookieValue
 
+-- | A lens onto the expiry time of a cookie.
 cookieExpiryTime :: Lens' Cookie UTCTime
 cookieExpiryTime = TH.cookieExpiryTime
 
+-- | A lens onto the domain of a cookie.
 cookieDomain :: Lens' Cookie ByteString
 cookieDomain = TH.cookieDomain
 
+-- | A lens onto the path of a cookie.
 cookiePath :: Lens' Cookie ByteString
 cookiePath = TH.cookiePath
 
+-- | A lens onto the creation time of a cookie.
 cookieCreationTime :: Lens' Cookie UTCTime
 cookieCreationTime = TH.cookieCreationTime
 
+-- | A lens onto the last access time of a cookie.
 cookieLastAccessTime :: Lens' Cookie UTCTime
 cookieLastAccessTime = TH.cookieLastAccessTime
 
+-- | A lens onto whether a cookie is persistent across sessions (also
+-- known as a \"tracking cookie\").
 cookiePersistent :: Lens' Cookie Bool
 cookiePersistent = TH.cookiePersistent
 
+-- | A lens onto whether a cookie is host-only.
 cookieHostOnly :: Lens' Cookie Bool
 cookieHostOnly = TH.cookieHostOnly
 
+-- | A lens onto whether a cookie is secure-only, such that it will
+-- only be used over TLS.
 cookieSecureOnly :: Lens' Cookie Bool
 cookieSecureOnly = TH.cookieSecureOnly
 
+-- | A lens onto whether a cookie is \"HTTP-only\".
+--
+-- Such cookies should be used only by browsers when transmitting HTTP
+-- requests.  They must be unavailable in non-browser environments,
+-- such as when executing JavaScript scripts.
 cookieHttpOnly :: Lens' Cookie Bool
 cookieHttpOnly = TH.cookieHttpOnly
 
+-- | A lens onto the hostname portion of a proxy configuration.
 proxyHost :: Lens' Proxy ByteString
 proxyHost = TH.proxyHost
 
+-- | A lens onto the TCP port number of a proxy configuration.
 proxyPort :: Lens' Proxy Int
 proxyPort = TH.proxyPort
 
+-- | A lens onto the status of an HTTP response.
 responseStatus :: Lens' (Response body) Status
 responseStatus = TH.responseStatus
 
+-- | A lens onto the version of an HTTP response.
 responseVersion :: Lens' (Response body) HttpVersion
 responseVersion = TH.responseVersion
 
-responseHeader :: HeaderName -> Traversal' (Response body) ByteString
+-- | A lens onto all matching named headers in an HTTP response.
+--
+-- To access exactly one header (the result will be the empty string if
+-- there is no match), use the ('Control.Lens.^.') operator.
+--
+-- @
+--r <- 'Network.WReq.get' \"http:\/\/httpbin.org\/get\"
+--print (r 'Control.Lens.^.' 'responseHeader' \"Content-Type\")
+-- @
+--
+-- To access at most one header (the result will be 'Nothing' if there
+-- is no match), use the ('Control.Lens.^?') operator.
+--
+-- @
+--r <- 'Network.WReq.get' \"http:\/\/httpbin.org\/get\"
+--print (r 'Control.Lens.^?' 'responseHeader' \"Content-Transfer-Encoding\")
+-- @
+--
+-- To access all (zero or more) matching headers, use the
+-- ('Control.Lens.^..') operator.
+--
+-- @
+--r <- 'Network.WReq.get' \"http:\/\/httpbin.org\/get\"
+--print (r 'Control.Lens.^..' 'responseHeader' \"Set-Cookie\")
+-- @
+responseHeader :: HeaderName
+               -- ^ Header name to match.
+               -> Traversal' (Response body) ByteString
 responseHeader = TH.responseHeader
 
+-- | A lens onto all headers in an HTTP response.
 responseHeaders :: Lens' (Response body) ResponseHeaders
 responseHeaders = TH.responseHeaders
 
-responseLink :: ByteString -> ByteString -> Fold (Response body) Link
+-- | A fold over @Link@ headers, matching on both parameter name
+-- and value.
+--
+-- For example, here is a @Link@ header returned by the GitHub search API.
+--
+-- > Link:
+-- >   <https://api.github.com/search/code?q=addClass+user%3Amozilla&page=2>; rel="next",
+-- >   <https://api.github.com/search/code?q=addClass+user%3Amozilla&page=34>; rel="last"
+--
+-- And here is an example of how we can retrieve the URL for the @next@ link
+-- programatically.
+--
+-- @
+--r <- 'Network.WReq.get' \"https:\/\/api.github.com\/search\/code?q=addClass+user:mozilla\"
+--print (r 'Control.Lens.^?' 'responseLink' \"rel\" \"next\" . 'linkURL')
+-- @
+responseLink :: ByteString
+             -- ^ Parameter name to match.
+             -> ByteString
+             -- ^ Parameter value to match.
+             -> Fold (Response body) Link
 responseLink = TH.responseLink
 
+-- | A lens onto the body of a response.
+--
+-- @
+--r <- 'Network.WReq.get' \"http:\/\/httpbin.org\/get\"
+--print (r 'Control.Lens.^.' 'responseBody')
+-- @
 responseBody :: Lens (Response body0) (Response body1) body0 body1
 responseBody = TH.responseBody
 
-responseCookie :: ByteString -> Fold (Response body) Cookie
+-- | A fold over any cookies that match the given name.
+--
+-- @
+--r <- 'Network.WReq.get' \"http:\/\/www.nytimes.com\/\"
+--print (r 'Control.Lens.^?' responseCookie \"RMID\")
+-- @
+responseCookie :: ByteString
+               -- ^ Name of cookie to match.
+               -> Fold (Response body) Cookie
 responseCookie = TH.responseCookie
 
+-- | A lens onto all cookies set in the response.
 responseCookieJar :: Lens' (Response body) CookieJar
 responseCookieJar = TH.responseCookieJar
 
+-- | A lens onto the numeric identifier of an HTTP status.
 statusCode :: Lens' Status Int
 statusCode = TH.statusCode
 
+-- | A lens onto the textual description of an HTTP status.
 statusMessage :: Lens' Status ByteString
 statusMessage = TH.statusMessage
 
+-- | A lens onto the URL portion of a @Link@ element.
 linkURL :: Lens' Link ByteString
 linkURL = TH.linkURL
 
+-- | A lens onto the parameters of a @Link@ element.
 linkParams :: Lens' Link [Param]
 linkParams = TH.linkParams
 
+-- | A lens onto the name of the @<input>@ element associated with
+-- part of a multipart form upload.
 partName :: Lens' Part Text
 partName = TH.partName
 
+-- | A lens onto the filename associated with part of a multipart form
+-- upload.
 partFilename :: Lens' Part (Maybe String)
 partFilename = TH.partFilename
 
-partContentType :: Lens' Part (Maybe MimeType)
+-- | A lens onto the content-type associated with part of a multipart
+-- form upload.
+partContentType :: Traversal' Part (Maybe MimeType)
 partContentType = TH.partContentType
 
+-- | A lens onto the code that fetches the data associated with part
+-- of a multipart form upload.
 partGetBody :: Lens' Part (IO RequestBody)
 partGetBody = TH.partGetBody
