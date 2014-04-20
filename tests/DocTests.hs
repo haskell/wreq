@@ -39,5 +39,5 @@ getDistDir :: IO FilePath
 getDistDir = do
   names <- getDirectoryContents "dist"
   return $ case filter ("dist-sandbox-" `isPrefixOf`) names of
-             (d:ds) -> "dist/" ++ d
-             _      -> "dist"
+             (d:_) -> "dist/" ++ d
+             _     -> "dist"
