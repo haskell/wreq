@@ -190,8 +190,8 @@ class FormValue a where
     renderFormValue :: a -> S.ByteString
     -- ^ Render the given value.
 
--- | A key\/value parameter to an
--- \"@application\/x-www-form-urlencoded@\" POST body.
+-- | A key\/value pair for an @application\/x-www-form-urlencoded@
+-- POST request body.
 data FormParam where
     (:=) :: (FormValue v) => S.ByteString -> v -> FormParam
 

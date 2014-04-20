@@ -28,7 +28,7 @@
 -- import "Data.Aeson" ('Data.Aeson.toJSON')
 --
 -- \-\- Easy traversal of JSON data.
--- import "Data.Aeson.Lens" ('Data.Aeson.Lens.key')
+-- import "Data.Aeson.Lens" ('Data.Aeson.Lens.key', 'Data.Aeson.Lens.nth')
 -- @
 --
 -- There exist some less frequently used lenses that are not exported
@@ -41,6 +41,7 @@ module Network.Wreq
       get
     , getWith
     -- ** POST
+    -- $postable
     , post
     , postWith
     -- ** HEAD
@@ -87,15 +88,15 @@ module Network.Wreq
 
     -- * Payloads for POST and PUT
     , Payload(..)
+    -- ** URL-encoded form data
+    , FormParam(..)
+    , FormValue(..)
     -- ** Multipart form data
     , Form.Part
     , Lens.partName
     , Lens.partFilename
     , Lens.partContentType
     , Lens.partGetBody
-    -- ** URL-encoded form data
-    , FormParam(..)
-    , FormValue(..)
     -- *** Smart constructors
     , Form.partBS
     , Form.partLBS
@@ -387,8 +388,6 @@ asJSON resp = do
 -- throw a 'JSONError' exception if the conversion to 'Value' fails.
 --
 -- @
---import "Data.Aeson.Lens" ('Data.Aeson.Lens.key')
---
 --foo = do
 --  r <- 'asValue' =<< 'get' \"http:\/\/httpbin.org\/get\"
 --  print (r 'Control.Lens.^?' 'responseBody' . key \"headers\" . key \"User-Agent\")
@@ -476,12 +475,48 @@ partString name value = Form.partBS name (encodeUtf8 (T.pack value))
 
 -- $cookielenses
 --
--- See "Network.Wreq.Lens" for several more cookie-related lenses.
+-- These are only the most frequently-used cookie-related lenses.  See
+-- "Network.Wreq.Lens" for the full accounting of them all.
+
+-- $postable
+--
+-- The 'Postable' class determines which Haskell types can be used as
+-- POST payloads.
+--
+-- 'Form.Part' and ['Form.Part'] give a request body with a
+-- @Content-Type@ of @multipart/form-data@.  Constructor functions
+-- include 'partText' and 'Form.partFile'.
+--
+-- >>> r <- post "http://httpbin.org/post" (partText "hello" "world")
+-- >>> r ^? responseBody . key "form" . key "hello"
+-- Just (String "world")
+--
+-- ('S.ByteString', 'S.ByteString') and 'FormParam' (and lists of
+-- each) give a request body with a @Content-Type@ of
+-- @application/x-www-form-urlencoded@. The easiest way to use this is
+-- via the (':=') constructor.
+--
+-- >>> r <- post "http://httpbin.org/post" ["num" := 31337, "str" := "foo"]
+-- >>> r ^? responseBody . key "form" . key "num"
+-- Just (String "31337")
+--
+-- The \"magical\" type conversion on the right-hand side of ':='
+-- above is due to the 'FormValue' class. This package provides
+-- sensible instances for the standard string and number types.
+--
+-- The 'Aeson.Value' type gives a JSON request body with a
+-- @Content-Type@ of @application/json@. Any instance of
+-- 'Aeson.ToJSON' can of course be converted to a 'Aeson.Value' using
+-- 'Aeson.toJSON'.
+--
+-- >>> r <- post "http://httpbin.org/post" (toJSON [1,2,3])
+-- >>> r ^? responseBody . key "json" . nth 0
+-- Just (Number 1.0)
 
 -- $setup
 --
 -- >>> :set -XOverloadedStrings
 -- >>> import Control.Lens
 -- >>> import Data.Aeson (toJSON)
--- >>> import Data.Aeson.Lens (key)
+-- >>> import Data.Aeson.Lens (key, nth)
 -- >>> import Network.Wreq
