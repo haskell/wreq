@@ -32,7 +32,7 @@
 -- @
 --
 -- There exist some less frequently used lenses that are not exported
--- from this module, and can instead be found in "Network.Wreq.Lens".
+-- from this module; these can instead be found in "Network.Wreq.Lens".
 
 module Network.Wreq
     (
