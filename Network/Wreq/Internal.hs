@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP, GADTs, OverloadedStrings #-}
 
-module Network.WReq.Internal
+module Network.Wreq.Internal
     (
       defaults
     , defaultManagerSettings
@@ -19,16 +19,16 @@ import Data.Version (showVersion)
 import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Network.WReq.Internal.Lens (setHeader)
-import Network.WReq.Types (Auth(..), Options(..))
+import Network.Wreq.Internal.Lens (setHeader)
+import Network.Wreq.Types (Auth(..), Options(..))
 import Prelude hiding (head)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
-import qualified Network.WReq.Internal.Lens as Lens
-import qualified Network.WReq.Lens as Lens
+import qualified Network.Wreq.Internal.Lens as Lens
+import qualified Network.Wreq.Lens as Lens
 
 -- This mess allows this module to continue to load during interactive
 -- development in ghci :-(

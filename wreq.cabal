@@ -23,17 +23,17 @@ library
   default-language: Haskell98
 
   exposed-modules:
-    Network.WReq
-    Network.WReq.Lens
-    Network.WReq.Session
-    Network.WReq.Types
+    Network.Wreq
+    Network.Wreq.Lens
+    Network.Wreq.Session
+    Network.Wreq.Types
   other-modules:
-    Network.WReq.Internal
-    Network.WReq.Internal.Lens
-    Network.WReq.Internal.Link
-    Network.WReq.Internal.Types
-    Network.WReq.Lens.TH
-    Network.WReq.Lens.Machinery
+    Network.Wreq.Internal
+    Network.Wreq.Internal.Lens
+    Network.Wreq.Internal.Link
+    Network.Wreq.Internal.Types
+    Network.Wreq.Lens.TH
+    Network.Wreq.Lens.Machinery
     Paths_wreq
   build-depends:
     aeson >= 0.7,

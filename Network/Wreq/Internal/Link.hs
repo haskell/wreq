@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Network.WReq.Internal.Link
+module Network.Wreq.Internal.Link
        (
          links
        ) where
@@ -8,7 +8,7 @@ module Network.WReq.Internal.Link
 import Control.Applicative ((<$>), (<*>), (*>), (<*), many)
 import Data.Attoparsec.ByteString.Char8 as A8
 import Data.ByteString (ByteString)
-import Network.WReq.Types (Link(..))
+import Network.Wreq.Types (Link(..))
 import qualified Data.Attoparsec.ByteString as A
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as B8

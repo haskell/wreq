@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 
 -- |
--- Module      : Network.WReq
+-- Module      : Network.Wreq
 -- Copyright   : (c) 2014 Bryan O'Sullivan
 --
 -- License     : BSD-style
@@ -19,17 +19,17 @@
 -- \{\-\# LANGUAGE OverloadedStrings \#\-\}
 --
 -- \-\- Import this module with a short name, so we can easily refer
--- \-\- to WReq.'head'.
--- import "Network.WReq" as WReq
+-- \-\- to Wreq.'head'.
+-- import "Network.Wreq" as Wreq
 --
 -- \-\- Operators such as ('&') and ('.~').
 -- import "Control.Lens"
 -- @
 --
 -- There exist some less frequently used lenses that are not exported
--- from this module, and can instead be found in "Network.WReq.Lens".
+-- from this module, and can instead be found in "Network.Wreq.Lens".
 
-module Network.WReq
+module Network.Wreq
     (
     -- * HTTP verbs
     -- ** GET
@@ -131,8 +131,8 @@ import Data.Aeson (FromJSON)
 import Data.ByteString.Char8 ()
 import Data.Maybe (fromMaybe)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
-import Network.WReq.Internal
-import Network.WReq.Types (Auth(..), JSONError(..), Options(..), Payload(..),
+import Network.Wreq.Internal
+import Network.Wreq.Types (Auth(..), JSONError(..), Options(..), Payload(..),
                            Postable(..), Putable(..))
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
@@ -141,8 +141,8 @@ import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.HTTP.Types as HTTP
-import qualified Network.WReq.Internal.Lens as Int
-import qualified Network.WReq.Lens as Lens
+import qualified Network.Wreq.Internal.Lens as Int
+import qualified Network.Wreq.Lens as Lens
 
 -- | Issue a GET request.
 --
@@ -201,7 +201,7 @@ postWith opts url payload =
 -- Example:
 --
 -- @
---WReq.'head' \"http:\/\/httpbin.org\/get\"
+--Wreq.'head' \"http:\/\/httpbin.org\/get\"
 -- @
 head :: String -> IO (Response ())
 head = headWith (defaults & Lens.redirects .~ 0)
@@ -399,4 +399,4 @@ httpProxy host port = Just (Proxy host port)
 
 -- $cookielenses
 --
--- See "Network.WReq.Lens" for several more cookie-related lenses.
+-- See "Network.Wreq.Lens" for several more cookie-related lenses.

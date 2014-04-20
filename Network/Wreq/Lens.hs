@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 
 -- |
--- Module      : Network.WReq.Lens
+-- Module      : Network.Wreq.Lens
 -- Copyright   : (c) 2014 Bryan O'Sullivan
 --
 -- License     : BSD-style
@@ -11,7 +11,7 @@
 --
 -- HTTP client lens machinery.
 
-module Network.WReq.Lens
+module Network.Wreq.Lens
     (
     -- * Configuration
       Options
@@ -85,8 +85,8 @@ import Network.HTTP.Types.Header (Header, HeaderName, ResponseHeaders)
 import Network.HTTP.Types.Status (Status)
 import Network.HTTP.Types.Version (HttpVersion)
 import Network.Mime (MimeType)
-import Network.WReq.Types (Auth, Link, Options, Param)
-import qualified Network.WReq.Lens.TH as TH
+import Network.Wreq.Types (Auth, Link, Options, Param)
+import qualified Network.Wreq.Lens.TH as TH
 
 -- | A lens onto configuration of the connection manager provided by
 -- the http-client package.
@@ -98,9 +98,9 @@ import qualified Network.WReq.Lens.TH as TH
 --import "OpenSSL.Session" ('OpenSSL.Session.context')
 --import "Network.HTTP.Client.OpenSSL"
 --
---let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'manager' 'Control.Lens..~' Left ('Network.HTTP.Client.OpenSSL.opensslManagerSettings' 'OpenSSL.Session.context')
+--let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'manager' 'Control.Lens..~' Left ('Network.HTTP.Client.OpenSSL.opensslManagerSettings' 'OpenSSL.Session.context')
 --'Network.HTTP.Client.OpenSSL.withOpenSSL' $
---  'Network.WReq.getWith' opts \"https:\/\/httpbin.org\/get\"
+--  'Network.Wreq.getWith' opts \"https:\/\/httpbin.org\/get\"
 -- @
 manager :: Lens' Options (Either ManagerSettings Manager)
 manager = TH.manager
@@ -110,8 +110,8 @@ manager = TH.manager
 -- Example:
 --
 -- @
---let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'proxy' 'Control.Lens..~' 'Network.WReq.httpProxy' \"localhost\" 8000
---'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+--let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'proxy' 'Control.Lens..~' 'Network.Wreq.httpProxy' \"localhost\" 8000
+--'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
 proxy :: Lens' Options (Maybe Proxy)
 proxy = TH.proxy
@@ -121,8 +121,8 @@ proxy = TH.proxy
 -- Example (note the use of TLS):
 --
 -- @
---let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'Lens.auth' 'Control.Lens..~' 'Network.WReq.basicAuth' \"user\" \"pass\"
---'Network.WReq.getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
+--let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'Lens.auth' 'Control.Lens..~' 'Network.Wreq.basicAuth' \"user\" \"pass\"
+--'Network.Wreq.getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
 -- @
 auth :: Lens' Options (Maybe Auth)
 auth = TH.auth
@@ -133,8 +133,8 @@ auth = TH.auth
 -- Example:
 --
 -- @
---let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'header' \"Accept\" 'Control.Lens..~' [\"*\/*\"]
---'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+--let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'header' \"Accept\" 'Control.Lens..~' [\"*\/*\"]
+--'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
 header :: HeaderName -> Lens' Options [ByteString]
 header = TH.header
@@ -145,7 +145,7 @@ header = TH.header
 -- every request.
 --
 -- @
---print ('Network.WReq.defaults' 'Control.Lens.^.' 'headers')
+--print ('Network.Wreq.defaults' 'Control.Lens.^.' 'headers')
 -- @
 headers :: Lens' Options [Header]
 headers = TH.headers
@@ -157,8 +157,8 @@ headers = TH.headers
 -- \"@http:\/\/httpbin.org\/get?foo=bar&foo=quux@\".
 --
 -- @
---let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'param' \"foo\" 'Control.Lens..~' [\"bar\", \"quux\"]
---'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+--let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'param' \"foo\" 'Control.Lens..~' [\"bar\", \"quux\"]
+--'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
 param :: ByteString -> Lens' Options [ByteString]
 param = TH.param
@@ -175,8 +175,8 @@ params = TH.params
 -- because the maximum number of redirects allowed will be exceeded.
 --
 -- @
---let opts = 'Network.WReq.defaults' 'Control.Lens.&' 'redirects' 'Control.Lens..~' 3
---'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/redirect\/5\"
+--let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'redirects' 'Control.Lens..~' 3
+--'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/redirect\/5\"
 -- @
 redirects :: Lens' Options Int
 redirects = TH.redirects
@@ -261,7 +261,7 @@ responseVersion = TH.responseVersion
 -- there is no match), use the ('Control.Lens.^.') operator.
 --
 -- @
---r <- 'Network.WReq.get' \"http:\/\/httpbin.org\/get\"
+--r <- 'Network.Wreq.get' \"http:\/\/httpbin.org\/get\"
 --print (r 'Control.Lens.^.' 'responseHeader' \"Content-Type\")
 -- @
 --
@@ -269,7 +269,7 @@ responseVersion = TH.responseVersion
 -- is no match), use the ('Control.Lens.^?') operator.
 --
 -- @
---r <- 'Network.WReq.get' \"http:\/\/httpbin.org\/get\"
+--r <- 'Network.Wreq.get' \"http:\/\/httpbin.org\/get\"
 --print (r 'Control.Lens.^?' 'responseHeader' \"Content-Transfer-Encoding\")
 -- @
 --
@@ -277,7 +277,7 @@ responseVersion = TH.responseVersion
 -- ('Control.Lens.^..') operator.
 --
 -- @
---r <- 'Network.WReq.get' \"http:\/\/httpbin.org\/get\"
+--r <- 'Network.Wreq.get' \"http:\/\/httpbin.org\/get\"
 --print (r 'Control.Lens.^..' 'responseHeader' \"Set-Cookie\")
 -- @
 responseHeader :: HeaderName
@@ -302,7 +302,7 @@ responseHeaders = TH.responseHeaders
 -- programatically.
 --
 -- @
---r <- 'Network.WReq.get' \"https:\/\/api.github.com\/search\/code?q=addClass+user:mozilla\"
+--r <- 'Network.Wreq.get' \"https:\/\/api.github.com\/search\/code?q=addClass+user:mozilla\"
 --print (r 'Control.Lens.^?' 'responseLink' \"rel\" \"next\" . 'linkURL')
 -- @
 responseLink :: ByteString
@@ -315,7 +315,7 @@ responseLink = TH.responseLink
 -- | A lens onto the body of a response.
 --
 -- @
---r <- 'Network.WReq.get' \"http:\/\/httpbin.org\/get\"
+--r <- 'Network.Wreq.get' \"http:\/\/httpbin.org\/get\"
 --print (r 'Control.Lens.^.' 'responseBody')
 -- @
 responseBody :: Lens (Response body0) (Response body1) body0 body1
@@ -324,7 +324,7 @@ responseBody = TH.responseBody
 -- | A fold over any cookies that match the given name.
 --
 -- @
---r <- 'Network.WReq.get' \"http:\/\/www.nytimes.com\/\"
+--r <- 'Network.Wreq.get' \"http:\/\/www.nytimes.com\/\"
 --print (r 'Control.Lens.^?' responseCookie \"RMID\")
 -- @
 responseCookie :: ByteString

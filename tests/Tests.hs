@@ -18,9 +18,9 @@ import Data.Text (pack)
 import Network.HTTP.Client (HttpException(..))
 import Network.HTTP.Types.Status (status200, status401)
 import Network.HTTP.Types.Version (http11)
-import Network.WReq
-import Network.WReq.Lens
-import qualified Network.WReq.Session as Session
+import Network.Wreq
+import Network.Wreq.Lens
+import qualified Network.Wreq.Session as Session
 import Prelude hiding (head)
 import System.IO (hClose, hPutStr)
 import System.IO.Temp (withSystemTempFile)

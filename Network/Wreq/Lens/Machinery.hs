@@ -1,4 +1,4 @@
-module Network.WReq.Lens.Machinery
+module Network.Wreq.Lens.Machinery
     (
       makeLenses
     , toCamelCase

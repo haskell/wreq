@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes, TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Network.WReq.Internal.Lens
+module Network.Wreq.Internal.Lens
     (
       HTTP.Request
     , method
@@ -31,7 +31,7 @@ import Control.Lens hiding (makeLenses)
 import Data.List (partition)
 import Network.HTTP.Client (Request)
 import Network.HTTP.Types (HeaderName)
-import Network.WReq.Lens.Machinery (makeLenses)
+import Network.Wreq.Lens.Machinery (makeLenses)
 import qualified Data.ByteString as S
 import qualified Network.HTTP.Client as HTTP
 

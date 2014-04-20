@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleInstances, GADTs, RecordWildCards #-}
 
 -- |
--- Module      : Network.WReq.Internal.Types
+-- Module      : Network.Wreq.Internal.Types
 -- Copyright   : (c) 2014 Bryan O'Sullivan
 --
 -- License     : BSD-style
@@ -11,7 +11,7 @@
 --
 -- HTTP client types.
 
-module Network.WReq.Internal.Types
+module Network.Wreq.Internal.Types
     (
     -- * Client configuration
       Options(..)
@@ -49,8 +49,8 @@ data Options = Options {
   -- 'Manager' will be created for each request.
   --
   -- /Note/: when issuing HTTP requests using 'Options'-based
-  -- functions from the the "Network.WReq.Session" module
-  -- ('Network.WReq.Session.getWith', 'Network.WReq.Session.putWith',
+  -- functions from the the "Network.Wreq.Session" module
+  -- ('Network.Wreq.Session.getWith', 'Network.Wreq.Session.putWith',
   -- etc.), this field will be ignored.
   --
   -- An example of using a specific manager:
@@ -59,8 +59,8 @@ data Options = Options {
   --import "Network.HTTP.Client" ('Network.HTTP.Client.withManager')
   --
   --'Network.HTTP.Client.withManager' $ \\mgr -> do
-  --  let opts = 'Network.WReq.defaults' { 'manager' = Right mgr }
-  --  'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+  --  let opts = 'Network.Wreq.defaults' { 'manager' = Right mgr }
+  --  'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
   -- @
   --
   -- An example of changing settings (this will use a separate
@@ -71,8 +71,8 @@ data Options = Options {
   --import "Network.HTTP.Client" ('Network.HTTP.Client.defaultManagerSettings')
   --
   --let settings = 'Network.HTTP.Client.defaultManagerSettings' { managerConnCount = 5 }
-  --    opts = 'Network.WReq.defaults' { 'manager' = Left settings }
-  --'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+  --    opts = 'Network.Wreq.defaults' { 'manager' = Left settings }
+  --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
   -- @
   , proxy :: Maybe Proxy
   -- ^ Host name and port for a proxy to use, if any.
@@ -82,15 +82,15 @@ data Options = Options {
   -- Example (note the use of TLS):
   --
   -- @
-  --let opts = 'Network.WReq.defaults' { 'auth' = 'Network.WReq.basicAuth' \"user\" \"pass\" }
-  --'Network.WReq.getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
+  --let opts = 'Network.Wreq.defaults' { 'auth' = 'Network.Wreq.basicAuth' \"user\" \"pass\" }
+  --'Network.Wreq.getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
   -- @
   , headers :: [Header]
   -- ^ Additional headers to send with each request.
   --
   -- @
-  --let opts = 'Network.WReq.defaults' { 'headers' = [(\"Accept\", \"*\/*\")] }
-  --'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+  --let opts = 'Network.Wreq.defaults' { 'headers' = [(\"Accept\", \"*\/*\")] }
+  --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
   -- @
   , params :: [Param]
   -- ^ Key-value pairs to assemble into a query string to add to the
@@ -99,8 +99,8 @@ data Options = Options {
   -- For example, given:
   --
   -- @
-  --let opts = 'Network.WReq.defaults' { params = [(\"sort\", \"ascending\"), (\"key\", \"name\")] }
-  --'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/get\"
+  --let opts = 'Network.Wreq.defaults' { params = [(\"sort\", \"ascending\"), (\"key\", \"name\")] }
+  --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
   -- @
   --
   -- This will generate a URL of the form:
@@ -115,17 +115,17 @@ data Options = Options {
   -- because the maximum number of redirects allowed will be exceeded:
   --
   -- @
-  --let opts = 'Network.WReq.defaults' { 'redirects' = 3 }
-  --'Network.WReq.getWith' opts \"http:\/\/httpbin.org\/redirect/5\"
+  --let opts = 'Network.Wreq.defaults' { 'redirects' = 3 }
+  --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/redirect/5\"
   -- @
   , cookies :: CookieJar
   -- ^ Cookies to set when issuing requests.
   --
   -- /Note/: when issuing HTTP requests using 'Options'-based
-  -- functions from the the "Network.WReq.Session" module
-  -- ('Network.WReq.Session.getWith', 'Network.WReq.Session.putWith',
+  -- functions from the the "Network.Wreq.Session" module
+  -- ('Network.Wreq.Session.getWith', 'Network.Wreq.Session.putWith',
   -- etc.), this field will be used only for the /first/ HTTP request
-  -- to be issued during a 'Network.WReq.Session.Session'. Any changes
+  -- to be issued during a 'Network.Wreq.Session.Session'. Any changes
   -- changes made for subsequent requests will be ignored.
   } deriving (Typeable)
 
@@ -181,8 +181,8 @@ data Payload where
     Raw  :: ContentType -> RequestBody -> Payload
   deriving (Typeable)
 
--- | The error type used by 'Network.WReq.asJSON' and
--- 'Network.WReq.asValue' if a failure occurs when parsing a response
+-- | The error type used by 'Network.Wreq.asJSON' and
+-- 'Network.Wreq.asValue' if a failure occurs when parsing a response
 -- body as JSON.
 data JSONError = JSONError String
                deriving (Show, Typeable)

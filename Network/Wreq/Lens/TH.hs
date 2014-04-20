@@ -2,7 +2,7 @@
     TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Network.WReq.Lens.TH
+module Network.Wreq.Lens.TH
     (
       Types.Options
     , manager
@@ -62,14 +62,14 @@ module Network.WReq.Lens.TH
 import Control.Lens hiding (makeLenses)
 import Control.Lens.TH (defaultRules, lensField, makeLensesWith)
 import Data.ByteString (ByteString)
-import Network.WReq.Internal.Lens (assoc, assoc2)
-import Network.WReq.Lens.Machinery (makeLenses, toCamelCase)
+import Network.Wreq.Internal.Lens (assoc, assoc2)
+import Network.Wreq.Lens.Machinery (makeLenses, toCamelCase)
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.HTTP.Types.Header as HTTP
 import qualified Network.HTTP.Types.Status as HTTP
-import qualified Network.WReq.Types as Types
-import Network.WReq.Internal.Link
+import qualified Network.Wreq.Types as Types
+import Network.Wreq.Internal.Link
 
 makeLenses ''Types.Options
 makeLensesWith (defaultRules & lensField .~ Just . toCamelCase) ''HTTP.Cookie

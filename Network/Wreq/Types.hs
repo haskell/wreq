@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- |
--- Module      : Network.WReq.Types
+-- Module      : Network.Wreq.Types
 -- Copyright   : (c) 2014 Bryan O'Sullivan
 --
 -- License     : BSD-style
@@ -12,7 +12,7 @@
 --
 -- HTTP client types.
 
-module Network.WReq.Types
+module Network.Wreq.Types
     (
     -- * Client configuration
       Options(..)
@@ -33,11 +33,11 @@ import Control.Lens ((&), (.~))
 import Data.Aeson (Value, encode)
 import Network.HTTP.Client (Request)
 import Network.HTTP.Client.MultipartFormData (Part, formDataBody)
-import Network.WReq.Internal.Types
+import Network.Wreq.Internal.Types
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
-import qualified Network.WReq.Internal.Lens as Lens
+import qualified Network.Wreq.Internal.Lens as Lens
 
 instance Postable Part where
     postPayload a = postPayload [a]

@@ -13,7 +13,7 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 import qualified Control.Exception as E
 
-import Network.WReq
+import Network.Wreq
 
 
 -- This Haskell type corresponds to the structure of a response body
