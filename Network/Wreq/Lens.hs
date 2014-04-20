@@ -85,7 +85,7 @@ import Network.HTTP.Types.Header (Header, HeaderName, ResponseHeaders)
 import Network.HTTP.Types.Status (Status)
 import Network.HTTP.Types.Version (HttpVersion)
 import Network.Mime (MimeType)
-import Network.Wreq.Types (Auth, Link, Options, Param)
+import Network.Wreq.Types (Auth, Link, Options)
 import qualified Network.Wreq.Lens.TH as TH
 
 -- | A lens onto configuration of the connection manager provided by
@@ -164,7 +164,7 @@ param :: ByteString -> Lens' Options [ByteString]
 param = TH.param
 
 -- | A lens onto all query parameters.
-params :: Lens' Options [Param]
+params :: Lens' Options [(ByteString, ByteString)]
 params = TH.params
 
 -- | A lens onto the maximum number of redirects that will be followed
@@ -349,7 +349,7 @@ linkURL :: Lens' Link ByteString
 linkURL = TH.linkURL
 
 -- | A lens onto the parameters of a @Link@ element.
-linkParams :: Lens' Link [Param]
+linkParams :: Lens' Link [(ByteString, ByteString)]
 linkParams = TH.linkParams
 
 -- | A lens onto the name of the @<input>@ element associated with

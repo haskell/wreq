@@ -22,7 +22,6 @@ module Network.Wreq.Internal.Types
     , Putable(..)
     -- * Headers
     , ContentType
-    , Param
     , Link(..)
     -- * Errors
     , JSONError(..)
@@ -92,7 +91,7 @@ data Options = Options {
   --let opts = 'Network.Wreq.defaults' { 'headers' = [(\"Accept\", \"*\/*\")] }
   --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
   -- @
-  , params :: [Param]
+  , params :: [(S.ByteString, S.ByteString)]
   -- ^ Key-value pairs to assemble into a query string to add to the
   -- end of a URL.
   --
@@ -161,9 +160,6 @@ instance Show Options where
                               , " }"
                               ]
 
--- | A key\/value pair.
-type Param = (S.ByteString, S.ByteString)
-
 -- | A type that can be converted into a POST request payload.
 class Postable a where
     postPayload :: a -> Request -> IO Request
@@ -192,5 +188,5 @@ instance Exception JSONError
 -- | An element of a @Link@ header.
 data Link = Link {
       linkURL :: S.ByteString
-    , linkParams :: [Param]
+    , linkParams :: [(S.ByteString, S.ByteString)]
     } deriving (Eq, Show, Typeable)

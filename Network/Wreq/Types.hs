@@ -23,7 +23,6 @@ module Network.Wreq.Types
     , Putable(..)
     -- * Headers
     , ContentType
-    , Param
     , Link(..)
     -- * Errors
     , JSONError(..)
@@ -45,10 +44,10 @@ instance Postable Part where
 instance Postable [Part] where
     postPayload = formDataBody
 
-instance Postable [Param] where
+instance Postable [(S.ByteString, S.ByteString)] where
     postPayload ps req = return $ HTTP.urlEncodedBody ps req
 
-instance Postable Param where
+instance Postable (S.ByteString, S.ByteString) where
     postPayload p = postPayload [p]
 
 instance Postable Payload where
