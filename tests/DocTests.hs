@@ -8,13 +8,15 @@ import Control.Applicative ((<$>), (<*>))
 import Control.Monad (filterM)
 import Data.List (isPrefixOf, isSuffixOf)
 import System.Directory
-import System.Environment (getArgs)
+-- import System.Environment (getArgs)
 import System.FilePath ((</>))
 import Test.DocTest (doctest)
 
 main :: IO ()
 main = do
-  args <- getArgs
+  -- doctest chokes on the command line args that cabal test passes in
+  -- args <- getArgs
+  let args = []
   srcs <- getSources
   dist <- getDistDir
   doctest $ args ++ [ "-i."
