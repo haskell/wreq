@@ -37,6 +37,7 @@ executable upload-paste
     filepath,
     lens,
     optparse-applicative,
+    tagsoup,
     text,
     wreq
 

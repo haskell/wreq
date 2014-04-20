@@ -17,10 +17,12 @@ import Control.Lens
 import Data.Char (toLower)
 import Data.Maybe (listToMaybe)
 import Data.Monoid (mempty)
-import Network.Wreq (FormParam((:=)), FormValue(..), post)
+import Network.Wreq (FormParam((:=)), FormValue(..), post, responseBody)
 import Options.Applicative as Opts hiding ((&), header)
 import System.FilePath (takeExtension, takeFileName)
+import Text.HTML.TagSoup
 import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Lazy.Char8 as L
 
 -- A post to lpaste.net can either be private or public (visible in an
 -- index).
@@ -81,7 +83,7 @@ instance FormValue Channel where
 -- We've parameterised the type so that the payload field can either
 -- be a filename or the actual contents of the file.
 data Paste a = Paste {
-    _visibility :: Visibility
+    _private :: Visibility
   , _title :: Maybe String
   , _author :: Maybe String
   , _channel :: Maybe Channel
@@ -115,12 +117,13 @@ upload :: Paste FilePath -> IO ()
 upload p0 = do
   let path = p0 ^. payload
   body <- B.readFile path
+  -- Transform command line options into form contents.
   let p = p0 & payload .~ body
              & title .~ (p0 ^. title <|> Just (takeFileName path))
              & language .~ guessLanguage path p0
   -- The := operator defines a key/value pair for a form.
   resp <- post "http://lpaste.net/new" [
-            "private" := p ^. visibility
+            "private" := p ^. private
           , "title" := p ^. title
           , "author" := p ^. author
           , "channel" := p ^. channel
@@ -128,8 +131,13 @@ upload p0 = do
           , "paste" := p ^. payload
           , "email" := p ^. email
           ]
-  print resp
-  return ()
+  let findURI (TagOpen "strong" [] : TagText "Paste:" : TagClose "strong" :
+               TagOpen "a" [("href",uri)] : _) = Just uri
+      findURI (_:xs) = findURI xs
+      findURI _      = Nothing
+  case findURI (parseTagsOptions parseOptionsFast (resp ^. responseBody)) of
+    Just uri -> L.putStrLn $ "http://lpaste.net" <> uri
+    Nothing  -> putStrLn "no uri in response!?"
 
 main :: IO ()
 main = upload =<< execParser opts
