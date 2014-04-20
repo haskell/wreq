@@ -1,3 +1,6 @@
+-- I don't know who originally wrote this, but I picked it up from
+-- Edward Kmett's folds package.
+
 {-# OPTIONS_GHC -Wall #-}
 module Main (main) where
 
