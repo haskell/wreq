@@ -25,6 +25,21 @@ executable wreq-example-json-response
     text,
     wreq
 
+executable upload-paste
+  main-is:          UploadPaste.hs
+  ghc-options:      -Wall -fwarn-tabs -threaded
+  default-language: Haskell98
+
+  build-depends:
+    aeson,
+    base >= 4.5 && < 5,
+    bytestring,
+    filepath,
+    lens,
+    optparse-applicative,
+    text,
+    wreq
+
 source-repository head
   type:     git
   location: https://github.com/bos/wreq
