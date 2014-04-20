@@ -131,6 +131,9 @@ upload p0 = do
           , "paste" := p ^. payload
           , "email" := p ^. email
           ]
+  -- Since lpaste.net doesn't provide an API and just spits HTML back
+  -- at us, we use tagsoup to look through the tags for the permalink
+  -- of the paste we just uploaded.
   let findURI (TagOpen "strong" [] : TagText "Paste:" : TagClose "strong" :
                TagOpen "a" [("href",uri)] : _) = Just uri
       findURI (_:xs) = findURI xs
