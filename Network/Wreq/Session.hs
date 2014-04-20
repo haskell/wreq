@@ -7,7 +7,7 @@ module Network.Wreq.Session
     -- * HTTP verbs
     , get
     , post
-    , head
+    , head_
     , options
     , put
     , delete
@@ -50,8 +50,8 @@ get = getWith defaults
 post :: Postable a => Session -> String -> a -> IO (Response L.ByteString)
 post = postWith defaults
 
-head :: Session -> String -> IO (Response ())
-head = headWith defaults
+head_ :: Session -> String -> IO (Response ())
+head_ = headWith defaults
 
 options :: Session -> String -> IO (Response ())
 options = optionsWith defaults

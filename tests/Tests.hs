@@ -21,7 +21,6 @@ import Network.HTTP.Types.Version (http11)
 import Network.Wreq
 import Network.Wreq.Lens
 import qualified Network.Wreq.Session as Session
-import Prelude hiding (head)
 import System.IO (hClose, hPutStr)
 import System.IO.Temp (withSystemTempFile)
 import Test.Framework (defaultMain, testGroup)
@@ -60,7 +59,7 @@ multipartPost site =
     assertEqual "POST succeeds" status200 (r ^. responseStatus)
 
 basicHead site = do
-  r <- head (site "/get")
+  r <- head_ (site "/get")
   assertEqual "HEAD succeeds" status200 (r ^. responseStatus)
 
 basicPut site = do
@@ -73,7 +72,7 @@ basicDelete site = do
 
 throwsStatusCode site =
     assertThrows "404 causes exception to be thrown" inspect $
-    head (site "/status/404")
+    head_ (site "/status/404")
   where inspect e = case e of
                       StatusCodeException _ _ _ -> return ()
                       _ -> assertFailure "unexpected exception thrown"
@@ -125,7 +124,7 @@ getGzip site = do
 
 headRedirect site =
   assertThrows "HEAD of redirect throws exception" inspect $
-    head (site "/redirect/3")
+    head_ (site "/redirect/3")
   where inspect e = case e of
                       StatusCodeException status _ _ ->
                         let code = status ^. statusCode

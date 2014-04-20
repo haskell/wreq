@@ -18,9 +18,8 @@
 -- \-\- Make it easy to write literal 'S.ByteString' values.
 -- \{\-\# LANGUAGE OverloadedStrings \#\-\}
 --
--- \-\- Import this module with a short name, so we can easily refer
--- \-\- to Wreq.'head'.
--- import "Network.Wreq" as Wreq
+-- \-\- Our handy module.
+-- import "Network.Wreq"
 --
 -- \-\- Operators such as ('&') and ('.~').
 -- import "Control.Lens"
@@ -39,7 +38,7 @@ module Network.Wreq
     , post
     , postWith
     -- ** HEAD
-    , head
+    , head_
     , headWith
     -- ** OPTIONS
     , options
@@ -194,17 +193,13 @@ postWith opts url payload =
 
 -- | Issue a HEAD request.
 --
--- Since the name of this function clashes with the "Prelude" function
--- 'Prelude.head', you will need to either use it qualified or hide
--- the import of 'Prelude.head' from "Prelude".
---
 -- Example:
 --
 -- @
---Wreq.'head' \"http:\/\/httpbin.org\/get\"
+--'head_' \"http:\/\/httpbin.org\/get\"
 -- @
-head :: String -> IO (Response ())
-head = headWith (defaults & Lens.redirects .~ 0)
+head_ :: String -> IO (Response ())
+head_ = headWith (defaults & Lens.redirects .~ 0)
 
 -- | Issue a HEAD request, using the supplied 'Options'.
 --
