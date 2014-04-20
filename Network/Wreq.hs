@@ -144,7 +144,8 @@ import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import Network.HTTP.Client.Internal (Proxy(..), Response)
 import Network.Wreq.Internal
-import Network.Wreq.Types
+import Network.Wreq.Types (Options)
+import Network.Wreq.Types hiding (Options(..))
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
@@ -155,6 +156,7 @@ import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.Wreq.Internal.Lens as Int
 import qualified Network.Wreq.Lens as Lens
+import qualified Network.Wreq.Types as Wreq
 
 -- | Issue a GET request.
 --
@@ -172,7 +174,7 @@ get url = getWith defaults url
 
 withManager :: (Options -> IO a) -> IO a
 withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
-  act defaults { manager = Right mgr }
+  act defaults { Wreq.manager = Right mgr }
 
 -- | Issue a GET request, using the supplied 'Options'.
 --
@@ -182,6 +184,11 @@ withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
 --let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
 --'getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
+--
+-- >>> let opts = defaults & param "foo" .~ ["bar"]
+-- >>> r <- getWith opts "http://httpbin.org/get"
+-- >>> r ^? responseBody . key "url"
+-- Just (String "http://httpbin.org/get?foo=bar")
 getWith :: Options -> String -> IO (Response L.ByteString)
 getWith opts url = request id opts url readResponse
 
@@ -224,6 +231,10 @@ postWith opts url payload =
 -- @
 --'head_' \"http:\/\/httpbin.org\/get\"
 -- @
+--
+-- >>> r <- head_ "http://httpbin.org/get"
+-- >>> r ^? responseHeader "Content-Type"
+-- Just "application/json"
 head_ :: String -> IO (Response ())
 head_ = headWith (defaults & Lens.redirects .~ 0)
 
@@ -235,12 +246,19 @@ head_ = headWith (defaults & Lens.redirects .~ 0)
 --let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
 --'headWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
+--
+-- >>> let opts = defaults & param "foo" .~ ["bar"]
+-- >>> r <- headWith opts "http://httpbin.org/get"
+-- >>> r ^? responseHeader "Connection"
+-- Just "keep-alive"
 headWith :: Options -> String -> IO (Response ())
 headWith = emptyMethodWith HTTP.methodHead
 
+-- | Issue a PUT request.
 put :: Putable a => String -> a -> IO (Response L.ByteString)
 put url payload = putWith defaults url payload
 
+-- | Issue a PUT request, using the supplied 'Options'.
 putWith :: Putable a => Options -> String -> a -> IO (Response L.ByteString)
 putWith opts url payload =
   requestIO (putPayload payload . (Int.method .~ HTTP.methodPut)) opts url
@@ -253,6 +271,10 @@ putWith opts url payload =
 -- @
 --'options' \"http:\/\/httpbin.org\/get\"
 -- @
+--
+-- >>> r <- options "http://httpbin.org/get"
+-- >>> r ^? responseHeader "Allow"
+-- Just "HEAD, GET, OPTIONS"
 options :: String -> IO (Response ())
 options = optionsWith defaults
 
@@ -264,6 +286,11 @@ options = optionsWith defaults
 --let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
 --'optionsWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
+--
+-- >>> let opts = defaults & param "foo" .~ ["bar"]
+-- >>> r <- optionsWith opts "http://httpbin.org/get"
+-- >>> r ^? responseHeader "Access-Control-Allow-Methods"
+-- Just "GET, POST, PUT, DELETE, PATCH, OPTIONS"
 optionsWith :: Options -> String -> IO (Response ())
 optionsWith = emptyMethodWith HTTP.methodOptions
 
@@ -274,6 +301,10 @@ optionsWith = emptyMethodWith HTTP.methodOptions
 -- @
 --'delete' \"http:\/\/httpbin.org\/delete\"
 -- @
+--
+-- >>> r <- delete "http://httpbin.org/delete"
+-- >>> r ^. responseStatus . statusCode
+-- 200
 delete :: String -> IO (Response ())
 delete = deleteWith defaults
 
@@ -285,6 +316,11 @@ delete = deleteWith defaults
 --let opts = 'defaults' '&' 'Lens.redirects' '.~' 0
 --'deleteWith' opts \"http:\/\/httpbin.org\/delete\"
 -- @
+--
+-- >>> let opts = defaults & redirects .~ 0
+-- >>> r <- deleteWith opts "http://httpbin.org/delete"
+-- >>> r ^. responseStatus . statusCode
+-- 200
 deleteWith :: Options -> String -> IO (Response ())
 deleteWith = emptyMethodWith HTTP.methodDelete
 
@@ -377,6 +413,11 @@ asValue = asJSON
 --let opts = 'defaults' '&' 'Lens.auth' '.~' 'basicAuth' \"user\" \"pass\"
 --'getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
 -- @
+--
+-- >>> let opts = defaults & auth .~ basicAuth "user" "pass"
+-- >>> r <- getWith opts "https://httpbin.org/basic-auth/user/pass"
+-- >>> r ^? responseBody . key "authenticated"
+-- Just (Bool True)
 basicAuth :: S.ByteString       -- ^ Username.
           -> S.ByteString       -- ^ Password.
           -> Maybe Auth
