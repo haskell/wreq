@@ -33,7 +33,9 @@ data Visibility = Private | Public
 instance FormValue Visibility where
   renderFormValue = renderFormValue . show
 
--- The languages that lpaste.net supports.
+-- The languages that lpaste.net supports. It just so happens that if
+-- we convert one of these constructor names to a lower-case string,
+-- it exactly matches what lpaste.net needs in its upload form.
 data Language =
   Haskell | Agda | Assembly | Bash | C | Coq | Cpp | Cs | Diff | Elm | ELisp |
   Erlang | Go | Idris | Java | JavaScript | LiterateHaskell | Lisp |
@@ -42,29 +44,20 @@ data Language =
   deriving (Eq, Show)
 
 instance FormValue Language where
-  renderFormValue lang = renderFormValue $
-    head [name | (_, name, l) <- languages, lang == l]
+  renderFormValue = renderFormValue . fmap toLower . show
 
--- An association between filename suffixes, the name that lpaste.net
--- expects in a form, and our Language type.
-languages :: [([String], String, Language)]
+-- An association between filename suffixes and our Language type.
+languages :: [([String], Language)]
 languages = [
-  ([".hs"], "haskell", Haskell), ([".agda"], "agda", Agda),
-  ([".el"], "elisp", ELisp), ([".ocaml"], "ocaml", OCaml),
-  ([".cl"], "lisp", Lisp), ([".erl"], "erlang", Erlang),
-  ([".lhs"], "literatehaskell", LiterateHaskell),
-  ([".scala"], "scala", Scala), ([".go"], "go", Go),
-  ([".py"], "python", Python), ([".rb"], "ruby", Ruby),
-  ([".elm"], "elm", Elm), ([".idris"], "idris", Idris),
-  ([".prl"], "prolog", Prolog), ([".scm"], "scheme", Scheme),
-  ([".coq"], "coq", Coq), ([".s", ".asm"], "asm", Assembly),
-  ([".sh"], "bash", Bash), ([".c", ".h"], "c", C),
-  ([".cs"], "cs", Cs), ([".tex"], "tex", TeX),
-  ([".cxx", ".cpp", ".cc", ".hxx", ".hpp", ".hh"], "cpp", Cpp),
-  ([".diff", ".patch"], "diff", Diff), ([".java"], "java", Java),
-  ([".js"], "javascript", JavaScript), ([".lua"], "lua", Lua),
-  ([".m"], "objectivec", ObjectiveC), ([".pl", ".pm"], "perl", Perl),
-  ([".smalltalk"], "smalltalk", Smalltalk), ([".sql"], "sql", SQL)
+  ([".hs"], Haskell), ([".agda"], Agda), ([".el"], ELisp), ([".ocaml"], OCaml),
+  ([".cl"], Lisp), ([".erl"], Erlang), ([".lhs"], LiterateHaskell),
+  ([".scala"], Scala), ([".go"], Go), ([".py"], Python), ([".rb"], Ruby),
+  ([".elm"], Elm), ([".idris"], Idris), ([".prl"], Prolog), ([".scm"], Scheme),
+  ([".coq"], Coq), ([".s", ".asm"], Assembly), ([".sh"], Bash),
+  ([".c", ".h"], C), ([".cs"], Cs), ([".tex"], TeX), ([".lua"], Lua),
+  ([".cxx", ".cpp", ".cc", ".hxx", ".hpp", ".hh"], Cpp), ([".pl", ".pm"], Perl),
+  ([".diff", ".patch"], Diff), ([".java"], Java), ([".js"], JavaScript),
+  ([".m"], ObjectiveC), ([".smalltalk"], Smalltalk), ([".sql"], SQL)
   ]
 
 -- An IRC channel to which an announcement of a paste can be posted.
@@ -104,8 +97,8 @@ makeLenses ''Paste
 readLanguage :: Monad m => String -> m Language
 readLanguage l = do
   let ll = toLower <$> l
-      ms = [lang | (suffixes, name, lang) <- languages,
-            ll == name || ll `elem` (tail <$> suffixes)]
+      ms = [lang | (suffixes, lang) <- languages,
+            ll == (toLower <$> show lang) || ll `elem` (tail <$> suffixes)]
   case ms of
     [m] -> return m
     _   -> fail $ "unsupported language " ++ show l
@@ -115,7 +108,7 @@ readLanguage l = do
 guessLanguage :: FilePath -> Paste a -> Maybe Language
 guessLanguage filename p =
     (p ^. language) <|>
-    listToMaybe [lang | (suffixes, _, lang) <- languages, sfx `elem` suffixes]
+    listToMaybe [lang | (suffixes, lang) <- languages, sfx `elem` suffixes]
   where sfx = toLower <$> takeExtension filename
 
 upload :: Paste FilePath -> IO ()
