@@ -18,9 +18,14 @@ extra-source-files:
   examples/*.cabal
   examples/*.hs
 
--- disable doctests with -f-test-doctests
-flag test-doctests
+-- disable doctests with -f-doctest
+flag doctest
   default: True
+  manual: True
+
+-- enable httpbin with -fhttpbin
+flag httpbin
+  default: False
   manual: True
 
 library
@@ -55,24 +60,28 @@ library
     text,
     time
 
+-- A convenient server for testing locally, or if httpbin.org is down.
 executable httpbin
   hs-source-dirs: httpbin
   main-is:        HttpBin.hs
-  ghc-options:    -Wall -fwarn-tabs -funbox-strict-fields -threaded
+  ghc-options:    -Wall -fwarn-tabs -threaded
   default-language: Haskell98
 
-  build-depends:
-    aeson >= 0.7,
-    aeson-pretty >= 0.7.1,
-    base >= 4.5 && < 5,
-    base64-bytestring,
-    bytestring,
-    case-insensitive,
-    containers,
-    dlist,
-    snap-core,
-    snap-server >= 0.9.4.2,
-    text
+  if !flag(httpbin)
+    buildable: False
+  else
+    build-depends:
+      aeson >= 0.7,
+      aeson-pretty >= 0.7.1,
+      base >= 4.5 && < 5,
+      base64-bytestring,
+      bytestring,
+      case-insensitive,
+      containers,
+      dlist,
+      snap-core,
+      snap-server >= 0.9.4.2,
+      text
 
 test-suite tests
   type:           exitcode-stdio-1.0
@@ -102,7 +111,7 @@ test-suite doctest
   ghc-options:    -Wall -fwarn-tabs -threaded
   default-language: Haskell98
 
-  if !flag(test-doctests)
+  if !flag(doctest)
     buildable: False
   else
     build-depends:
