@@ -54,7 +54,7 @@ library
     base >= 4.5 && < 5,
     bytestring >= 0.9,
     exceptions >= 0.5,
-    http-client >= 0.3.0.2,
+    http-client >= 0.3.1.1,
     http-client-tls >= 0.2,
     http-types >= 0.8,
     lens >= 4.1,
