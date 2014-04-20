@@ -17,6 +17,9 @@ cabal-version:       >=1.10
 extra-source-files:
   examples/*.cabal
   examples/*.hs
+  www/*.css
+  www/*.md
+  www/Makefile
 
 -- disable doctests with -f-doctest
 flag doctest

@@ -1,9 +1,12 @@
 ^(?:dist|\w+/dist|tests/coverage)$
 \.(?:aux|eventlog|h[ip]|log|[oa]|orig|prof|ps|rej|swp|tix)$
+^www/(?:index|tutorial)\.html$
 ~$
 
 syntax: glob
+\#*
 .\#*
 \.cabal-sandbox
 cabal.sandbox.config
 test-tokens.txt
+www/bootstrap*
