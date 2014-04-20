@@ -73,9 +73,9 @@ instance FormValue Channel where
 
 data Paste a = Paste {
     _visibility :: Visibility
-  , _title :: String
-  , _author :: String
-  , _channel :: Channel
+  , _title :: Maybe String
+  , _author :: Maybe String
+  , _channel :: Maybe Channel
   , _language :: Maybe Language
   , _payload :: a
   } deriving (Show)
@@ -101,20 +101,13 @@ guessLanguage filename p =
     listToMaybe [lang | (suffixes, _, lang) <- languages, sfx `elem` suffixes]
   where sfx = toLower <$> takeExtension filename
 
--- The Alternative definition for lists acts as a sum, which we don't
--- want in one spot below.
-(<||>) :: [a] -> [a] -> [a]
-[] <||> b = b
-a  <||> _ = a
-infixl 3 <||>
-
 upload :: Paste FilePath -> IO ()
 upload p0 = do
   let path = p0 ^. payload
   p <- withFile path ReadMode $ \h -> do
          body <- B.hGetContents h
          return $ p0 & payload .~ body
-                     & title .~ (p0 ^. title <||> takeFileName path)
+                     & title .~ (p0 ^. title <|> Just (takeFileName path))
                      & language .~ guessLanguage path p0
   resp <- post "http://lpaste.net/new" [
             "private" := p ^. visibility
@@ -134,13 +127,15 @@ main = upload =<< execParser opts
         optionParser = Paste <$>
           (flag Private Public $ long "public" <>
                                  help "display in index of pastes") <*>
-          (strOption $ long "title" <> short 't' <> metavar "TITLE" <>
-                       help "title to use for paste" <> value "") <*>
-          (strOption $ long "author" <> short 'a' <> metavar "AUTHOR" <>
-                       help "author to display for paste" <> value "") <*>
-          (fmap Channel . strOption $
+          (optional . strOption $
+           long "title" <> short 't' <> metavar "TITLE" <>
+           help "title to use for paste") <*>
+          (optional . strOption $
+           long "author" <> short 'a' <> metavar "AUTHOR" <>
+           help "author to display for paste") <*>
+          (optional . fmap Channel . strOption $
            long "channel" <> short 'c' <> metavar "CHANNEL" <>
-           help "name of IRC channel to announce" <> value "") <*>
+           help "name of IRC channel to announce") <*>
           (optional . nullOption $
            long "language" <> short 'l' <> metavar "LANG" <>
            help "language to use" <> reader readLanguage) <*>
