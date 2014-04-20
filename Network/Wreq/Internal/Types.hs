@@ -181,11 +181,15 @@ data Payload where
   deriving (Typeable)
 
 -- | A type that can be rendered as the value portion of a key\/value
--- pair for use in an \"@application\/x-www-form-urlencoded@\" POST body.
+-- pair for use in an @application\/x-www-form-urlencoded@ POST
+-- body. Intended for use with the 'FormParam' type.
 --
 -- The instances for 'String', strict 'Data.Text.Text', and lazy
--- 'Data.Text.Lazy.Text' are all encoded using UTF-8 /before/ being
+-- 'Data.Text.Lazy.Text' are all encoded using UTF-8 before being
 -- URL-encoded.
+--
+-- The instance for 'Maybe' gives an empty string on 'Nothing',
+-- and otherwise uses the contained type's instance.
 class FormValue a where
     renderFormValue :: a -> S.ByteString
     -- ^ Render the given value.

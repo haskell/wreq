@@ -32,7 +32,7 @@
 -- @
 --
 -- There exist some less frequently used lenses that are not exported
--- from this module; these can instead be found in "Network.Wreq.Lens".
+-- from this module; these can be found in "Network.Wreq.Lens".
 
 module Network.Wreq
     (
@@ -90,7 +90,7 @@ module Network.Wreq
     , Payload(..)
     -- ** URL-encoded form data
     , FormParam(..)
-    , FormValue(..)
+    , FormValue
     -- ** Multipart form data
     , Form.Part
     , Lens.partName
@@ -459,14 +459,18 @@ httpProxy host port = Just (Proxy host port)
 --
 -- The 'Part' does not have a file name or content type associated
 -- with it.
-partText :: Text -> Text -> Form.Part
+partText :: Text             -- ^ Name of the corresponding \<input\>.
+         -> Text             -- ^ The body for this 'Form.Part'.
+         -> Form.Part
 partText name value = Form.partBS name (encodeUtf8 value)
 
 -- | Make a 'Part' whose content is a 'String', encoded as UTF-8.
 --
 -- The 'Part' does not have a file name or content type associated
 -- with it.
-partString :: Text -> String -> Form.Part
+partString :: Text           -- ^ Name of the corresponding \<input\>.
+           -> String         -- ^ The body for this 'Form.Part'.
+           -> Form.Part
 partString name value = Form.partBS name (encodeUtf8 (T.pack value))
 
 -- $cookielenses

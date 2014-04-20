@@ -10,6 +10,26 @@
 -- Portability : GHC
 --
 -- HTTP client lens machinery.
+--
+-- When reading the examples in this module, you should assume the
+-- following environment:
+--
+-- @
+-- \-\- Make it easy to write literal 'S.ByteString' and 'Text' values.
+-- \{\-\# LANGUAGE OverloadedStrings \#\-\}
+--
+-- \-\- Our handy module.
+-- import "Network.Wreq"
+--
+-- \-\- Operators such as ('&') and ('.~').
+-- import "Control.Lens"
+--
+-- \-\- Conversion of Haskell values to JSON.
+-- import "Data.Aeson" ('Data.Aeson.toJSON')
+--
+-- \-\- Easy traversal of JSON data.
+-- import "Data.Aeson.Lens" ('Data.Aeson.Lens.key', 'Data.Aeson.Lens.nth')
+-- @
 
 module Network.Wreq.Lens
     (
@@ -381,15 +401,17 @@ partGetBody = TH.partGetBody
 -- Both headers and bodies can contain complicated data that we may
 -- need to parse.
 --
--- For example, when responding to an OPTIONS request, a server may
--- return the list of verbs it supports in any order.  To deal with
--- this possibility, we parse the list, then sort it.
+-- Example: when responding to an OPTIONS request, a server may return
+-- the list of verbs it supports in any order, up to and including
+-- changing the order on every request (which httpbin.org /actually
+-- does/!).  To deal with this possibility, we parse the list, then
+-- sort it.
 --
--- >>> import Control.Lens (to)
 -- >>> import Data.Attoparsec.ByteString.Char8 as A
 -- >>> import Data.List (sort)
 -- >>>
--- >>> let verbs = A.takeWhile isAlpha_ascii `sepBy` ("," >> skipSpace)
+-- >>> let comma = skipSpace >> "," >> skipSpace
+-- >>> let verbs = A.takeWhile isAlpha_ascii `sepBy` comma
 -- >>>
 -- >>> r <- options "http://httpbin.org/get"
 -- >>> r ^. responseHeader "Allow" . atto verbs . to sort
