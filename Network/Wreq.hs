@@ -90,6 +90,8 @@ module Network.Wreq
     -- *** Smart constructors
     , Form.partBS
     , Form.partLBS
+    , partText
+    , partString
     , Form.partFile
     , Form.partFileSource
 
@@ -129,6 +131,8 @@ import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Aeson (FromJSON)
 import Data.ByteString.Char8 ()
 import Data.Maybe (fromMaybe)
+import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
 import Network.Wreq.Internal
 import Network.Wreq.Types (Auth(..), JSONError(..), Options(..), Payload(..),
@@ -137,6 +141,7 @@ import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
+import qualified Data.Text as T
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.HTTP.Types as HTTP
@@ -391,6 +396,21 @@ oauth2Token token = Just (OAuth2Token token)
 -- @
 httpProxy :: S.ByteString -> Int -> Maybe Proxy
 httpProxy host port = Just (Proxy host port)
+
+-- | Make a 'Part' whose content is a strict 'T.Text', encoded as
+-- UTF-8.
+--
+-- The 'Part' does not have a file name or content type associated
+-- with it.
+partText :: Text -> Text -> Form.Part
+partText name value = Form.partBS name (encodeUtf8 value)
+
+-- | Make a 'Part' whose content is a 'String', encoded as UTF-8.
+--
+-- The 'Part' does not have a file name or content type associated
+-- with it.
+partString :: Text -> String -> Form.Part
+partString name value = Form.partBS name (encodeUtf8 (T.pack value))
 
 -- $cookielenses
 --
