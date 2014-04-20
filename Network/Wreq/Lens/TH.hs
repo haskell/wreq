@@ -62,6 +62,7 @@ module Network.Wreq.Lens.TH
 import Control.Lens hiding (makeLenses)
 import Control.Lens.TH (defaultRules, lensField, makeLensesWith)
 import Data.ByteString (ByteString)
+import Data.Text (Text)
 import Network.Wreq.Internal.Lens (assoc, assoc2)
 import Network.Wreq.Lens.Machinery (makeLenses, toCamelCase)
 import qualified Network.HTTP.Client as HTTP
@@ -82,7 +83,7 @@ makeLenses ''Form.Part
 responseHeader :: HTTP.HeaderName -> Traversal' (HTTP.Response body) ByteString
 responseHeader n = responseHeaders . assoc n
 
-param :: ByteString -> Lens' Types.Options [ByteString]
+param :: Text -> Lens' Types.Options [Text]
 param n = params . assoc2 n
 
 header :: HTTP.HeaderName -> Lens' Types.Options [ByteString]

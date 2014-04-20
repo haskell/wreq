@@ -184,11 +184,11 @@ headers = TH.headers
 --let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'param' \"foo\" 'Control.Lens..~' [\"bar\", \"quux\"]
 --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
-param :: ByteString -> Lens' Options [ByteString]
+param :: Text -> Lens' Options [Text]
 param = TH.param
 
 -- | A lens onto all query parameters.
-params :: Lens' Options [(ByteString, ByteString)]
+params :: Lens' Options [(Text, Text)]
 params = TH.params
 
 -- | A lens onto the maximum number of redirects that will be followed

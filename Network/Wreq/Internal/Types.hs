@@ -31,6 +31,7 @@ module Network.Wreq.Internal.Types
     ) where
 
 import Control.Exception (Exception)
+import Data.Text (Text)
 import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
                             RequestBody, destroyCookieJar)
@@ -94,7 +95,7 @@ data Options = Options {
   --let opts = 'Network.Wreq.defaults' { 'headers' = [(\"Accept\", \"*\/*\")] }
   --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
   -- @
-  , params :: [(S.ByteString, S.ByteString)]
+  , params :: [(Text, Text)]
   -- ^ Key-value pairs to assemble into a query string to add to the
   -- end of a URL.
   --

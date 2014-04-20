@@ -13,8 +13,10 @@ module Network.Wreq.Internal
     ) where
 
 import Control.Applicative ((<$>))
+import Control.Arrow ((***))
 import Control.Lens ((&), (.~), (%~))
 import Data.Monoid ((<>))
+import Data.Text.Encoding (encodeUtf8)
 import Data.Version (showVersion)
 import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
@@ -106,7 +108,8 @@ setQuery opts =
     [] -> id
     ps -> Lens.queryString %~ \qs ->
           let n = S.length qs in
-          qs <> (if n > 1 then "&" else "") <> HTTP.renderSimpleQuery (n==0) ps
+          qs <> (if n > 1 then "&" else "") <> HTTP.renderSimpleQuery (n==0)
+          (map (encodeUtf8 *** encodeUtf8) ps)
 
 setAuth :: Options -> Request -> Request
 setAuth = maybe id f . auth
