@@ -35,8 +35,8 @@ instance FormValue Visibility where
 
 -- The languages that lpaste.net supports.
 data Language =
-  Haskell | Agda | Assembly | Bash | C | CommonLisp | Coq | Cpp | Cs | Diff |
-  Elm | EmacsLisp | Erlang | Go | Idris | Java | JavaScript | LiterateHaskell |
+  Haskell | Agda | Assembly | Bash | C | Coq | Cpp | Cs | Diff | Elm | ELisp |
+  Erlang | Go | Idris | Java | JavaScript | LiterateHaskell | Lisp |
   Lua | OCaml | ObjectiveC | Perl | Prolog | Python | Ruby | SQL | Scala |
   Scheme | Smalltalk | TeX
   deriving (Eq, Show)
@@ -50,8 +50,8 @@ instance FormValue Language where
 languages :: [([String], String, Language)]
 languages = [
   ([".hs"], "haskell", Haskell), ([".agda"], "agda", Agda),
-  ([".el"], "elisp", EmacsLisp), ([".ocaml"], "ocaml", OCaml),
-  ([".cl"], "lisp", CommonLisp), ([".erl"], "erlang", Erlang),
+  ([".el"], "elisp", ELisp), ([".ocaml"], "ocaml", OCaml),
+  ([".cl"], "lisp", Lisp), ([".erl"], "erlang", Erlang),
   ([".lhs"], "literatehaskell", LiterateHaskell),
   ([".scala"], "scala", Scala), ([".go"], "go", Go),
   ([".py"], "python", Python), ([".rb"], "ruby", Ruby),
