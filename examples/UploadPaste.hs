@@ -9,7 +9,6 @@ import Data.Monoid (mempty)
 import Network.Wreq (FormParam((:=)), FormValue(..), post)
 import Options.Applicative as Opts hiding ((&), header)
 import System.FilePath (takeExtension, takeFileName)
-import System.IO (IOMode(..), withFile)
 import qualified Data.ByteString.Char8 as B
 
 -- A post to lpaste.net can either be private or public (visible in an
@@ -104,11 +103,10 @@ guessLanguage filename p =
 upload :: Paste FilePath -> IO ()
 upload p0 = do
   let path = p0 ^. payload
-  p <- withFile path ReadMode $ \h -> do
-         body <- B.hGetContents h
-         return $ p0 & payload .~ body
-                     & title .~ (p0 ^. title <|> Just (takeFileName path))
-                     & language .~ guessLanguage path p0
+  body <- B.readFile path
+  let p = p0 & payload .~ body
+             & title .~ (p0 ^. title <|> Just (takeFileName path))
+             & language .~ guessLanguage path p0
   resp <- post "http://lpaste.net/new" [
             "private" := p ^. visibility
           , "title" := p ^. title
