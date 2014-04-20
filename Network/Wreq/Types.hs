@@ -128,6 +128,8 @@ instance FormValue Word64 where renderFormValue = renderFormValue . show
 instance FormValue Float where renderFormValue = renderFormValue . show
 instance FormValue Double where renderFormValue = renderFormValue . show
 
+instance FormValue () where renderFormValue _ = ""
+
 instance (FormValue a) => FormValue (Maybe a) where
     renderFormValue (Just a) = renderFormValue a
     renderFormValue Nothing  = ""

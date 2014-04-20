@@ -1,3 +1,14 @@
+-- upload a paste to lpaste.net
+--
+-- This example is pretty beefy, as it does double duty.
+--
+-- Perhaps the majority of it shows off some complex uses of the
+-- optparse-applicative package.
+--
+-- The POST portion is in the function named upload below.  It uploads
+-- an application/x-www-urlencoded form that creates a paste on the
+-- Haskell community pastebin at <http://lpaste.net/>.
+
 {-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall #-}
 
@@ -17,8 +28,8 @@ data Visibility = Private | Public
                 deriving (Show)
 
 -- Wreq supports uploading an application/x-www-urlencoded form (see
--- the := operator below), so we tell it how to render a value of a
--- custom datatype.
+-- uses of the := operator in the upload function below), so we tell
+-- it how to render a value of a custom datatype.
 instance FormValue Visibility where
   renderFormValue = renderFormValue . show
 
@@ -70,6 +81,12 @@ instance FormValue Channel where
           checkHash cs@(_:_)   = '#' : cs
           checkHash cs         = cs
 
+-- This type plays two roles.  It describes the command line options
+-- we accept, and also the contents of the form we'll upload to create
+-- a new paste.
+--
+-- We've parameterised the type so that the payload field can either
+-- be a filename or the actual contents of the file.
 data Paste a = Paste {
     _visibility :: Visibility
   , _title :: Maybe String
@@ -77,6 +94,7 @@ data Paste a = Paste {
   , _channel :: Maybe Channel
   , _language :: Maybe Language
   , _payload :: a
+  , _email :: () -- used by lpaste.net for spam protection
   } deriving (Show)
 
 makeLenses ''Paste
@@ -107,6 +125,7 @@ upload p0 = do
   let p = p0 & payload .~ body
              & title .~ (p0 ^. title <|> Just (takeFileName path))
              & language .~ guessLanguage path p0
+  -- The := operator defines a key/value pair for a form.
   resp <- post "http://lpaste.net/new" [
             "private" := p ^. visibility
           , "title" := p ^. title
@@ -114,7 +133,7 @@ upload p0 = do
           , "channel" := p ^. channel
           , "language" := p ^. language
           , "paste" := p ^. payload
-          , "email" := (""::String)
+          , "email" := p ^. email
           ]
   print resp
   return ()
@@ -138,4 +157,5 @@ main = upload =<< execParser opts
            long "language" <> short 'l' <> metavar "LANG" <>
            help "language to use" <> reader readLanguage) <*>
           (Opts.argument str $ metavar "PATH" <>
-                               help "file to upload")
+                               help "file to upload") <*>
+          (pure ())
