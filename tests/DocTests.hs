@@ -8,14 +8,16 @@ import Control.Applicative ((<$>), (<*>))
 import Control.Monad (filterM)
 import Data.List (isPrefixOf, isSuffixOf)
 import System.Directory
+import System.Environment (getArgs)
 import System.FilePath ((</>))
 import Test.DocTest (doctest)
 
 main :: IO ()
 main = do
+  args <- getArgs
   srcs <- getSources
   dist <- getDistDir
-  doctest $ [ "-i."
+  doctest $ args ++ [ "-i."
             , "-i" ++ dist ++ "/build/autogen"
             , "-optP-include"
             , "-optP" ++ dist ++ "/build/autogen/cabal_macros.h"
