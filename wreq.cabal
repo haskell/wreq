@@ -41,7 +41,7 @@ library
     Network.Wreq.Lens.Machinery
     Paths_wreq
   build-depends:
-    aeson >= 0.7,
+    aeson >= 0.7.0.3,
     attoparsec,
     base >= 4.5 && < 5,
     bytestring >= 0.9,
