@@ -1,20 +1,24 @@
+-- I don't know who originally wrote this, but I picked it up from
+-- Edward Kmett's folds package, and subsequently modified it.
+
 module Main where
 
-import Control.Monad
-import System.Directory
-import Data.List
-import System.FilePath
-import Control.Applicative
 import Build_doctest (deps)
-import Test.DocTest
+import Control.Applicative ((<$>), (<*>))
+import Control.Monad (filterM)
+import Data.List (isPrefixOf, isSuffixOf)
+import System.Directory
+import System.FilePath ((</>))
+import Test.DocTest (doctest)
 
 main :: IO ()
 main = do
   srcs <- getSources
+  dist <- getDistDir
   doctest $ [ "-i."
-            , "-idist/build/autogen"
+            , "-i" ++ dist ++ "/build/autogen"
             , "-optP-include"
-            , "-optPdist/build/autogen/cabal_macros.h"
+            , "-optP" ++ dist ++ "/build/autogen/cabal_macros.h"
             , "-hide-all-packages"
             ] ++ map ("-package="++) deps ++ srcs
 
@@ -30,3 +34,10 @@ getFilesAndDirectories dir = do
   c <- map (dir </>) . filter (`notElem` ["..", "."]) <$>
        getDirectoryContents dir
   (,) <$> filterM doesDirectoryExist c <*> filterM doesFileExist c
+
+getDistDir :: IO FilePath
+getDistDir = do
+  names <- getDirectoryContents "dist"
+  return $ case filter ("dist-sandbox-" `isPrefixOf`) names of
+             (d:ds) -> "dist/" ++ d
+             _      -> "dist"
