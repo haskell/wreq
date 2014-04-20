@@ -69,7 +69,7 @@ module Network.Wreq.Lens
     -- * POST body part
     , Part
     , partName
-    , partFilename
+    , partFileName
     , partContentType
     , partGetBody
 
@@ -363,8 +363,8 @@ partName = TH.partName
 
 -- | A lens onto the filename associated with part of a multipart form
 -- upload.
-partFilename :: Lens' Part (Maybe String)
-partFilename = TH.partFilename
+partFileName :: Lens' Part (Maybe String)
+partFileName = TH.partFilename
 
 -- | A lens onto the content-type associated with part of a multipart
 -- form upload.

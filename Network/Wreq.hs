@@ -94,7 +94,7 @@ module Network.Wreq
     -- ** Multipart form data
     , Form.Part
     , Lens.partName
-    , Lens.partFilename
+    , Lens.partFileName
     , Lens.partContentType
     , Lens.partGetBody
     -- *** Smart constructors
