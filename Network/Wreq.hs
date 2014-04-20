@@ -15,7 +15,7 @@
 -- following environment:
 --
 -- @
--- \-\- Make it easy to write literal 'S.ByteString' values.
+-- \-\- Make it easy to write literal 'S.ByteString' and 'Text' values.
 -- \{\-\# LANGUAGE OverloadedStrings \#\-\}
 --
 -- \-\- Our handy module.
@@ -23,6 +23,12 @@
 --
 -- \-\- Operators such as ('&') and ('.~').
 -- import "Control.Lens"
+--
+-- \-\- Conversion of Haskell values to JSON.
+-- import "Data.Aeson" ('Data.Aeson.toJSON')
+--
+-- \-\- Easy traversal of JSON data.
+-- import "Data.Aeson.Lens" ('Data.Aeson.Lens.key')
 -- @
 --
 -- There exist some less frequently used lenses that are not exported
@@ -136,7 +142,7 @@ import Data.ByteString.Char8 ()
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
-import Network.HTTP.Client.Internal (Proxy(..), Response(..))
+import Network.HTTP.Client.Internal (Proxy(..), Response)
 import Network.Wreq.Internal
 import Network.Wreq.Types
 import Prelude hiding (head)
@@ -157,6 +163,10 @@ import qualified Network.Wreq.Lens as Lens
 -- @
 --'get' \"http:\/\/httpbin.org\/get\"
 -- @
+--
+-- >>> r <- get "http://httpbin.org/get"
+-- >>> r ^. responseStatus . statusCode
+-- 200
 get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url
 
@@ -182,6 +192,10 @@ getWith opts url = request id opts url readResponse
 -- @
 --'post' \"http:\/\/httpbin.org\/post\" ('Aeson.toJSON' [1,2,3])
 -- @
+--
+-- >>> r <- post "http://httpbin.org/post" (toJSON [1,2,3])
+-- >>> r ^? responseBody . key "json"
+-- Just (Array (fromList [Number 1.0,Number 2.0,Number 3.0]))
 post :: Postable a => String -> a -> IO (Response L.ByteString)
 post url payload = postWith defaults url payload
 
@@ -193,6 +207,11 @@ post url payload = postWith defaults url payload
 --let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
 --'postWith' opts \"http:\/\/httpbin.org\/post\" ('Aeson.toJSON' [1,2,3])
 -- @
+--
+-- >>> let opts = defaults & param "foo" .~ ["bar"]
+-- >>> r <- postWith opts "http://httpbin.org/post" (toJSON [1,2,3])
+-- >>> r ^? responseBody . key "url"
+-- Just (String "http://httpbin.org/post?foo=bar")
 postWith :: Postable a => Options -> String -> a -> IO (Response L.ByteString)
 postWith opts url payload =
   requestIO (postPayload payload . (Int.method .~ HTTP.methodPost)) opts url
@@ -318,10 +337,10 @@ asJSON :: (MonadThrow m, FromJSON a) =>
 {-# SPECIALIZE asJSON :: Response L.ByteString -> IO (Response Aeson.Value) #-}
 asJSON resp = do
   let contentType = fst . S.break (==59) . fromMaybe "unknown" .
-                    lookup "Content-Type" . responseHeaders $ resp
+                    lookup "Content-Type" . HTTP.responseHeaders $ resp
   unless ("application/json" `S.isPrefixOf` contentType) $
     throwM . JSONError $ "content type of response is " ++ show contentType
-  case Aeson.eitherDecode' (responseBody resp) of
+  case Aeson.eitherDecode' (HTTP.responseBody resp) of
     Left err  -> throwM (JSONError err)
     Right val -> return (fmap (const val) resp)
 
@@ -417,3 +436,11 @@ partString name value = Form.partBS name (encodeUtf8 (T.pack value))
 -- $cookielenses
 --
 -- See "Network.Wreq.Lens" for several more cookie-related lenses.
+
+-- $setup
+--
+-- >>> :set -XOverloadedStrings
+-- >>> import Control.Lens
+-- >>> import Data.Aeson (toJSON)
+-- >>> import Data.Aeson.Lens (key)
+-- >>> import Network.Wreq

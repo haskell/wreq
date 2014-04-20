@@ -12,11 +12,16 @@ license-file:        LICENSE
 maintainer:          bos@serpentine.com
 -- copyright:
 category:            Web
-build-type:          Simple
+build-type:          Custom
 cabal-version:       >=1.10
 extra-source-files:
   examples/*.cabal
   examples/*.hs
+
+-- disable doctests with -f-test-doctests
+flag test-doctests
+  default: True
+  manual: True
 
 library
   ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
@@ -89,6 +94,22 @@ test-suite tests
     test-framework-hunit,
     text,
     wreq
+
+test-suite doctest
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: tests
+  main-is:        DocTests.hs
+  ghc-options:    -Wall -fwarn-tabs -threaded
+  default-language: Haskell98
+
+  if !flag(test-doctests)
+    buildable: False
+  else
+    build-depends:
+      base >= 4.5 && < 5,
+      directory,
+      doctest,
+      filepath
 
 source-repository head
   type:     git
