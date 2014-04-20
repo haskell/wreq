@@ -133,6 +133,9 @@ module Network.Wreq
     , Lens.cookieExpiryTime
     , Lens.cookieDomain
     , Lens.cookiePath
+
+    -- * Parsing responses
+    , Lens.atto
     ) where
 
 import Control.Lens ((.~), (&))
@@ -273,9 +276,7 @@ putWith opts url payload =
 --'options' \"http:\/\/httpbin.org\/get\"
 -- @
 --
--- >>> r <- options "http://httpbin.org/get"
--- >>> r ^? responseHeader "Allow"
--- Just "HEAD, GET, OPTIONS"
+-- See 'Lens.atto' for a more complex worked example.
 options :: String -> IO (Response ())
 options = optionsWith defaults
 
@@ -287,11 +288,6 @@ options = optionsWith defaults
 --let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
 --'optionsWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
---
--- >>> let opts = defaults & param "foo" .~ ["bar"]
--- >>> r <- optionsWith opts "http://httpbin.org/get"
--- >>> r ^? responseHeader "Access-Control-Allow-Methods"
--- Just "GET, POST, PUT, DELETE, PATCH, OPTIONS"
 optionsWith :: Options -> String -> IO (Response ())
 optionsWith = emptyMethodWith HTTP.methodOptions
 

@@ -72,9 +72,13 @@ module Network.Wreq.Lens
     , partFilename
     , partContentType
     , partGetBody
+
+    -- * Parsing
+    , atto
     ) where
 
-import Control.Lens (Fold, Lens, Lens', Traversal')
+import Control.Lens (Fold, Lens, Lens', Traversal', folding)
+import Data.Attoparsec (Parser, parseOnly)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
@@ -371,3 +375,32 @@ partContentType = TH.partContentType
 -- of a multipart form upload.
 partGetBody :: Lens' Part (IO RequestBody)
 partGetBody = TH.partGetBody
+
+-- | Turn an attoparsec 'Parser' into a 'Fold'.
+--
+-- Both headers and bodies can contain complicated data that we may
+-- need to parse.
+--
+-- For example, when responding to an OPTIONS request, a server may
+-- return the list of verbs it supports in any order.  To deal with
+-- this possibility, we parse the list, then sort it.
+--
+-- >>> import Control.Lens (to)
+-- >>> import Data.Attoparsec.ByteString.Char8 as A
+-- >>> import Data.List (sort)
+-- >>>
+-- >>> let verbs = A.takeWhile isAlpha_ascii `sepBy` ("," >> skipSpace)
+-- >>>
+-- >>> r <- options "http://httpbin.org/get"
+-- >>> r ^. responseHeader "Allow" . atto verbs . to sort
+-- ["GET","HEAD","OPTIONS"]
+atto :: Parser a -> Fold ByteString a
+atto = folding . parseOnly
+
+-- $setup
+--
+-- >>> :set -XOverloadedStrings
+-- >>> import Control.Lens
+-- >>> import Data.Aeson (toJSON)
+-- >>> import Data.Aeson.Lens (key, nth)
+-- >>> import Network.Wreq
