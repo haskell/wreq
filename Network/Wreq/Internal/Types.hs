@@ -20,6 +20,9 @@ module Network.Wreq.Internal.Types
     , Payload(..)
     , Postable(..)
     , Putable(..)
+    -- ** URL-encoded forms
+    , FormParam(..)
+    , FormValue(..)
     -- * Headers
     , ContentType
     , Link(..)
@@ -176,6 +179,26 @@ class Putable a where
 data Payload where
     Raw  :: ContentType -> RequestBody -> Payload
   deriving (Typeable)
+
+-- | A type that can be rendered as the value portion of a key\/value
+-- pair for use in an \"@application\/x-www-form-urlencoded@\" POST body.
+--
+-- The instances for 'String', strict 'Data.Text.Text', and lazy
+-- 'Data.Text.Lazy.Text' are all encoded using UTF-8 /before/ being
+-- URL-encoded.
+class FormValue a where
+    renderFormValue :: a -> S.ByteString
+    -- ^ Render the given value.
+
+-- | A key\/value parameter to an
+-- \"@application\/x-www-form-urlencoded@\" POST body.
+data FormParam where
+    (:=) :: (FormValue v) => S.ByteString -> v -> FormParam
+
+instance Show FormParam where
+    show (a := b) = show a ++ " := " ++ show (renderFormValue b)
+
+infixr 3 :=
 
 -- | The error type used by 'Network.Wreq.asJSON' and
 -- 'Network.Wreq.asValue' if a failure occurs when parsing a response

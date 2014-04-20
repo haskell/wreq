@@ -21,6 +21,9 @@ module Network.Wreq.Types
     , Payload(..)
     , Postable(..)
     , Putable(..)
+    -- ** URL-encoded forms
+    , FormParam(..)
+    , FormValue(..)
     -- * Headers
     , ContentType
     , Link(..)
@@ -30,11 +33,17 @@ module Network.Wreq.Types
 
 import Control.Lens ((&), (.~))
 import Data.Aeson (Value, encode)
+import Data.Int (Int8, Int16, Int32, Int64)
+import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Network.HTTP.Client (Request)
 import Network.HTTP.Client.MultipartFormData (Part, formDataBody)
 import Network.Wreq.Internal.Types
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Builder as TL
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.Wreq.Internal.Lens as Lens
 
@@ -48,6 +57,13 @@ instance Postable [(S.ByteString, S.ByteString)] where
     postPayload ps req = return $ HTTP.urlEncodedBody ps req
 
 instance Postable (S.ByteString, S.ByteString) where
+    postPayload p = postPayload [p]
+
+instance Postable [FormParam] where
+    postPayload ps = postPayload (map f ps)
+      where f (a := b) = (a, renderFormValue b)
+
+instance Postable FormParam where
     postPayload p = postPayload [p]
 
 instance Postable Payload where
@@ -77,6 +93,44 @@ instance Putable L.ByteString where
 instance Putable Value where
     putPayload = payload "application/json" . HTTP.RequestBodyLBS . encode
 
+
+instance FormValue T.Text where
+    renderFormValue = T.encodeUtf8
+
+instance FormValue TL.Text where
+    renderFormValue = T.encodeUtf8 . TL.toStrict
+
+instance FormValue TL.Builder where
+    renderFormValue = T.encodeUtf8 . TL.toStrict . TL.toLazyText
+
+instance FormValue String where
+    renderFormValue = T.encodeUtf8 . T.pack
+
+instance FormValue S.ByteString where
+    renderFormValue = id
+
+instance FormValue L.ByteString where
+    renderFormValue = S.concat . L.toChunks
+
+instance FormValue Int where renderFormValue = renderFormValue . show
+instance FormValue Int8 where renderFormValue = renderFormValue . show
+instance FormValue Int16 where renderFormValue = renderFormValue . show
+instance FormValue Int32 where renderFormValue = renderFormValue . show
+instance FormValue Int64 where renderFormValue = renderFormValue . show
+instance FormValue Integer where renderFormValue = renderFormValue . show
+
+instance FormValue Word where renderFormValue = renderFormValue . show
+instance FormValue Word8 where renderFormValue = renderFormValue . show
+instance FormValue Word16 where renderFormValue = renderFormValue . show
+instance FormValue Word32 where renderFormValue = renderFormValue . show
+instance FormValue Word64 where renderFormValue = renderFormValue . show
+
+instance FormValue Float where renderFormValue = renderFormValue . show
+instance FormValue Double where renderFormValue = renderFormValue . show
+
+instance (FormValue a) => FormValue (Maybe a) where
+    renderFormValue (Just a) = renderFormValue a
+    renderFormValue Nothing  = ""
 
 payload :: ContentType -> HTTP.RequestBody -> Request -> IO Request
 payload ct body req = return $ req & Lens.setHeader "Content-Type" ct &

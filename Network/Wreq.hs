@@ -87,6 +87,9 @@ module Network.Wreq
     , Lens.partFilename
     , Lens.partContentType
     , Lens.partGetBody
+    -- ** URL-encoded form data
+    , FormParam(..)
+    , FormValue(..)
     -- *** Smart constructors
     , Form.partBS
     , Form.partLBS
@@ -135,8 +138,7 @@ import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import Network.HTTP.Client.Internal (Proxy(..), Response(..))
 import Network.Wreq.Internal
-import Network.Wreq.Types (Auth(..), JSONError(..), Options(..), Payload(..),
-                           Postable(..), Putable(..))
+import Network.Wreq.Types
 import Prelude hiding (head)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as S
