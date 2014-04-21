@@ -104,7 +104,9 @@ We'll have more to say about lenses as this tutorial proceeds.
 
 # Changing default behaviours
 
-While `get` is convenient and easy to use, there's a lot more power
+While
+[`get`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:get)
+ is convenient and easy to use, there's a lot more power
 available to us.
 
 For example, if we want to add parameters to the query string of a
@@ -152,10 +154,10 @@ on the left and the new value on the right.
 param "foo" .~ ["bar", "quux"]
 ~~~~
 
-The
+<a id="param">The
 [`param`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:param)
-lens focuses on the values associated with the given key in the query
-string.
+lens</a> focuses on the values associated with the given key in the
+query string.
 
 ~~~~ {.haskell}
 param :: Text -> Lens' Options [Text]
@@ -266,4 +268,128 @@ ghci> r ^? responseBody . key "fnord" . _String
 Nothing
 ghci> r ^? responseBody . key "url" . _String
 Just "http://httpbin.org/get"
+~~~~
+
+
+# Working with headers
+
+To add headers to a request, we use the
+[`header`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:header)
+lens.
+
+~~~~ {.haskell}
+ghci> let opts = defaults & header "Accept" .~ ["application/json"]
+ghci> getWith opts "http://httpbin.org/get"
+~~~~
+
+As with the [`param`](#param) lens, if we provide more than one value to go
+with a single key, this will expand to several headers.
+
+~~~~ {.haskell}
+header :: HeaderName -> Lens' Options [ByteString]
+~~~~
+
+When we want to inspect the headers of a response, we use the
+[`responseHeader`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:responseHeader)
+lens.
+
+~~~~ {.haskell}
+ghci> r <- get "http://httpbin.org/get"
+ghci> r ^. responseHeader "content-type"
+"application/json"
+~~~~
+
+Notice that header names are case insensitive.
+
+If a header is not present in a response, then `^.` will give an empty
+string, while `^?` will give `Nothing`.
+
+~~~~ {.haskell}
+ghci> r ^. responseHeader "X-Nonesuch"
+""
+ghci> r ^? responseHeader "X-Nonesuch"
+Nothing
+~~~~
+
+
+# Uploading data via POST
+
+We use the [`post`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:post)
+ and
+ [`postWith`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:postWith)
+ functions to issue POST requests.
+
+~~~~ {.haskell}
+ghci> r <- post "http://httpbin.org/post" ["num" := 3, "str" := "wat"]
+ghci> r ^? responseBody . key "form"
+Just (Object fromList [("num",String "3"),("str",String "wat")])
+~~~~
+
+The [httpbin.org](http://httpbin.org/) server conveniently echoes our
+request headers back at us, so we can see what kind of body we POSTed.
+
+~~~~ {.haskell}
+ghci> r ^. responseBody . key "headers" . key "Content-Type" . _String
+"application/x-www-form-urlencoded"
+~~~~
+
+The
+[`:=`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v::-61-)
+operator is the constructor for the
+[`FormParam`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#t:FormParam)
+type, which `wreq` uses as a key/value pair to generate an
+`application/x-www-form-urlencoded` form body to upload.
+
+A class named
+[`FormValue`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#t:FormValue)
+determines how the operand on the right-hand side of `:=` is encoded,
+with sensible default behaviours for strings and numbers.
+
+The slightly more modern way to upload POST data is via a
+`multipart/form-data` payload, for which `wreq` provides the
+[`Part`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#t:Part)
+type.
+
+~~~~ {.haskell}
+ghci> r <- post "http://httpbin.org/post" [partText "button" "o hai"]
+ghci> r ^. responseBody . key "headers" . key "Content-Type" . _String
+"multipart/form-data; boundary=----WebKitFormBoundaryJsEZfuj89uj"
+~~~~
+
+The first argument to these `part*` functions is the label of the
+`<input>` element in the form being uploaded.
+
+Let's inspect httpbin.org's response to see what we uploaded.  When we
+think there could be more than one value associated with a lens, we
+use the
+[`^..`](http://hackage.haskell.org/package/lens-4.1.2/docs/Control-Lens-Fold.html#v:-94-..)
+operator, which returns a list.
+
+~~~~ {.haskell}
+ghci> r ^.. responseBody . key "form"
+[Object fromList [("button",String "o hai")]]
+~~~~
+
+## Uploading file contents
+
+To upload a file as part of a `multipart/form-data` POST, we use
+[`partFile`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#t:partFile),
+or if the file is large enough that we want to stream its contents,
+[`partFileSource`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#t:partFileSource).
+
+~~~~ {.haskell}
+ghci> r <- post "http://httpbin.org/post" (partFile "file" "hello.hs")
+ghci> r ^.. responseBody . key "files" . members . _String
+["main = putStrLn \"hello\"\n"]
+~~~~
+
+Both `partFile` and `partFileSource` will set the filename of a part
+to whatever name they are given (including any leading path components
+such as `/tmp/confidential`), and guess its content-type based on the
+file name extension.  Here's an example of how we can upload a file
+without revealing its name.
+
+~~~~ {.haskell}
+ghci> partFile "label" "foo.hs" & partFileName .~ Nothing
+Part "label" Nothing (Just "text/plain") <m (RequestBody m)>
 ~~~~
