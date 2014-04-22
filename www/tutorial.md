@@ -370,6 +370,7 @@ ghci> r ^.. responseBody . key "form"
 [Object fromList [("button",String "o hai")]]
 ~~~~
 
+
 ## Uploading file contents
 
 To upload a file as part of a `multipart/form-data` POST, we use
@@ -393,3 +394,86 @@ without revealing its name.
 ghci> partFile "label" "foo.hs" & partFileName .~ Nothing
 Part "label" Nothing (Just "text/plain") <m (RequestBody m)>
 ~~~~
+
+
+# Cookies
+
+To see how easily we can work with cookies, let's can ask the
+ever-valuable httpbin.org to set a cookie in a response.
+
+~~~~ {.haskell}
+ghci> r <- get "http://httpbin.org/cookies/set?foo=bar"
+ghci> r ^. responseCookie "foo" . cookieValue
+"bar"
+~~~~
+
+
+# Authentication
+
+The `wreq` library supports both basic authentication and OAuth2
+bearer authentication.  **Note:** the security of these mechanisms is
+_absolutely dependent on your use of TLS_, as the credentials can
+easily be stolen and reused if transmitted unencrypted.
+
+If we try to access a service that requires authentication, `wreq`
+will throw a
+[`HttpException`](http://hackage.haskell.org/package/http-client/docs/Network-HTTP-Client.html#t:HttpException).
+
+~~~~ {.haskell}
+ghci> r <- get "http://httpbin.org/basic-auth/user/pass
+*** Exception: StatusCodeException (Status {statusCode = 401, {-...-}
+~~~~
+
+If we then supply a username and password, our request will succeed.
+(Notice that we follow our own advice: we switch to `https` for our
+retry.)
+
+~~~~ {.haskell}
+ghci> let opts = defaults & auth .~ basicAuth "user" "pass"
+ghci> r <- getWith opts "https://httpbin.org/basic-auth/user/pass"
+ghci> r ^. responseBody
+"{\n  \"authenticated\": true,\n  \"user\": \"user\"\n}"
+~~~~
+
+For OAuth2 bearer authentication, `wreq` supports two flavours:
+[`oauth2Bearer`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:oauth2Bearer)
+is the standard bearer token, while
+[`oauth2Token`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:oauth2Token)
+is GitHub's variant.  These tokens are equivalent in value to a
+username and password.
+
+
+# Error handling
+
+Most of the time when an error occurs or a request fails, `wreq` will
+throw a `HttpException`.
+
+~~~~ {.haskell}
+h> r <- get "http://httpbin.org/wibblesticks"
+*** Exception: StatusCodeException (Status {statusCode = 404, {-...-}
+~~~~
+
+Here's a simple example of how we can respond to one kind of error: a
+`get`-like function that retries with authentication if an
+unauthenticated request fails.
+
+~~~~ {.haskell}
+import Control.Exception as E
+import Control.Lens
+import Network.HTTP.Client
+import Network.Wreq
+
+getAuth url myauth = get url `E.catch` handler
+  where
+    handler e@(StatusCodeException s _ _)
+      | s ^. statusCode == 401 = getWith authopts authurl
+      | otherwise              = throwIO e
+      where authopts = defaults & auth .~ myauth
+            -- switch to TLS when we use auth
+            authurl = "https" ++ dropWhile (/=':') url
+~~~~
+
+(A "real world" version would remember which URLs required
+authentication during a session, to avoid the need for an
+unauthenticated failure followed by an authenticated success if we
+visit the same endpoint repeatedly.)
