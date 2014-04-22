@@ -8,7 +8,7 @@ install: $(files)
 	-mkdir -p $(HOME)/public_html/wreq
 	cp -a $(files) $(HOME)/public_html/wreq
 
-%.html: %.md template.html
+%.html: %.md template.html bootstrap-custom.css
 	pandoc $< -o $@ --smart --template template.html \
 	  --css $(bootstrap)/css/bootstrap.css \
 	  --css bootstrap-custom.css \

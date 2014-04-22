@@ -1,4 +1,5 @@
 % A wreq tutorial
+% Learn how to write web clients. We start easy, then ramp up the power.
 
 # Installation
 

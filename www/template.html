@@ -10,6 +10,8 @@ $endfor$
 $if(date-meta)$
   <meta name="date" content="$date-meta$" />
 $endif$
+  <link href="http://fonts.googleapis.com/css?family=Roboto:700" rel='stylesheet' type='text/css'>
+  <link href="http://fonts.googleapis.com/css?family=Roboto+Slab" rel='stylesheet' type='text/css'>
   <title>$if(title-prefix)$$title-prefix$ - $endif$$pagetitle$</title>
   <style type="text/css">code{white-space: pre;}</style>
 $if(quotes)$
@@ -32,32 +34,18 @@ $endfor$
 </head>
 <body>
   $if(title)$
-  <div class="navbar navbar-static-top">
-    <div class="navbar-inner">
-      <div class="container">
-        <span class="doc-title">$title$</span>
-        <ul class="nav pull-right doc-info">
-          $for(author)$
-          <li><p class="navbar-text">$author$</p></li>
-          $endfor$
-          $if(date)$
-          <li><p class="navbar-text">$date$</p></li>
-          $endif$
-        </ul>
-      </div>
+  <div class="container">
+    <div class="jumbotron">
+      <h1>$title$</h1>
+      $for(author)$
+      <p class="lead">$author$</p>
+      $endfor$
     </div>
   </div>
   $endif$
   <div class="container">
     <div class="row">
-      $if(toc)$
-      <div id="$idprefix$TOC" class="col-md-3">
-        <div class="well toc">
-        $toc$
-        </div>
-      </div>
-      $endif$
-      <div class="col-md-$if(toc)$9$else$12$endif$">
+      <div class="col-md-$if(toc)$9$else$12$endif$" role="main">
       $for(include-before)$
       $include-before$
       $endfor$
@@ -66,7 +54,21 @@ $endfor$
       $include-after$
       $endfor$
       </div>
+      $if(toc)$
+      <div id="$idprefix$TOC" class="col-md-3">
+        <div class="bs-docs-sidebar hidden-print affix" role="complementary">
+	  <div class="nav bs-docs-sidenav">
+	    $for(toc)$
+            $toc$
+	    $endfor$
+	  </div>
+        </div>
+      </div>
+      $endif$
     </div>
   </div>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+
+  <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 </body>
 </html>
