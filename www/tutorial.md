@@ -120,7 +120,7 @@ parameter that allow changes from the library's default behaviours.
 ~~~~ {.haskell}
 ghci> import Data.Aeson.Lens (_String, key)
 ghci> let opts = defaults & param "foo" .~ ["bar", "quux"]
-ghci> r <- getWith opts "http://httpbin.org"
+ghci> r <- getWith opts "http://httpbin.org/get"
 ghci> r ^. responseBody . key "url" . _String
 "http://httpbin.org/get?foo=bar&foo=quux"
 ~~~~
