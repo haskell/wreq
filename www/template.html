@@ -34,12 +34,23 @@ $endfor$
 </head>
 <body>
   $if(title)$
-  <div class="container">
+  <div class="jumboback">
+    <div class="navbar" role="navigation">
+      <a class="navbar-brand" href="/wreq">wreq</a>
+      <ul class="nav navbar-nav">
+        <li><a href="tutorial.html">tutorial</a></li>
+        <li><a href="http://hackage.haskell.org/package/wreq" target="_blank">docs</a></li>
+        <li><a href="https://github.com/bos/wreq/issues" target="_blank">issues</a></li>
+        <li><a href="https://github.com/bos/wreq" target="_blank">code</a></li>
+      </ul>
+    </div>
     <div class="jumbotron">
-      <h1>$title$</h1>
-      $for(author)$
-      <p class="lead">$author$</p>
-      $endfor$
+      <div class="container">
+	<h1>$title$</h1>
+	$for(author)$
+	<p class="lead">$author$</p>
+	$endfor$
+      </div>
     </div>
   </div>
   $endif$
@@ -65,6 +76,16 @@ $endfor$
         </div>
       </div>
       $endif$
+    </div>
+  </div>
+  <div id="footer">
+    <div class="container">
+      <p class="pull-right text-muted" style="clear: right"><iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=bos&repo=wreq&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="100px" height="20px"></iframe></p>
+      <p class="text-muted">&copy;
+      2014 <a href="http://www.serpentine.com/" target="_blank">Bryan
+      O'Sullivan</a>.</p>
+      <p class="pull-right text-muted" style="clear: right"><iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=bos&repo=wreq&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="102px" height="20px"></iframe></p>
+      <p class="text-muted"><a href="https://github.com/bos/wreq/blob/master/LICENSE.md">BSD licensed</a>.</p>
     </div>
   </div>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>

@@ -1,4 +1,4 @@
-^(?:dist|\w+/dist|tests/coverage)$
+^(?:\.DS_Store|dist|\w+/dist|tests/coverage)$
 \.(?:aux|eventlog|h[ip]|log|[oa]|orig|prof|ps|rej|swp|tix)$
 ^www/(?:index|tutorial)\.html$
 ~$

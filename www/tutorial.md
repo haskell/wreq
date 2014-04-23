@@ -207,10 +207,12 @@ ghci> Map.size (r ^. responseBody)
 4
 ~~~~
 
-(Notice that we have to tell `ghci` exactly what target type we are
-expecting. In a real Haskell program, the correct return type will
+<div class="alert alert-info">
+In this example, we have to tell `ghci` exactly what target type we
+are expecting. In a real Haskell program, the correct return type will
 usually be inferred automatically, making an explicit type signature
-unnecessary in most cases.)
+unnecessary in most cases.
+</div>
 
 If the response is not `application/json`, or we try to convert to an
 incompatible Haskell type, a
@@ -241,11 +243,13 @@ ghci> r ^? responseBody . key "url"
 Just (String "http://httpbin.org/get")
 ~~~~
 
+<div class="alert alert-info">
 Notice our use of the
 [`^?`](http://hackage.haskell.org/package/lens-4.1.2/docs/Control-Lens-Fold.html#v:-94--63-)
 operator here. This is like `^.`, but it allows for the possibility
 that an access might fail---and of course there may not be a key named
 `"url"` in our object.
+</div>
 
 That said, our result above has the type `Maybe Value`, so it's quite
 annoying to work with. This is where the `_String` lens comes in.
@@ -300,7 +304,9 @@ ghci> r ^. responseHeader "content-type"
 "application/json"
 ~~~~
 
-Notice that header names are case insensitive.
+<div class="alert alert-info">
+Header names are case insensitive.
+</div>
 
 If a header is not present in a response, then `^.` will give an empty
 string, while `^?` will give `Nothing`.
@@ -412,9 +418,13 @@ ghci> r ^. responseCookie "foo" . cookieValue
 # Authentication
 
 The `wreq` library supports both basic authentication and OAuth2
-bearer authentication.  **Note:** the security of these mechanisms is
-_absolutely dependent on your use of TLS_, as the credentials can
-easily be stolen and reused if transmitted unencrypted.
+bearer authentication.
+
+<div class="alert alert-danger">
+**Note:** the security of these mechanisms is _absolutely dependent on
+your use of TLS_, as the credentials can easily be stolen and reused
+if transmitted unencrypted.
+</div>
 
 If we try to access a service that requires authentication, `wreq`
 will throw a

@@ -1,27 +1,59 @@
-.doc-title { float: left; display: block; padding: 10px 20px 10px; margin-left: -20px;
-  font-size: 20px; font-weight: 200; color: #777777; text-shadow: 0 1px 0 #ffffff; }
-.doc-info .navbar-text { padding: 0 15px; }
-h1 a { color: #333; } h2 a { color: #333; } h3 a { color: #333; }
-h4 a { color: #333; } h5 a { color: #333; } h6 a { color: #333; }
-h1:hover a { color: #333; } h2:hover a { color: #333; } h3:hover a { color: #333; }
-h4:hover a { color: #333; } h5:hover a { color: #333; } h6:hover a { color: #333; }
+html {
+    position: relative;
+    min-height: 100%;
+}
+body {
+    /* Margin bottom by footer height */
+    margin-bottom: 80px;
+}
+#footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    /* Set the fixed height of the footer here */
+    height: 80px;
+    background-color: #f5f5f5;
+}
+
 a > code { color: #02d; }
 a > code:hover { color: #44f; }
-.toc { margin-top: 10px; }
-.toc, .toc ul { padding: 0; }
-.toc ul { margin-left: 0; margin-bottom: 20px; list-style: none; }
-.toc ul > li > a { display: block; }
-.toc ul > li > a:hover,
-.toc ul > li > a:focus { text-decoration: none; background-color: #eeeeee; }
-.toc ul { margin-bottom: 0; }
-.toc ul > li > a, .toc ul > li > a { padding: 3px 15px; }
-
 div.nav.bs-docs-sidenav > ul { list-style-type: none; }
 div.nav.bs-docs-sidenav > ul > li > ul { list-style-type: none; }
 
 h1, h2, h3, h4 {
     font-family: 'Roboto', 'sans-serif';
+    margin-top: 40px;
 }
 p, div {
     font-family: 'Roboto Slab', 'sans-serif';
+}
+
+.container .text-muted {
+    margin: 10px 0;
+}
+
+.jumboback > .navbar {
+     background: rgba(0,0,0,0.4);
+     margin-bottom: 0;
+     text-shadow: none;
+     border: 0;
+     border-radius: 0;
+}
+
+.jumboback > .navbar > a, .jumboback > .navbar > ul > li > a {
+    color: white;
+}
+
+.jumboback > .jumbotron {
+    background: transparent;
+}
+
+.jumboback {
+    background-image: url(background.jpg);
+    margin-bottom: 20px;
+    background-position: -20% 25%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    color: white;
+    text-shadow: black 0em 0em 0.8em;
 }
