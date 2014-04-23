@@ -22,3 +22,8 @@ easy.
   schema-less responses
 
 * Basic and OAuth2 bearer authentication
+
+
+# Is it done?
+
+No!  See [`TODO.md`](TODO.md) for a rather long list of ideas.

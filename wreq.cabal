@@ -39,6 +39,8 @@ build-type:          Custom
 cabal-version:       >=1.10
 extra-source-files:
   README.md
+  TODO.md
+  changelog
   examples/*.cabal
   examples/*.hs
   www/*.css
