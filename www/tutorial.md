@@ -404,7 +404,7 @@ Part "label" Nothing (Just "text/plain") <m (RequestBody m)>
 
 # Cookies
 
-To see how easily we can work with cookies, let's can ask the
+To see how easily we can work with cookies, let's ask the
 ever-valuable httpbin.org to set a cookie in a response.
 
 ~~~~ {.haskell}
