@@ -1,20 +1,44 @@
 name:                wreq
-version:             0.0.0.0
+version:             0.1.0.0
 synopsis:            An easy-to-use HTTP client library.
 description:
   .
-  wreq is a HTTP client library that is designed for ease of use.
-homepage:            https://github.com/bos/wreq
+  A web client library that is designed for ease of use.
+  .
+  Tutorial: <http://www.serpentine.com/wreq/tutorial.html>
+  .
+  Features include:
+  .
+  * Simple but powerful `lens`-based API
+  .
+  * A solid test suite, and built on reliable libraries like
+    http-client and lens
+  .
+  * Session handling includes connection keep-alive and pooling, and
+    cookie persistence
+  .
+  * Automatic response body decompression
+  .
+  * Powerful multipart form and file upload handling
+  .
+  * Support for JSON requests and responses, including navigation of
+    schema-less responses
+  .
+  * Basic and OAuth2 bearer authentication
+  .
+  * Early TLS support via the tls package
+homepage:            http://www.serpentine.com/wreq
 bug-reports:         https://github.com/bos/wreq/issues
 license:             BSD3
 license-file:        LICENSE.md
--- author:
+author:              Bryan O'Sullivan <bos@serpentine.com>
 maintainer:          bos@serpentine.com
--- copyright:
+copyright:           2014 Bryan O'Sullivan
 category:            Web
 build-type:          Custom
 cabal-version:       >=1.10
 extra-source-files:
+  README.md
   examples/*.cabal
   examples/*.hs
   www/*.css

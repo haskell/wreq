@@ -17,7 +17,8 @@ import Control.Lens
 import Data.Char (toLower)
 import Data.Maybe (listToMaybe)
 import Data.Monoid (mempty)
-import Network.Wreq (FormParam((:=)), FormValue(..), post, responseBody)
+import Network.Wreq (FormParam((:=)), post, responseBody)
+import Network.Wreq.Types (FormValue(..))
 import Options.Applicative as Opts hiding ((&), header)
 import System.FilePath (takeExtension, takeFileName)
 import Text.HTML.TagSoup
