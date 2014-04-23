@@ -5,7 +5,7 @@ description:
 homepage:            https://github.com/bos/wreq
 bug-reports:         https://github.com/bos/wreq/issues
 license:             BSD3
-license-file:        ../LICENSE
+license-file:        ../LICENSE.md
 maintainer:          bos@serpentine.com
 category:            Web
 build-type:          Simple
