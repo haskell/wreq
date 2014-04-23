@@ -451,6 +451,10 @@ oauth2Token token = Just (OAuth2Token token)
 --let opts = 'defaults' '&' 'Lens.proxy' '.~' 'httpProxy' \"localhost\" 8000
 --'getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
+--
+-- (You may wonder why this function returns a 'Maybe Proxy'. This
+-- allows it to be easily used on the right hand side of an operation,
+-- as above, without its result needing to be wrapped in 'Just'.)
 httpProxy :: S.ByteString -> Int -> Maybe Proxy
 httpProxy host port = Just (Proxy host port)
 
