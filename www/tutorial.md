@@ -392,10 +392,9 @@ ghci> r ^.. responseBody . key "files" . members . _String
 ~~~~
 
 Both `partFile` and `partFileSource` will set the filename of a part
-to whatever name they are given (including any leading path components
-such as `/tmp/confidential`), and guess its content-type based on the
-file name extension.  Here's an example of how we can upload a file
-without revealing its name.
+to whatever name they are given, and guess its content-type based on
+the file name extension.  Here's an example of how we can upload a
+file without revealing its name.
 
 ~~~~ {.haskell}
 ghci> partFile "label" "foo.hs" & partFileName .~ Nothing
