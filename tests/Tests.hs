@@ -221,6 +221,7 @@ httpbinTests = [testGroup "httpbin" [
   , testGroup "https" $ httpbinTestsWith ("https://httpbin.org" <>)
   ]]
 
+-- Tests that httpbin.org doesn't support.
 localTests site = commonTestsWith site <> [
     testCase "oauth2 Bearer" $ getOAuth2 "Bearer" oauth2Bearer site
   , testCase "oauth2 token" $ getOAuth2 "token" oauth2Token site
