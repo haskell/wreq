@@ -17,3 +17,5 @@
 
 * Some poor sod needs to add digest authentication to `http-client` so
   we can use it
+
+* Cache management
