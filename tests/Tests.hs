@@ -6,7 +6,7 @@ module Main (main) where
 
 import Control.Applicative ((<$>))
 import Control.Exception (Exception)
-import Control.Lens ((^.), (^?), (.~), (&))
+import Control.Lens ((^.), (^?), (.~), (?~), (&))
 import Control.Monad (unless, void)
 import Data.Aeson (Value(..), object)
 import Data.Aeson.Lens (key)
@@ -78,7 +78,7 @@ throwsStatusCode site =
                       _ -> assertFailure "unexpected exception thrown"
 
 getBasicAuth site = do
-  let opts = defaults & auth .~ basicAuth "user" "passwd"
+  let opts = defaults & auth ?~ basicAuth "user" "passwd"
   r <- getWith opts (site "/basic-auth/user/passwd")
   assertEqual "basic auth GET succeeds" status200 (r ^. responseStatus)
   let inspect e = case e of

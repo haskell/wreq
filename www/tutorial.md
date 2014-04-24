@@ -440,11 +440,21 @@ If we then supply a username and password, our request will succeed.
 retry.)
 
 ~~~~ {.haskell}
-ghci> let opts = defaults & auth .~ basicAuth "user" "pass"
+ghci> let opts = defaults & auth ?~ basicAuth "user" "pass"
 ghci> r <- getWith opts "https://httpbin.org/basic-auth/user/pass"
 ghci> r ^. responseBody
 "{\n  \"authenticated\": true,\n  \"user\": \"user\"\n}"
 ~~~~
+
+<div class="alert alert-info">
+We use the
+[`?~`](http://hackage.haskell.org/package/lens/docs/Control-Lens-Setter.html#v:-63--126-)
+ operator to turn an [`Auth`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#t:Auth)
+into a `Maybe Auth` here, to make the type of value on the right hand
+side compatible with the
+[`auth`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:auth)
+lens.
+</div>
 
 For OAuth2 bearer authentication, `wreq` supports two flavours:
 [`oauth2Bearer`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:oauth2Bearer)

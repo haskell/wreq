@@ -405,18 +405,22 @@ asValue = asJSON
 -- Example (note the use of TLS):
 --
 -- @
---let opts = 'defaults' '&' 'Lens.auth' '.~' 'basicAuth' \"user\" \"pass\"
+--let opts = 'defaults' '&' 'Lens.auth' '?~' 'basicAuth' \"user\" \"pass\"
 --'getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
 -- @
 --
--- >>> let opts = defaults & auth .~ basicAuth "user" "pass"
+-- Note here the use of the 'Control.Lens.?~' setter to turn an 'Auth'
+-- into a 'Maybe' 'Auth', to make the type of the RHS compatible with
+-- the 'Lens.auth' lens.
+--
+-- >>> let opts = defaults & auth ?~ basicAuth "user" "pass"
 -- >>> r <- getWith opts "https://httpbin.org/basic-auth/user/pass"
 -- >>> r ^? responseBody . key "authenticated"
 -- Just (Bool True)
 basicAuth :: S.ByteString       -- ^ Username.
           -> S.ByteString       -- ^ Password.
-          -> Maybe Auth
-basicAuth user pass = Just (BasicAuth user pass)
+          -> Auth
+basicAuth = BasicAuth
 
 -- | An OAuth2 bearer token. This is treated by many services as the
 -- equivalent of a username and password.
@@ -424,11 +428,11 @@ basicAuth user pass = Just (BasicAuth user pass)
 -- Example (note the use of TLS):
 --
 -- @
---let opts = 'defaults' '&' 'Lens.auth' '.~' 'oauth2Bearer' \"1234abcd\"
+--let opts = 'defaults' '&' 'Lens.auth' '?~' 'oauth2Bearer' \"1234abcd\"
 --'getWith' opts \"https:\/\/public-api.wordpress.com\/rest\/v1\/me\/\"
 -- @
-oauth2Bearer :: S.ByteString -> Maybe Auth
-oauth2Bearer token = Just (OAuth2Bearer token)
+oauth2Bearer :: S.ByteString -> Auth
+oauth2Bearer = OAuth2Bearer
 
 -- | A not-quite-standard OAuth2 bearer token (that seems to be used
 -- only by GitHub). This will be treated by whatever services accept
@@ -437,11 +441,11 @@ oauth2Bearer token = Just (OAuth2Bearer token)
 -- Example (note the use of TLS):
 --
 -- @
---let opts = 'defaults' '&' 'Lens.auth' '.~' 'oauth2Token' \"abcd1234\"
+--let opts = 'defaults' '&' 'Lens.auth' '?~' 'oauth2Token' \"abcd1234\"
 --'getWith' opts \"https:\/\/api.github.com\/user\"
 -- @
-oauth2Token :: S.ByteString -> Maybe Auth
-oauth2Token token = Just (OAuth2Token token)
+oauth2Token :: S.ByteString -> Auth
+oauth2Token = OAuth2Token
 
 -- | Proxy configuration.
 --
