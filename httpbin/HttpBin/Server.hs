@@ -61,11 +61,12 @@ redirect_ = do
      | n == 1    -> redirect "/get"
      | otherwise -> modifyResponse $ setResponseCode 400
 
+unauthorized = modifyResponse $
+               setHeader "WWW-Authenticate" "Basic realm=\"Fake Realm\"" .
+               setResponseCode 401
+
 basicAuth = do
   req <- getRequest
-  let unauthorized = modifyResponse $
-                     setHeader "WWW-Authenticate" "Basic realm=\"Fake Realm\"" .
-                     setResponseCode 401
   case (rqParam "user" req, rqParam "pass" req) of
     (Just [user], Just [passwd]) | not (':' `B.elem` user) ->
       case getHeader "Authorization" (headers req) of
@@ -75,6 +76,20 @@ basicAuth = do
           if auth /= expected
             then unauthorized
             else writeJSON [ ("user", toJSON (B.unpack user))
+                           , ("authenticated", Bool True) ]
+    _ -> modifyResponse $ setResponseCode 400
+
+oauth2token = do
+  req <- getRequest
+  case (rqParam "kind" req, rqParam "token" req) of
+    (Just [kind], Just [token]) ->
+      case getHeader "Authorization" (headers req) of
+        Nothing -> unauthorized
+        Just auth -> do
+          let expected = kind <> " " <> token
+          if auth /= expected
+            then unauthorized
+            else writeJSON [ ("token", toJSON (B.unpack token))
                            , ("authenticated", Bool True) ]
     _ -> modifyResponse $ setResponseCode 400
 
@@ -121,4 +136,5 @@ serve mkConfig = do
     , ("/gzip", methods [GET,HEAD] gzip)
     , ("/cookies/set", methods [GET,HEAD] setCookies)
     , ("/basic-auth/:user/:pass", methods [GET,HEAD] basicAuth)
+    , ("/oauth2/:kind/:token", methods [GET,HEAD] oauth2token)
     ]

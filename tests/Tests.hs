@@ -86,10 +86,22 @@ getBasicAuth site = do
   assertEqual "basic auth GET succeeds" status200 (r ^. responseStatus)
   let inspect e = case e of
                     StatusCodeException status _ _ ->
-                      assertEqual "failed basic auth failed GET gives 401"
+                      assertEqual "basic auth failed GET gives 401"
                         status401 status
   assertThrows "basic auth GET fails if password is bad" inspect $
     getWith opts (site "/basic-auth/user/asswd")
+
+getOAuth2 kind ctor site = do
+  let opts = defaults & auth ?~ ctor "token1234"
+  r <- getWith opts (site $ "/oauth2/" <> kind <> "/token1234")
+  assertEqual ("oauth2 " <> kind <> " GET succeeds")
+    status200 (r ^. responseStatus)
+  let inspect e = case e of
+                    StatusCodeException status _ _ ->
+                      assertEqual ("oauth2 " <> kind <> " failed GET gives 401")
+                        status401 status
+  assertThrows ("oauth2 " <> kind <> " GET fails if token is bad") inspect $
+    getWith opts (site $ "/oauth2/" <> kind <> "/token123")
 
 getRedirect site = do
   r <- get (site "/redirect/3")
@@ -209,6 +221,11 @@ httpbinTests = [testGroup "httpbin" [
   , testGroup "https" $ httpbinTestsWith ("https://httpbin.org" <>)
   ]]
 
+localTests site = commonTestsWith site <> [
+    testCase "oauth2 Bearer" $ getOAuth2 "Bearer" oauth2Bearer site
+  , testCase "oauth2 token" $ getOAuth2 "token" oauth2Token site
+  ]
+
 startServer = do
   started <- newEmptyMVar
   let go n | n >= 100 = putMVar started Nothing
@@ -228,6 +245,4 @@ main = do
     defaultMain $ httpbinTests <>
     case mserv of
       Nothing -> []
-      Just binding -> [testGroup "localhost" $ commonTestsWith (binding <>)]
-
-localTests = commonTestsWith ("http://localhost:8000" <>)
+      Just binding -> [testGroup "localhost" $ localTests (binding <>)]
