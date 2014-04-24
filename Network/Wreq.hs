@@ -448,15 +448,15 @@ oauth2Token token = Just (OAuth2Token token)
 -- Example:
 --
 -- @
---let opts = 'defaults' '&' 'Lens.proxy' '.~' 'httpProxy' \"localhost\" 8000
+--let opts = 'defaults' '&' 'Lens.proxy' '?~' 'httpProxy' \"localhost\" 8000
 --'getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
 --
--- (You may wonder why this function returns a 'Maybe Proxy'. This
--- allows it to be easily used on the right hand side of an operation,
--- as above, without its result needing to be wrapped in 'Just'.)
-httpProxy :: S.ByteString -> Int -> Maybe Proxy
-httpProxy host port = Just (Proxy host port)
+-- Note here the use of the 'Control.Lens.?~' setter to turn a 'Proxy'
+-- into a 'Maybe' 'Proxy', to make the type of the RHS compatible with
+-- the 'Lens.proxy' lens.
+httpProxy :: S.ByteString -> Int -> Proxy
+httpProxy = Proxy
 
 -- | Make a 'Part' whose content is a strict 'T.Text', encoded as
 -- UTF-8.

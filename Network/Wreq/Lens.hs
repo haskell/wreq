@@ -134,9 +134,13 @@ manager = TH.manager
 -- Example:
 --
 -- @
---let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'proxy' 'Control.Lens..~' 'Network.Wreq.httpProxy' \"localhost\" 8000
+--let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'proxy' 'Control.Lens.?~' 'Network.Wreq.httpProxy' \"localhost\" 8000
 --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
+--
+-- Note here the use of the 'Control.Lens.?~' setter to turn a 'Proxy'
+-- into a 'Maybe' 'Proxy', to make the type of the RHS compatible with
+-- the 'Lens.proxy' lens.
 proxy :: Lens' Options (Maybe Proxy)
 proxy = TH.proxy
 
