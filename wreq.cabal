@@ -92,9 +92,10 @@ library
 -- A convenient server for testing locally, or if httpbin.org is down.
 executable httpbin
   hs-source-dirs: httpbin
-  main-is:        HttpBin.hs
   ghc-options:    -Wall -fwarn-tabs -threaded
   default-language: Haskell98
+  main-is:        HttpBin.hs
+  other-modules:  HttpBin.Server
 
   if !flag(httpbin)
     buildable: False
