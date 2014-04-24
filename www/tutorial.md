@@ -386,6 +386,7 @@ or if the file is large enough that we want to stream its contents,
 [`partFileSource`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#t:partFileSource).
 
 ~~~~ {.haskell}
+ghci> import Data.Aeson.Lens (members)
 ghci> r <- post "http://httpbin.org/post" (partFile "file" "hello.hs")
 ghci> r ^.. responseBody . key "files" . members . _String
 ["main = putStrLn \"hello\"\n"]
