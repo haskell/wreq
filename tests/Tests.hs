@@ -207,12 +207,12 @@ commonTestsWith site = [
     , testCase "headers" $ getHeaders site
     , testCase "gzip" $ getGzip site
     , testCase "getWithManager" $ getWithManager site
+    , testCase "cookiesSet" $ cookiesSet site
+    , testCase "cookieSession" $ cookieSession site
     ]
   ]
 
 httpbinTestsWith site = commonTestsWith site <> [
-    testCase "cookiesSet" $ cookiesSet site
-  , testCase "cookieSession" $ cookieSession site
   ]
 
 -- Tests that our local httpbin clone doesn't yet support.

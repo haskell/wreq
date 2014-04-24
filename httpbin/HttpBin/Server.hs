@@ -52,6 +52,12 @@ setCookies = do
      | (k,vs) <- Map.toList params, v <- vs]
   redirect "/cookies"
 
+listCookies = do
+  cks <- rqCookies <$> getRequest
+  let cs = [(decodeUtf8 (cookieName c),
+             toJSON (decodeUtf8 (cookieValue c))) | c <- cks]
+  respond $ \obj -> return $ obj <> [("cookies", object cs)]
+
 redirect_ = do
   req <- getRequest
   let n   = fromMaybe (-1::Int) . rqIntParam "n" $ req
@@ -132,6 +138,7 @@ serve mkConfig = do
     , ("/status/:val", status)
     , ("/gzip", methods [GET,HEAD] gzip)
     , ("/cookies/set", methods [GET,HEAD] setCookies)
+    , ("/cookies", methods [GET,HEAD] listCookies)
     , ("/basic-auth/:user/:pass", methods [GET,HEAD] basicAuth)
     , ("/oauth2/:kind/:token", methods [GET,HEAD] oauth2token)
     ]
