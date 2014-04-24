@@ -65,33 +65,30 @@ unauthorized = modifyResponse $
                setHeader "WWW-Authenticate" "Basic realm=\"Fake Realm\"" .
                setResponseCode 401
 
-basicAuth = do
+simpleAuth expect = do
   req <- getRequest
+  case expect req of
+    Nothing -> modifyResponse $ setResponseCode 400
+    Just (expected, resp) ->
+      case getHeader "Authorization" (headers req) of
+        Nothing -> unauthorized
+        Just auth | auth == expected -> writeJSON $
+                                        resp <> [("authenticated", Bool True)]
+                  | otherwise -> unauthorized
+
+basicAuth = simpleAuth $ \req ->
   case (rqParam "user" req, rqParam "pass" req) of
     (Just [user], Just [passwd]) | not (':' `B.elem` user) ->
-      case getHeader "Authorization" (headers req) of
-        Nothing -> unauthorized
-        Just auth -> do
-          let expected = "Basic " <> B64.encode (user <> ":" <> passwd)
-          if auth /= expected
-            then unauthorized
-            else writeJSON [ ("user", toJSON (B.unpack user))
-                           , ("authenticated", Bool True) ]
-    _ -> modifyResponse $ setResponseCode 400
+      Just ("Basic " <> B64.encode (user <> ":" <> passwd),
+            [("user", toJSON (B.unpack user))])
+    _ -> Nothing
 
-oauth2token = do
-  req <- getRequest
+oauth2token = simpleAuth $ \req ->
   case (rqParam "kind" req, rqParam "token" req) of
     (Just [kind], Just [token]) ->
-      case getHeader "Authorization" (headers req) of
-        Nothing -> unauthorized
-        Just auth -> do
-          let expected = kind <> " " <> token
-          if auth /= expected
-            then unauthorized
-            else writeJSON [ ("token", toJSON (B.unpack token))
-                           , ("authenticated", Bool True) ]
-    _ -> modifyResponse $ setResponseCode 400
+      Just (kind <> " " <> token,
+            [("token", toJSON (B.unpack token))])
+    _ -> Nothing
 
 rqIntParam name req =
   case rqParam name req of
