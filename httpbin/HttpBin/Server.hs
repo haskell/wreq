@@ -16,7 +16,7 @@ import Data.Monoid ((<>))
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Read (decimal)
 import Snap.Core
-import Snap.Http.Server
+import Snap.Http.Server as Snap
 import Snap.Util.GZip (withCompression)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as Map

@@ -114,19 +114,25 @@ executable httpbin
 
 test-suite tests
   type:           exitcode-stdio-1.0
-  hs-source-dirs: tests
+  hs-source-dirs: httpbin tests
   main-is:        Tests.hs
   ghc-options:    -Wall -fwarn-tabs -funbox-strict-fields -threaded
   default-language: Haskell98
 
   build-depends:
     HUnit,
-    aeson,
+    aeson >= 0.7,
+    aeson-pretty >= 0.7.1,
     base >= 4.5 && < 5,
+    base64-bytestring,
     bytestring,
+    case-insensitive,
+    containers,
     http-client,
     http-types,
     lens >= 4.1,
+    snap-core,
+    snap-server >= 0.9.4.2,
     temporary,
     test-framework,
     test-framework-hunit,

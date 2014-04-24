@@ -5,6 +5,8 @@
 module Main (main) where
 
 import Control.Applicative ((<$>))
+import Control.Concurrent (forkIO, killThread)
+import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 import Control.Exception (Exception)
 import Control.Lens ((^.), (^?), (.~), (?~), (&))
 import Control.Monad (unless, void)
@@ -14,13 +16,13 @@ import Data.ByteString (ByteString)
 import Data.Char (toUpper)
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
-import Data.Text (pack)
+import HttpBin.Server (serve)
 import Network.HTTP.Client (HttpException(..))
 import Network.HTTP.Types.Status (status200, status401)
 import Network.HTTP.Types.Version (http11)
 import Network.Wreq
 import Network.Wreq.Lens
-import qualified Network.Wreq.Session as Session
+import Snap.Http.Server.Config
 import System.IO (hClose, hPutStr)
 import System.IO.Temp (withSystemTempFile)
 import Test.Framework (defaultMain, testGroup)
@@ -28,6 +30,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool, assertEqual, assertFailure)
 import qualified Control.Exception as E
 import qualified Data.Text as T
+import qualified Network.Wreq.Session as Session
 
 basicGet site = do
   r <- get (site "/get")
@@ -93,7 +96,7 @@ getRedirect site = do
   let stripProto = T.dropWhile (/=':')
       smap f (String s) = String (f s)
   assertEqual "redirect goes to /get"
-    (Just . String . stripProto . pack . site $ "/get")
+    (Just . String . stripProto . T.pack . site $ "/get")
     (smap stripProto <$> (r ^. responseBody ^? key "url"))
 
 getParams site = do
@@ -172,7 +175,7 @@ assertThrows desc inspect act = do
   caught <- (act >> return False) `E.catch` \e -> myInspect e >> return True
   unless caught (assertFailure desc)
 
-testsWith site = [
+commonTestsWith site = [
     testGroup "basic" [
       testCase "get" $ basicGet site
     , testCase "post" $ basicPost site
@@ -191,17 +194,40 @@ testsWith site = [
     , testCase "params" $ getParams site
     , testCase "headers" $ getHeaders site
     , testCase "gzip" $ getGzip site
-    , testCase "cookiesSet" $ cookiesSet site
-    , testCase "cookieSession" $ cookieSession site
     , testCase "getWithManager" $ getWithManager site
     ]
   ]
 
-tests = [
-    testGroup "http" $ testsWith ("http://httpbin.org" <>)
-  , testGroup "https" $ testsWith ("https://httpbin.org" <>)
+httpbinTestsWith site = commonTestsWith site <> [
+    testCase "cookiesSet" $ cookiesSet site
+  , testCase "cookieSession" $ cookieSession site
   ]
 
-main = defaultMain tests
+-- Tests that our local httpbin clone doesn't yet support.
+httpbinTests = [testGroup "httpbin" [
+    testGroup "http" $ httpbinTestsWith ("http://httpbin.org" <>)
+  , testGroup "https" $ httpbinTestsWith ("https://httpbin.org" <>)
+  ]]
 
-localtest = defaultMain (testsWith ("http://localhost:8000" <>))
+startServer = do
+  started <- newEmptyMVar
+  let go n | n >= 100 = putMVar started Nothing
+           | otherwise = do
+        let port = 8000 + n
+            startedUp p = putMVar started (Just ("http://localhost:" <> p))
+            mkCfg = return . setBind ("localhost") . setPort port .
+                    setVerbose False .
+                    setStartupHook (const (startedUp (show port)))
+        serve mkCfg `E.catch` \(_::E.IOException) -> go (n+1)
+  tid <- forkIO $ go 0
+  (,) tid <$> takeMVar started
+
+main = do
+  (tid, mserv) <- startServer
+  flip E.finally (killThread tid) .
+    defaultMain $ httpbinTests <>
+    case mserv of
+      Nothing -> []
+      Just binding -> [testGroup "localhost" $ commonTestsWith (binding <>)]
+
+localTests = commonTestsWith ("http://localhost:8000" <>)
