@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RankNTypes, RecordWildCards #-}
 
 module Network.Wreq.Session
     (
@@ -33,6 +33,14 @@ import qualified Network.Wreq as Wreq
 data Session = Session {
       seshCookies :: MVar HTTP.CookieJar
     , seshManager :: HTTP.Manager
+    , seshGet :: Options -> Session -> String -> IO (Response L.ByteString)
+    , seshPost :: Postable a => Options -> Session -> String -> a
+               -> IO (Response L.ByteString)
+    , seshHead :: Options -> Session -> String -> IO (Response ())
+    , seshOptions :: Options -> Session -> String -> IO (Response ())
+    , seshPut :: Putable a => Options -> Session -> String -> a
+              -> IO (Response L.ByteString)
+    , seshDelete :: Options -> Session -> String -> IO (Response ())
     }
 
 instance Show Session where
@@ -42,7 +50,15 @@ withSession :: (Session -> IO a) -> IO a
 withSession act = do
   mv <- newMVar $ HTTP.createCookieJar []
   HTTP.withManager defaultManagerSettings $ \mgr ->
-    act Session { seshCookies = mv, seshManager = mgr }
+    act Session { seshCookies = mv
+                , seshManager = mgr
+                , seshGet = getWith_
+                , seshPost = postWith_
+                , seshHead = headWith_
+                , seshOptions = optionsWith_
+                , seshPut = putWith_
+                , seshDelete = deleteWith_
+                }
 
 get :: Session -> String -> IO (Response L.ByteString)
 get = getWith defaults
@@ -63,29 +79,49 @@ delete :: Session -> String -> IO (Response ())
 delete = deleteWith defaults
 
 getWith :: Options -> Session -> String -> IO (Response L.ByteString)
-getWith opts sesh url =
+getWith opts sesh = seshGet sesh opts sesh
+
+getWith_ :: Options -> Session -> String -> IO (Response L.ByteString)
+getWith_ opts sesh url =
   override opts sesh $ \opts' -> Wreq.getWith opts' url
 
 postWith :: Postable a => Options -> Session -> String -> a
          -> IO (Response L.ByteString)
-postWith opts sesh url payload =
+postWith opts sesh = seshPost sesh opts sesh
+
+postWith_ :: Postable a => Options -> Session -> String -> a
+          -> IO (Response L.ByteString)
+postWith_ opts sesh url payload =
   override opts sesh $ \opts' -> Wreq.postWith opts' url payload
 
 headWith :: Options -> Session -> String -> IO (Response ())
-headWith opts sesh url =
+headWith opts sesh = seshHead sesh opts sesh
+
+headWith_ :: Options -> Session -> String -> IO (Response ())
+headWith_ opts sesh url =
   override opts sesh $ \opts' -> Wreq.headWith opts' url
 
 optionsWith :: Options -> Session -> String -> IO (Response ())
-optionsWith opts sesh url =
+optionsWith opts sesh = seshOptions sesh opts sesh
+
+optionsWith_ :: Options -> Session -> String -> IO (Response ())
+optionsWith_ opts sesh url =
   override opts sesh $ \opts' -> Wreq.optionsWith opts' url
 
 putWith :: Putable a => Options -> Session -> String -> a
         -> IO (Response L.ByteString)
-putWith opts sesh url payload =
+putWith opts sesh = seshPut sesh opts sesh
+
+putWith_ :: Putable a => Options -> Session -> String -> a
+         -> IO (Response L.ByteString)
+putWith_ opts sesh url payload =
   override opts sesh $ \opts' -> Wreq.putWith opts' url payload
 
 deleteWith :: Options -> Session -> String -> IO (Response ())
-deleteWith opts sesh url =
+deleteWith opts sesh = seshDelete sesh opts sesh
+
+deleteWith_ :: Options -> Session -> String -> IO (Response ())
+deleteWith_ opts sesh url =
   override opts sesh $ \opts' -> Wreq.deleteWith opts' url
 
 override :: Options -> Session -> (Options -> IO (Response body))
