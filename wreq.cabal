@@ -109,7 +109,7 @@ executable httpbin
       case-insensitive,
       containers,
       snap-core,
-      snap-server >= 0.9.4.2,
+      snap-server >= 0.9.4.4,
       text
 
 test-suite tests
@@ -132,7 +132,7 @@ test-suite tests
     http-types,
     lens >= 4.1,
     snap-core,
-    snap-server >= 0.9.4.2,
+    snap-server >= 0.9.4.4,
     temporary,
     test-framework,
     test-framework-hunit,
