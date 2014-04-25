@@ -256,6 +256,14 @@ commonTestsWith verb site = [
     ]
   ]
 
+-- Snap responds incorrectly to HEAD (by sending a response body),
+-- thereby killing http-client's ability to continue a session.
+-- https://github.com/snapframework/snap-core/issues/192
+snapHeadSessionBug site = Session.withSession $ \s -> do
+  basicHead (session s) site
+  -- will crash with (InvalidStatusLine "0")
+  basicGet (session s) site
+
 httpbinTestsWith verb site = commonTestsWith verb site <> [
   ]
 
