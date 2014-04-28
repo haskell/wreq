@@ -49,16 +49,25 @@ extra-source-files:
 
 -- disable doctests with -f-doctest
 flag doctest
+  description: enable doctest tests
   default: True
   manual: True
 
 -- enable httpbin with -fhttpbin
 flag httpbin
+  description: enable httpbin test daemon
+  default: False
+  manual: True
+
+flag developer
+  description: build in developer mode
   default: False
   manual: True
 
 library
   ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
+  if flag(developer)
+    ghc-options:  -Werror
   default-language: Haskell98
 
   exposed-modules:
@@ -93,6 +102,8 @@ library
 executable httpbin
   hs-source-dirs: httpbin
   ghc-options:    -Wall -fwarn-tabs -threaded
+  if flag(developer)
+    ghc-options:  -Werror
   default-language: Haskell98
   main-is:        HttpBin.hs
   other-modules:  HttpBin.Server
@@ -117,6 +128,8 @@ test-suite tests
   hs-source-dirs: httpbin tests
   main-is:        Tests.hs
   ghc-options:    -Wall -fwarn-tabs -funbox-strict-fields -threaded
+  if flag(developer)
+    ghc-options:  -Werror
   default-language: Haskell98
 
   build-depends:
@@ -144,6 +157,8 @@ test-suite doctest
   hs-source-dirs: tests
   main-is:        DocTests.hs
   ghc-options:    -Wall -fwarn-tabs -threaded
+  if flag(developer)
+    ghc-options:  -Werror
   default-language: Haskell98
 
   if !flag(doctest)
