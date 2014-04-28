@@ -4,6 +4,7 @@ module Network.Wreq.Session
     (
       Session
     , withSession
+    , withSessionWith
     -- * HTTP verbs
     , get
     , post
@@ -47,9 +48,12 @@ instance Show Session where
     show _ = "Session"
 
 withSession :: (Session -> IO a) -> IO a
-withSession act = do
+withSession = withSessionWith defaultManagerSettings
+
+withSessionWith :: HTTP.ManagerSettings -> (Session -> IO a) -> IO a
+withSessionWith settings act = do
   mv <- newMVar $ HTTP.createCookieJar []
-  HTTP.withManager defaultManagerSettings $ \mgr ->
+  HTTP.withManager settings $ \mgr ->
     act Session { seshCookies = mv
                 , seshManager = mgr
                 , seshGet = getWith_
