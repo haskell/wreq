@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, GADTs, RecordWildCards #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, GADTs,
+    RecordWildCards #-}
 
 -- |
 -- Module      : Network.Wreq.Internal.Types
@@ -15,6 +16,7 @@ module Network.Wreq.Internal.Types
     (
     -- * Client configuration
       Options(..)
+    , Mgr
     , Auth(..)
     -- * Request payloads
     , Payload(..)
@@ -28,6 +30,8 @@ module Network.Wreq.Internal.Types
     , Link(..)
     -- * Errors
     , JSONError(..)
+    -- * Request types
+    , Req(..)
     ) where
 
 import Control.Exception (Exception)
@@ -43,9 +47,11 @@ import qualified Data.ByteString as S
 -- | A MIME content type, e.g. @\"application/octet-stream\"@.
 type ContentType = S.ByteString
 
+type Mgr = Either ManagerSettings Manager
+
 -- | Options for configuring a client.
 data Options = Options {
-    manager :: Either ManagerSettings Manager
+    manager :: Mgr
   -- ^ Either configuration for a 'Manager', or an actual 'Manager'.
   --
   -- If only 'ManagerSettings' are provided, then by default a new
@@ -218,3 +224,5 @@ data Link = Link {
       linkURL :: S.ByteString
     , linkParams :: [(S.ByteString, S.ByteString)]
     } deriving (Eq, Show, Typeable)
+
+data Req = Req Mgr Request

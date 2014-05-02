@@ -50,8 +50,8 @@ data Verb = Verb {
   , putWith :: Putable a => Options -> String -> a -> IO (Response L.ByteString)
   , options :: String -> IO (Response ())
   , optionsWith :: Options -> String -> IO (Response ())
-  , delete :: String -> IO (Response ())
-  , deleteWith :: Options -> String -> IO (Response ())
+  , delete :: String -> IO (Response L.ByteString)
+  , deleteWith :: Options -> String -> IO (Response L.ByteString)
   }
 
 basic :: Verb

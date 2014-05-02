@@ -41,7 +41,7 @@ data Session = Session {
     , seshOptions :: Options -> Session -> String -> IO (Response ())
     , seshPut :: Putable a => Options -> Session -> String -> a
               -> IO (Response L.ByteString)
-    , seshDelete :: Options -> Session -> String -> IO (Response ())
+    , seshDelete :: Options -> Session -> String -> IO (Response L.ByteString)
     }
 
 instance Show Session where
@@ -79,7 +79,7 @@ options = optionsWith defaults
 put :: Putable a => Session -> String -> a -> IO (Response L.ByteString)
 put = putWith defaults
 
-delete :: Session -> String -> IO (Response ())
+delete :: Session -> String -> IO (Response L.ByteString)
 delete = deleteWith defaults
 
 getWith :: Options -> Session -> String -> IO (Response L.ByteString)
@@ -121,10 +121,10 @@ putWith_ :: Putable a => Options -> Session -> String -> a
 putWith_ opts sesh url payload =
   override opts sesh $ \opts' -> Wreq.putWith opts' url payload
 
-deleteWith :: Options -> Session -> String -> IO (Response ())
+deleteWith :: Options -> Session -> String -> IO (Response L.ByteString)
 deleteWith opts sesh = seshDelete sesh opts sesh
 
-deleteWith_ :: Options -> Session -> String -> IO (Response ())
+deleteWith_ :: Options -> Session -> String -> IO (Response L.ByteString)
 deleteWith_ opts sesh url =
   override opts sesh $ \opts' -> Wreq.deleteWith opts' url
 

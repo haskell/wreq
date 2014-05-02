@@ -158,8 +158,6 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.Text as T
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form
-import qualified Network.HTTP.Types as HTTP
-import qualified Network.Wreq.Internal.Lens as Int
 import qualified Network.Wreq.Lens as Lens
 import qualified Network.Wreq.Types as Wreq
 
@@ -195,7 +193,7 @@ withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
 -- >>> r ^? responseBody . key "url"
 -- Just (String "http://httpbin.org/get?foo=bar")
 getWith :: Options -> String -> IO (Response L.ByteString)
-getWith opts url = request return opts url readResponse
+getWith opts url = runRead =<< prepareGet opts url
 
 -- | Issue a POST request.
 --
@@ -225,9 +223,7 @@ post url payload = postWith defaults url payload
 -- >>> r ^? responseBody . key "url"
 -- Just (String "http://httpbin.org/post?foo=bar")
 postWith :: Postable a => Options -> String -> a -> IO (Response L.ByteString)
-postWith opts url payload =
-  request (postPayload payload . (Int.method .~ HTTP.methodPost)) opts url
-    readResponse
+postWith opts url payload = runRead =<< preparePost opts url payload
 
 -- | Issue a HEAD request.
 --
@@ -257,7 +253,7 @@ head_ = headWith (defaults & Lens.redirects .~ 0)
 -- >>> r ^? responseHeader "Connection"
 -- Just "keep-alive"
 headWith :: Options -> String -> IO (Response ())
-headWith = emptyMethodWith HTTP.methodHead
+headWith opts url = runIgnore =<< prepareHead opts url
 
 -- | Issue a PUT request.
 put :: Putable a => String -> a -> IO (Response L.ByteString)
@@ -265,9 +261,7 @@ put url payload = putWith defaults url payload
 
 -- | Issue a PUT request, using the supplied 'Options'.
 putWith :: Putable a => Options -> String -> a -> IO (Response L.ByteString)
-putWith opts url payload =
-  request (putPayload payload . (Int.method .~ HTTP.methodPut)) opts url
-    readResponse
+putWith opts url payload = runRead =<< preparePut opts url payload
 
 -- | Issue an OPTIONS request.
 --
@@ -290,7 +284,7 @@ options = optionsWith defaults
 --'optionsWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
 optionsWith :: Options -> String -> IO (Response ())
-optionsWith = emptyMethodWith HTTP.methodOptions
+optionsWith opts url = runIgnore =<< prepareOptions opts url
 
 -- | Issue a DELETE request.
 --
@@ -303,7 +297,7 @@ optionsWith = emptyMethodWith HTTP.methodOptions
 -- >>> r <- delete "http://httpbin.org/delete"
 -- >>> r ^. responseStatus . statusCode
 -- 200
-delete :: String -> IO (Response ())
+delete :: String -> IO (Response L.ByteString)
 delete = deleteWith defaults
 
 -- | Issue a DELETE request, using the supplied 'Options'.
@@ -319,8 +313,8 @@ delete = deleteWith defaults
 -- >>> r <- deleteWith opts "http://httpbin.org/delete"
 -- >>> r ^. responseStatus . statusCode
 -- 200
-deleteWith :: Options -> String -> IO (Response ())
-deleteWith = emptyMethodWith HTTP.methodDelete
+deleteWith :: Options -> String -> IO (Response L.ByteString)
+deleteWith opts url = runRead =<< prepareDelete opts url
 
 foldGet :: (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGet f z url = foldGetWith defaults f z url

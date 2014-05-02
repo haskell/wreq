@@ -9,6 +9,14 @@ module Network.Wreq.Internal
     , ignoreResponse
     , readResponse
     , request
+    , prepareGet
+    , preparePost
+    , runRead
+    , prepareHead
+    , runIgnore
+    , prepareOptions
+    , preparePut
+    , prepareDelete
     ) where
 
 import Control.Applicative ((<$>))
@@ -21,7 +29,8 @@ import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wreq.Internal.Lens (setHeader)
-import Network.Wreq.Types (Auth(..), Options(..))
+import Network.Wreq.Internal.Types (Mgr, Req(..))
+import Network.Wreq.Types (Auth(..), Options(..), Postable(..), Putable(..))
 import Prelude hiding (head)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as Char8
@@ -84,10 +93,10 @@ foldResponseBody f z0 resp = go z0
 
 request :: (Request -> IO Request) -> Options -> String
         -> (Response BodyReader -> IO a) -> IO a
-request modify opts url act = run opts act =<< prepare modify opts url
+request modify opts url act = run (manager opts) act =<< prepare modify opts url
 
-run :: Options -> (Response BodyReader -> IO a) -> Request -> IO a
-run opts act req = either (flip HTTP.withManager go) go (manager opts)
+run :: Mgr -> (Response BodyReader -> IO a) -> Request -> IO a
+run emgr act req = either (flip HTTP.withManager go) go emgr
   where go mgr = HTTP.withResponse req mgr act
 
 prepare :: (Request -> IO Request) -> Options -> String -> IO Request
@@ -119,3 +128,33 @@ setAuth = maybe id f . auth
 setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy
   where f (Proxy host port) = addProxy host port
+
+prepareGet :: Options -> String -> IO Req
+prepareGet opts url = Req (manager opts) <$> prepare return opts url
+
+runRead :: Req -> IO (Response L.ByteString)
+runRead (Req mgr req) = run mgr readResponse req
+
+preparePost :: Postable a => Options -> String -> a -> IO Req
+preparePost opts url payload = Req (manager opts) <$>
+  prepare (postPayload payload . (Lens.method .~ HTTP.methodPost)) opts url
+
+prepareMethod :: HTTP.Method -> Options -> String -> IO Req
+prepareMethod method opts url = Req (manager opts) <$>
+  prepare (return . (Lens.method .~ method)) opts url
+
+prepareHead :: Options -> String -> IO Req
+prepareHead = prepareMethod HTTP.methodHead
+
+runIgnore :: Req -> IO (Response ())
+runIgnore (Req mgr req) = run mgr ignoreResponse req
+
+prepareOptions :: Options -> String -> IO Req
+prepareOptions = prepareMethod HTTP.methodOptions
+
+preparePut :: Putable a => Options -> String -> a -> IO Req
+preparePut opts url payload = Req (manager opts) <$>
+  prepare (putPayload payload . (Lens.method .~ HTTP.methodPut)) opts url
+
+prepareDelete :: Options -> String -> IO Req
+prepareDelete = prepareMethod HTTP.methodDelete
