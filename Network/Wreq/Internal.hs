@@ -38,6 +38,7 @@ import qualified Network.Wreq.Lens as Lens
 import Paths_wreq (version)
 #else
 import Data.Version (Version(..))
+version :: Version
 version = Version [0] ["wip"]
 #endif
 
@@ -88,15 +89,18 @@ requestIO modify opts url body =
     either (flip HTTP.withManager go) go (manager opts)
   where
     go mgr = do
-      let frob req = req
-                   & Lens.requestHeaders %~ (headers opts ++)
+      req <- prepare modify opts url
+      HTTP.withResponse req mgr body
+
+prepare :: (Request -> IO Request) -> Options -> String -> IO Request
+prepare modify opts url = modify =<< (frob <$> HTTP.parseUrl url)
+  where
+    frob req = req & Lens.requestHeaders %~ (headers opts ++)
                    & setQuery opts
                    & setAuth opts
                    & setProxy opts
                    & setRedirects opts
                    & Lens.cookieJar .~ Just (cookies opts)
-      req <- modify =<< (frob <$> HTTP.parseUrl url)
-      HTTP.withResponse req mgr body
 
 request :: (Request -> Request) -> Options -> String
         -> (Response BodyReader -> IO a) -> IO a
