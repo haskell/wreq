@@ -60,7 +60,6 @@ module Network.Wreq.Lens.TH
     ) where
 
 import Control.Lens hiding (makeLenses)
-import Control.Lens.TH (defaultRules, lensField, makeLensesWith)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Network.Wreq.Internal.Lens (assoc, assoc2)
