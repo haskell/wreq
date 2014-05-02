@@ -136,6 +136,7 @@ module Network.Wreq
 
     -- * Parsing responses
     , Lens.atto
+    , Lens.atto_
     ) where
 
 import Control.Lens ((.~), (&))

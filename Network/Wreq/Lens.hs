@@ -95,10 +95,12 @@ module Network.Wreq.Lens
 
     -- * Parsing
     , atto
+    , atto_
     ) where
 
+import Control.Applicative ((<*))
 import Control.Lens (Fold, Lens, Lens', Traversal', folding)
-import Data.Attoparsec (Parser, parseOnly)
+import Data.Attoparsec (Parser, endOfInput, parseOnly)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
@@ -422,6 +424,17 @@ partGetBody = TH.partGetBody
 -- ["GET","HEAD","OPTIONS"]
 atto :: Parser a -> Fold ByteString a
 atto = folding . parseOnly
+
+-- | The same as 'atto', but ensures that the parser consumes the
+-- entire input.
+--
+-- Equivalent to:
+--
+-- @
+--'atto_' myParser = 'atto' (myParser '<*' 'endOfInput')
+-- @
+atto_ :: Parser a -> Fold ByteString a
+atto_ p = atto (p <* endOfInput)
 
 -- $setup
 --
