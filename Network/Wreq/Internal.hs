@@ -9,7 +9,6 @@ module Network.Wreq.Internal
     , ignoreResponse
     , readResponse
     , request
-    , requestIO
     ) where
 
 import Control.Applicative ((<$>))
@@ -64,7 +63,7 @@ setRedirects opts req
 
 emptyMethodWith :: HTTP.Method -> Options -> String -> IO (Response ())
 emptyMethodWith method opts url =
-  request (Lens.method .~ method) opts url ignoreResponse
+  request (return . (Lens.method .~ method)) opts url ignoreResponse
 
 ignoreResponse :: Response BodyReader -> IO (Response ())
 ignoreResponse resp = (Lens.responseBody .~ ()) <$> readResponse resp
@@ -83,9 +82,9 @@ foldResponseBody f z0 resp = go z0
             then return z
             else f z bs >>= go
 
-requestIO :: (Request -> IO Request) -> Options -> String
-          -> (Response BodyReader -> IO a) -> IO a
-requestIO modify opts url body =
+request :: (Request -> IO Request) -> Options -> String
+        -> (Response BodyReader -> IO a) -> IO a
+request modify opts url body =
     either (flip HTTP.withManager go) go (manager opts)
   where
     go mgr = do
@@ -101,10 +100,6 @@ prepare modify opts url = modify =<< (frob <$> HTTP.parseUrl url)
                    & setProxy opts
                    & setRedirects opts
                    & Lens.cookieJar .~ Just (cookies opts)
-
-request :: (Request -> Request) -> Options -> String
-        -> (Response BodyReader -> IO a) -> IO a
-request f = requestIO (return . f)
 
 setQuery :: Options -> Request -> Request
 setQuery opts =

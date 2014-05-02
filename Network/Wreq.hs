@@ -195,7 +195,7 @@ withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
 -- >>> r ^? responseBody . key "url"
 -- Just (String "http://httpbin.org/get?foo=bar")
 getWith :: Options -> String -> IO (Response L.ByteString)
-getWith opts url = request id opts url readResponse
+getWith opts url = request return opts url readResponse
 
 -- | Issue a POST request.
 --
@@ -226,7 +226,7 @@ post url payload = postWith defaults url payload
 -- Just (String "http://httpbin.org/post?foo=bar")
 postWith :: Postable a => Options -> String -> a -> IO (Response L.ByteString)
 postWith opts url payload =
-  requestIO (postPayload payload . (Int.method .~ HTTP.methodPost)) opts url
+  request (postPayload payload . (Int.method .~ HTTP.methodPost)) opts url
     readResponse
 
 -- | Issue a HEAD request.
@@ -266,7 +266,7 @@ put url payload = putWith defaults url payload
 -- | Issue a PUT request, using the supplied 'Options'.
 putWith :: Putable a => Options -> String -> a -> IO (Response L.ByteString)
 putWith opts url payload =
-  requestIO (putPayload payload . (Int.method .~ HTTP.methodPut)) opts url
+  request (putPayload payload . (Int.method .~ HTTP.methodPut)) opts url
     readResponse
 
 -- | Issue an OPTIONS request.
@@ -326,7 +326,7 @@ foldGet :: (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGet f z url = foldGetWith defaults f z url
 
 foldGetWith :: Options -> (a -> S.ByteString -> IO a) -> a -> String -> IO a
-foldGetWith opts f z0 url = request id opts url (foldResponseBody f z0)
+foldGetWith opts f z0 url = request return opts url (foldResponseBody f z0)
 
 -- | Convert the body of an HTTP response from JSON to a suitable
 -- Haskell type.
