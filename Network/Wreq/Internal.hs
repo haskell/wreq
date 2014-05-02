@@ -84,12 +84,11 @@ foldResponseBody f z0 resp = go z0
 
 request :: (Request -> IO Request) -> Options -> String
         -> (Response BodyReader -> IO a) -> IO a
-request modify opts url body =
-    either (flip HTTP.withManager go) go (manager opts)
-  where
-    go mgr = do
-      req <- prepare modify opts url
-      HTTP.withResponse req mgr body
+request modify opts url act = run opts act =<< prepare modify opts url
+
+run :: Options -> (Response BodyReader -> IO a) -> Request -> IO a
+run opts act req = either (flip HTTP.withManager go) go (manager opts)
+  where go mgr = HTTP.withResponse req mgr act
 
 prepare :: (Request -> IO Request) -> Options -> String -> IO Request
 prepare modify opts url = modify =<< (frob <$> HTTP.parseUrl url)
