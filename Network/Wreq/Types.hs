@@ -134,6 +134,6 @@ instance (FormValue a) => FormValue (Maybe a) where
     renderFormValue (Just a) = renderFormValue a
     renderFormValue Nothing  = ""
 
-payload :: ContentType -> HTTP.RequestBody -> Request -> IO Request
+payload :: S.ByteString -> HTTP.RequestBody -> Request -> IO Request
 payload ct body req = return $ req & Lens.setHeader "Content-Type" ct &
                       Lens.requestBody .~ body
