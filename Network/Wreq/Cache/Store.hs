@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, RecordWildCards #-}
+{-# LANGUAGE BangPatterns, DeriveFunctor, RecordWildCards #-}
 
 module Network.Wreq.Cache.Store
     (
@@ -34,6 +34,7 @@ empty :: Ord k => Int -> Store k v
 empty cap
   | cap <= 0  = error "empty: invalid capacity"
   | otherwise = Store cap 0 0 PSQ.empty HM.empty
+{-# INLINABLE empty #-}
 
 insert :: (Ord k, Hashable k) => k -> v -> Store k v -> Store k v
 insert k v st@Store{..}
@@ -52,15 +53,20 @@ insert k v st@Store{..}
                                       else HM.delete mink map
             }
   where present = k `HM.member` map
+{-# INLINABLE insert #-}
 
 lookup :: (Ord k, Hashable k) => k -> Store k v -> Maybe (v, Store k v)
 lookup k st@Store{..} = do
   v <- HM.lookup k map
-  return (v, st { epoch = epoch + 1, lru = PSQ.insert k epoch lru })
+  let !st' = st { epoch = epoch + 1, lru = PSQ.insert k epoch lru }
+  return (v, st')
+{-# INLINABLE lookup #-}
 
 fromList :: (Ord k, Hashable k) => Int -> [(k, v)] -> Store k v
 fromList = foldl' (flip (uncurry insert)) . empty
+{-# INLINABLE fromList #-}
 
 toList :: (Ord k, Hashable k) => Store k v -> [(k, v)]
 toList Store{..} = [(k,v) | (k PSQ.:-> _) <- PSQ.toList lru,
                             let v = map HM.! k]
+{-# INLINABLE toList #-}
