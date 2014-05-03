@@ -92,6 +92,7 @@ library
     case-insensitive,
     containers,
     exceptions >= 0.5,
+    ghc-prim,
     hashable,
     http-client >= 0.3.1.1,
     http-client-tls >= 0.2,
