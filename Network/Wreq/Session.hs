@@ -22,9 +22,11 @@ module Network.Wreq.Session
     ) where
 
 import Control.Concurrent.MVar (MVar, modifyMVar, newMVar)
-import Control.Lens ((&), (.~), (^.))
-import Network.Wreq (Options, Response, defaults)
-import Network.Wreq.Internal (defaultManagerSettings)
+import Control.Lens ((&), (?~), (^.))
+import Network.Wreq (Options, Response)
+import Network.Wreq.Internal
+import Network.Wreq.Internal.Lens (cookieJar)
+import Network.Wreq.Internal.Types (Req(..))
 import Network.Wreq.Types (Postable, Putable)
 import Prelude hiding (head)
 import qualified Data.ByteString.Lazy as L
@@ -34,14 +36,7 @@ import qualified Network.Wreq as Wreq
 data Session = Session {
       seshCookies :: MVar HTTP.CookieJar
     , seshManager :: HTTP.Manager
-    , seshGet :: Options -> Session -> String -> IO (Response L.ByteString)
-    , seshPost :: Postable a => Options -> Session -> String -> a
-               -> IO (Response L.ByteString)
-    , seshHead :: Options -> Session -> String -> IO (Response ())
-    , seshOptions :: Options -> Session -> String -> IO (Response ())
-    , seshPut :: Putable a => Options -> Session -> String -> a
-              -> IO (Response L.ByteString)
-    , seshDelete :: Options -> Session -> String -> IO (Response L.ByteString)
+    , seshRun :: forall body. Session -> (Req -> IO (Response body)) -> Req -> IO (Response body)
     }
 
 instance Show Session where
@@ -56,12 +51,7 @@ withSessionWith settings act = do
   HTTP.withManager settings $ \mgr ->
     act Session { seshCookies = mv
                 , seshManager = mgr
-                , seshGet = getWith_
-                , seshPost = postWith_
-                , seshHead = headWith_
-                , seshOptions = optionsWith_
-                , seshPut = putWith_
-                , seshDelete = deleteWith_
+                , seshRun = runWith
                 }
 
 get :: Session -> String -> IO (Response L.ByteString)
@@ -83,55 +73,32 @@ delete :: Session -> String -> IO (Response L.ByteString)
 delete = deleteWith defaults
 
 getWith :: Options -> Session -> String -> IO (Response L.ByteString)
-getWith opts sesh = seshGet sesh opts sesh
-
-getWith_ :: Options -> Session -> String -> IO (Response L.ByteString)
-getWith_ opts sesh url =
-  override opts sesh $ \opts' -> Wreq.getWith opts' url
+getWith opts sesh url = run sesh runRead =<< prepareGet opts url
 
 postWith :: Postable a => Options -> Session -> String -> a
          -> IO (Response L.ByteString)
-postWith opts sesh = seshPost sesh opts sesh
-
-postWith_ :: Postable a => Options -> Session -> String -> a
-          -> IO (Response L.ByteString)
-postWith_ opts sesh url payload =
-  override opts sesh $ \opts' -> Wreq.postWith opts' url payload
+postWith opts sesh url payload =
+  run sesh runRead =<< preparePost opts url payload
 
 headWith :: Options -> Session -> String -> IO (Response ())
-headWith opts sesh = seshHead sesh opts sesh
-
-headWith_ :: Options -> Session -> String -> IO (Response ())
-headWith_ opts sesh url =
-  override opts sesh $ \opts' -> Wreq.headWith opts' url
+headWith opts sesh url = run sesh runIgnore =<< prepareHead opts url
 
 optionsWith :: Options -> Session -> String -> IO (Response ())
-optionsWith opts sesh = seshOptions sesh opts sesh
-
-optionsWith_ :: Options -> Session -> String -> IO (Response ())
-optionsWith_ opts sesh url =
-  override opts sesh $ \opts' -> Wreq.optionsWith opts' url
+optionsWith opts sesh url = run sesh runIgnore =<< prepareOptions opts url
 
 putWith :: Putable a => Options -> Session -> String -> a
         -> IO (Response L.ByteString)
-putWith opts sesh = seshPut sesh opts sesh
-
-putWith_ :: Putable a => Options -> Session -> String -> a
-         -> IO (Response L.ByteString)
-putWith_ opts sesh url payload =
-  override opts sesh $ \opts' -> Wreq.putWith opts' url payload
+putWith opts sesh url payload =
+  run sesh runRead =<< preparePut opts url payload
 
 deleteWith :: Options -> Session -> String -> IO (Response L.ByteString)
-deleteWith opts sesh = seshDelete sesh opts sesh
+deleteWith opts sesh url = run sesh runRead =<< prepareDelete opts url
 
-deleteWith_ :: Options -> Session -> String -> IO (Response L.ByteString)
-deleteWith_ opts sesh url =
-  override opts sesh $ \opts' -> Wreq.deleteWith opts' url
+run :: Session -> (Req -> IO (Response body)) -> Req -> IO (Response body)
+run sesh = seshRun sesh sesh
 
-override :: Options -> Session -> (Options -> IO (Response body))
-         -> IO (Response body)
-override opts Session{..} act =
+runWith :: Session -> (Req -> IO (Response body)) -> Req -> IO (Response body)
+runWith Session{..} act (Req _ req) =
   modifyMVar seshCookies $ \cj -> do
-    resp <- act $ opts & Wreq.cookies .~ cj &
-                         Wreq.manager .~ Right seshManager
+    resp <- act (Req (Right seshManager) (req & cookieJar ?~ cj))
     return (resp ^. Wreq.responseCookieJar, resp)
