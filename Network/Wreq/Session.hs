@@ -21,26 +21,17 @@ module Network.Wreq.Session
     , deleteWith
     ) where
 
-import Control.Concurrent.MVar (MVar, modifyMVar, newMVar)
+import Control.Concurrent.MVar (modifyMVar, newMVar)
 import Control.Lens ((&), (?~), (^.))
 import Network.Wreq (Options, Response)
 import Network.Wreq.Internal
 import Network.Wreq.Internal.Lens (cookieJar)
-import Network.Wreq.Internal.Types (Req(..))
+import Network.Wreq.Internal.Types (Req(..), Run, Session(..))
 import Network.Wreq.Types (Postable, Putable)
 import Prelude hiding (head)
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.Wreq as Wreq
-
-data Session = Session {
-      seshCookies :: MVar HTTP.CookieJar
-    , seshManager :: HTTP.Manager
-    , seshRun :: forall body. Session -> (Req -> IO (Response body)) -> Req -> IO (Response body)
-    }
-
-instance Show Session where
-    show _ = "Session"
 
 withSession :: (Session -> IO a) -> IO a
 withSession = withSessionWith defaultManagerSettings
@@ -94,10 +85,10 @@ putWith opts sesh url payload =
 deleteWith :: Options -> Session -> String -> IO (Response L.ByteString)
 deleteWith opts sesh url = run sesh runRead =<< prepareDelete opts url
 
-run :: Session -> (Req -> IO (Response body)) -> Req -> IO (Response body)
+run :: Session -> Run body -> Run body
 run sesh = seshRun sesh sesh
 
-runWith :: Session -> (Req -> IO (Response body)) -> Req -> IO (Response body)
+runWith :: Session -> Run body -> Run body
 runWith Session{..} act (Req _ req) =
   modifyMVar seshCookies $ \cj -> do
     resp <- act (Req (Right seshManager) (req & cookieJar ?~ cj))

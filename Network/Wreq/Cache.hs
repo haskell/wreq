@@ -23,6 +23,7 @@ import Data.Typeable (Typeable)
 import GHC.Generics (Generic)
 import Network.HTTP.Types (HeaderName, Method)
 import Network.Wreq.Internal.Lens
+import Network.Wreq.Internal.Types (CacheEntry(..))
 import Network.Wreq.Lens
 import System.Locale (defaultTimeLocale)
 import qualified Data.ByteString.Char8 as B
@@ -45,12 +46,6 @@ computeExpiration now crs = do
   guard $ and [NoCache [] `notElem` crs, NoStore `notElem` crs]
   age <- listToMaybe $ sort [age | MaxAge age <- crs]
   return $! fromIntegral age `addUTCTime` now
-
-data CacheEntry body = CacheEntry {
-    ceCreated :: UTCTime
-  , ceExpires :: Maybe UTCTime
-  , ceResponse :: Response body
-  }
 
 shouldCache :: UTCTime -> Request -> Response body -> Maybe (CacheEntry body)
 shouldCache now req resp = do

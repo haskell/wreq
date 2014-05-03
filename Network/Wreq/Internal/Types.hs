@@ -1,5 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, GADTs,
-    RecordWildCards #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveFunctor, FlexibleInstances, GADTs,
+    RankNTypes, RecordWildCards #-}
 
 -- |
 -- Module      : Network.Wreq.Internal.Types
@@ -32,14 +32,21 @@ module Network.Wreq.Internal.Types
     , JSONError(..)
     -- * Request types
     , Req(..)
+    -- * Sessions
+    , Session(..)
+    , Run
+    -- * Caches
+    , CacheEntry(..)
     ) where
 
+import Control.Concurrent.MVar (MVar)
 import Control.Exception (Exception)
 import Data.Text (Text)
+import Data.Time.Clock (UTCTime)
 import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
                             RequestBody, destroyCookieJar)
-import Network.HTTP.Client.Internal (Proxy)
+import Network.HTTP.Client.Internal (Response, Proxy)
 import Network.HTTP.Types (Header)
 import Prelude hiding (head)
 import qualified Data.ByteString as S
@@ -226,3 +233,23 @@ data Link = Link {
     } deriving (Eq, Show, Typeable)
 
 data Req = Req Mgr Request
+
+type Run body = Req -> IO (Response body)
+
+data Session = Session {
+      seshCookies :: MVar CookieJar
+    , seshManager :: Manager
+    , seshRun :: forall body. Session -> Run body -> Run body
+    }
+
+instance Show Session where
+    show _ = "Session"
+
+data CacheEntry body = CacheEntry {
+    entryCreated :: UTCTime
+  , entryExpires :: Maybe UTCTime
+  , entryResponse :: Response body
+  } deriving (Functor)
+
+instance Show (CacheEntry body) where
+    show _ = "CacheEntry"

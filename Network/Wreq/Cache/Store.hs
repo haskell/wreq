@@ -21,10 +21,10 @@ type Epoch = Int64
 
 data Store k v = Store {
     capacity :: {-# UNPACK #-} !Int
-  , size :: {-# UNPACK #-} !Int
-  , epoch :: {-# UNPACK #-} !Epoch
-  , lru :: !(PSQ.PSQ k Epoch)
-  , map :: !(HM.HashMap k v)
+  , size     :: {-# UNPACK #-} !Int
+  , epoch    :: {-# UNPACK #-} !Epoch
+  , lru      :: !(PSQ.PSQ k Epoch)
+  , map      :: !(HM.HashMap k v)
   }
 
 instance (Show k, Show v, Ord k, Hashable k) => Show (Store k v) where

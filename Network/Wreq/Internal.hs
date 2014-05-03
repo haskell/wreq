@@ -29,7 +29,7 @@ import Network.HTTP.Client (BodyReader)
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wreq.Internal.Lens (setHeader)
-import Network.Wreq.Internal.Types (Mgr, Req(..))
+import Network.Wreq.Internal.Types (Mgr, Req(..), Run)
 import Network.Wreq.Types (Auth(..), Options(..), Postable(..), Putable(..))
 import Prelude hiding (head)
 import qualified Data.ByteString as S
@@ -132,7 +132,7 @@ setProxy = maybe id f . proxy
 prepareGet :: Options -> String -> IO Req
 prepareGet opts url = Req (manager opts) <$> prepare return opts url
 
-runRead :: Req -> IO (Response L.ByteString)
+runRead :: Run L.ByteString
 runRead (Req mgr req) = run mgr readResponse req
 
 preparePost :: Postable a => Options -> String -> a -> IO Req
@@ -146,7 +146,7 @@ prepareMethod method opts url = Req (manager opts) <$>
 prepareHead :: Options -> String -> IO Req
 prepareHead = prepareMethod HTTP.methodHead
 
-runIgnore :: Req -> IO (Response ())
+runIgnore :: Run ()
 runIgnore (Req mgr req) = run mgr ignoreResponse req
 
 prepareOptions :: Options -> String -> IO Req
