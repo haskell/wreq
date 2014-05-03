@@ -73,6 +73,7 @@ library
   exposed-modules:
     Network.Wreq
     Network.Wreq.Cache
+    Network.Wreq.Cache.Store
     Network.Wreq.Lens
     Network.Wreq.Session
     Network.Wreq.Types
