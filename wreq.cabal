@@ -154,6 +154,7 @@ test-suite tests
     bytestring,
     case-insensitive,
     containers,
+    hashable,
     http-client,
     http-types,
     lens >= 4.1,
