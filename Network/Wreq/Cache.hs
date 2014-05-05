@@ -1,9 +1,11 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFunctor, DeriveGeneric,
-    OverloadedStrings #-}
+    OverloadedStrings, RecordWildCards #-}
 
 module Network.Wreq.Cache
     (
       shouldCache
+    , validateEntry
+    , cacheStore
     ) where
 
 import Control.Applicative
@@ -11,24 +13,49 @@ import Control.Lens ((^?), (^.), (^..), folded, non, pre, to)
 import Control.Monad (guard)
 import Data.Attoparsec.Char8 as A
 import Data.CaseInsensitive (mk)
+import Data.Foldable (forM_)
 import Data.HashSet (HashSet)
 import Data.Hashable (Hashable)
 import Data.IntSet (IntSet)
+import Data.IORef (atomicModifyIORef', newIORef)
 import Data.List (sort)
 import Data.Maybe (listToMaybe)
 import Data.Monoid (First(..), mconcat)
-import Data.Time.Clock (UTCTime, addUTCTime)
+import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
 import Data.Time.Format (parseTime)
 import Data.Typeable (Typeable)
 import GHC.Generics (Generic)
 import Network.HTTP.Types (HeaderName, Method)
 import Network.Wreq.Internal.Lens
-import Network.Wreq.Internal.Types (CacheEntry(..))
+import Network.Wreq.Internal.Types
 import Network.Wreq.Lens
 import System.Locale (defaultTimeLocale)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.HashSet as HashSet
 import qualified Data.IntSet as IntSet
+import qualified Network.Wreq.Cache.Store as Store
+
+cacheStore :: Int -> IO (Run body -> Run body)
+cacheStore capacity = do
+  cache <- newIORef (Store.empty capacity)
+  return $ \run req -> do
+    let url = reqURL req
+    before <- getCurrentTime
+    mresp <- atomicModifyIORef' cache $ \s ->
+      case Store.lookup url s of
+        Nothing       -> (s, Nothing)
+        Just (ce, s') ->
+          case validateEntry before ce of
+            n@Nothing -> (Store.delete url s, n)
+            resp      -> (s', resp)
+    case mresp of
+      Just resp -> return resp
+      Nothing -> do
+        resp <- run req
+        after <- getCurrentTime
+        forM_ (shouldCache after req resp) $ \ce ->
+          atomicModifyIORef' cache $ \s -> (Store.insert url ce s, ())
+        return resp
 
 cacheableStatuses :: IntSet
 cacheableStatuses = IntSet.fromList [200, 203, 300, 301, 410]
@@ -47,8 +74,15 @@ computeExpiration now crs = do
   age <- listToMaybe $ sort [age | MaxAge age <- crs]
   return $! fromIntegral age `addUTCTime` now
 
-shouldCache :: UTCTime -> Request -> Response body -> Maybe (CacheEntry body)
-shouldCache now req resp = do
+validateEntry :: UTCTime -> CacheEntry body -> Maybe (Response body)
+validateEntry now CacheEntry{..} =
+  case entryExpires of
+    Nothing          -> Just entryResponse
+    Just e | e > now -> Just entryResponse
+    _                -> Nothing
+
+shouldCache :: UTCTime -> Req -> Response body -> Maybe (CacheEntry body)
+shouldCache now (Req _ req) resp = do
   guard (possiblyCacheable req resp)
   let crs = resp ^.. responseHeader "Cache-Control" . atto_ parseCacheResponse .
                      folded . to simplifyCacheResponse

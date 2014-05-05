@@ -5,6 +5,7 @@ module Network.Wreq.Cache.Store
       Store
     , empty
     , insert
+    , delete
     , lookup
     , fromList
     , toList
@@ -61,6 +62,16 @@ lookup k st@Store{..} = do
   let !st' = st { epoch = epoch + 1, lru = PSQ.insert k epoch lru }
   return (v, st')
 {-# INLINABLE lookup #-}
+
+delete :: (Ord k, Hashable k) => k -> Store k v -> Store k v
+delete k st@Store{..}
+  | k `HM.member` map =
+    st { size = size - 1
+       , lru  = PSQ.delete k lru
+       , map  = HM.delete k map
+       }
+  | otherwise = st
+{-# INLINABLE delete #-}
 
 fromList :: (Ord k, Hashable k) => Int -> [(k, v)] -> Store k v
 fromList = foldl' (flip (uncurry insert)) . empty
