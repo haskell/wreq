@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFunctor, FlexibleInstances, GADTs,
-    RankNTypes, RecordWildCards #-}
+    OverloadedStrings, RankNTypes, RecordWildCards #-}
 
 -- |
 -- Module      : Network.Wreq.Internal.Types
@@ -32,15 +32,18 @@ module Network.Wreq.Internal.Types
     , JSONError(..)
     -- * Request types
     , Req(..)
+    , reqURL
     -- * Sessions
     , Session(..)
     , Run
+    , Body(..)
     -- * Caches
     , CacheEntry(..)
     ) where
 
 import Control.Concurrent.MVar (MVar)
 import Control.Exception (Exception)
+import Data.Monoid ((<>), mconcat)
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Typeable (Typeable)
@@ -49,7 +52,9 @@ import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
 import Network.HTTP.Client.Internal (Response, Proxy)
 import Network.HTTP.Types (Header)
 import Prelude hiding (head)
-import qualified Data.ByteString as S
+import qualified Data.ByteString.Char8 as S
+import qualified Data.ByteString.Lazy as L
+import qualified Network.HTTP.Client as HTTP
 
 -- | A MIME content type, e.g. @\"application/octet-stream\"@.
 type ContentType = S.ByteString
@@ -232,24 +237,48 @@ data Link = Link {
     , linkParams :: [(S.ByteString, S.ByteString)]
     } deriving (Eq, Show, Typeable)
 
+-- | A request that is ready to be submitted.
 data Req = Req Mgr Request
 
+reqURL :: Req -> S.ByteString
+reqURL (Req _ req) = mconcat [
+    if https then "https" else "http"
+  , "://"
+  , HTTP.host req
+  , case (HTTP.port req, https) of
+      (80, False) -> ""
+      (443, True) -> ""
+      (p, _)      -> S.pack (show p)
+  , HTTP.path req
+  , case HTTP.queryString req of
+      qs | S.null qs -> ""
+         | otherwise -> "?" <> qs
+  ]
+  where https = HTTP.secure req
+
+-- | A function that runs a request and returns the associated
+-- response.
 type Run body = Req -> IO (Response body)
 
+-- | A session that spans multiple requests.
 data Session = Session {
       seshCookies :: MVar CookieJar
     , seshManager :: Manager
-    , seshRun :: forall body. Session -> Run body -> Run body
+    , seshRun :: Session -> Run Body -> Run Body
     }
 
 instance Show Session where
     show _ = "Session"
 
 data CacheEntry body = CacheEntry {
-    entryCreated :: UTCTime
-  , entryExpires :: Maybe UTCTime
+    entryCreated  :: UTCTime
+  , entryExpires  :: Maybe UTCTime
   , entryResponse :: Response body
   } deriving (Functor)
+
+data Body = NoBody
+          | StringBody L.ByteString
+          | ReaderBody HTTP.BodyReader
 
 instance Show (CacheEntry body) where
     show _ = "CacheEntry"

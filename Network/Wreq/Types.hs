@@ -29,6 +29,10 @@ module Network.Wreq.Types
     , Link(..)
     -- * Errors
     , JSONError(..)
+    -- * Request handling
+    , Req
+    , reqURL
+    , Run
     ) where
 
 import Control.Lens ((&), (.~))

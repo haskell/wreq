@@ -21,6 +21,9 @@ module Network.Wreq.Internal.Lens
     , checkStatus
     , getConnectionWrapper
     , cookieJar
+    , seshCookies
+    , seshManager
+    , seshRun
     -- * Useful functions
     , assoc
     , assoc2
@@ -32,10 +35,12 @@ import Data.List (partition)
 import Network.HTTP.Client (Request)
 import Network.HTTP.Types (HeaderName)
 import Network.Wreq.Lens.Machinery (makeLenses)
+import Network.Wreq.Internal.Types (Session)
 import qualified Data.ByteString as S
 import qualified Network.HTTP.Client as HTTP
 
 makeLenses ''HTTP.Request
+makeLenses ''Session
 
 assoc :: (Eq k) => k -> IndexedTraversal' k [(k, a)] a
 assoc i = traverse . itraversed . index i
