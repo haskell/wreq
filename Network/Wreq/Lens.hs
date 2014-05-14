@@ -45,6 +45,7 @@ module Network.Wreq.Lens
     , params
     , cookie
     , cookies
+    , checkStatus
 
     -- ** Proxy setup
     , Proxy
@@ -99,6 +100,7 @@ module Network.Wreq.Lens
     ) where
 
 import Control.Applicative ((<*))
+import Control.Exception (SomeException)
 import Control.Lens (Fold, Lens, Lens', Traversal', folding)
 import Data.Attoparsec (Parser, endOfInput, parseOnly)
 import Data.ByteString (ByteString)
@@ -210,6 +212,10 @@ params = TH.params
 -- @
 redirects :: Lens' Options Int
 redirects = TH.redirects
+
+-- | A lens to get the optional status check function
+checkStatus :: Lens' Options (Maybe (Status -> ResponseHeaders -> CookieJar -> Maybe SomeException))
+checkStatus = TH.checkStatus
 
 -- | A traversal onto the cookie with the given name, if one exists.
 cookie :: ByteString -> Traversal' Options Cookie

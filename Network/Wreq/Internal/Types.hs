@@ -42,7 +42,7 @@ module Network.Wreq.Internal.Types
     ) where
 
 import Control.Concurrent.MVar (MVar)
-import Control.Exception (Exception)
+import Control.Exception (Exception, SomeException)
 import Data.Monoid ((<>), mconcat)
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
@@ -50,7 +50,7 @@ import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
                             RequestBody, destroyCookieJar)
 import Network.HTTP.Client.Internal (Response, Proxy)
-import Network.HTTP.Types (Header)
+import Network.HTTP.Types (Header, Status, ResponseHeaders)
 import Prelude hiding (head)
 import qualified Data.ByteString.Char8 as S
 import qualified Data.ByteString.Lazy as L
@@ -148,6 +148,13 @@ data Options = Options {
   -- etc.), this field will be used only for the /first/ HTTP request
   -- to be issued during a 'Network.Wreq.Session.Session'. Any changes
   -- changes made for subsequent requests will be ignored.
+  , checkStatus :: 
+    Maybe (Status -> ResponseHeaders -> CookieJar -> Maybe SomeException)
+  -- ^ Function that checks the status code and potentially returns an exception.
+  --
+  -- This defaults to 'Nothing', which will just use the default of
+  -- 'Network.HTTP.Client.Request' which throws a 'StatusException' if the status
+  -- is not 2XX. 
   } deriving (Typeable)
 
 -- | Supported authentication types.

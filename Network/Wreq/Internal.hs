@@ -38,7 +38,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.Wreq.Internal.Lens as Lens
-import qualified Network.Wreq.Lens as Lens
+import qualified Network.Wreq.Lens as Lens hiding (checkStatus)
 
 -- This mess allows this module to continue to load during interactive
 -- development in ghci :-(
@@ -55,13 +55,14 @@ defaultManagerSettings = tlsManagerSettings
 
 defaults :: Options
 defaults = Options {
-    manager   = Left defaultManagerSettings
-  , proxy     = Nothing
-  , auth      = Nothing
-  , headers   = [("User-Agent", userAgent)]
-  , params    = []
-  , redirects = 10
-  , cookies   = HTTP.createCookieJar []
+    manager     = Left defaultManagerSettings
+  , proxy       = Nothing
+  , auth        = Nothing
+  , headers     = [("User-Agent", userAgent)]
+  , params      = []
+  , redirects   = 10
+  , cookies     = HTTP.createCookieJar []
+  , checkStatus = Nothing
   }
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
 
@@ -106,6 +107,7 @@ prepare modify opts url = modify =<< (frob <$> HTTP.parseUrl url)
                    & setQuery opts
                    & setAuth opts
                    & setProxy opts
+                   & setCheckStatus opts
                    & setRedirects opts
                    & Lens.cookieJar .~ Just (cookies opts)
 
@@ -128,6 +130,10 @@ setAuth = maybe id f . auth
 setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy
   where f (Proxy host port) = addProxy host port
+
+setCheckStatus :: Options -> Request -> Request
+setCheckStatus = maybe id f . checkStatus 
+  where f cs = ( & Lens.checkStatus .~ cs)
 
 prepareGet :: Options -> String -> IO Req
 prepareGet opts url = Req (manager opts) <$> prepare return opts url

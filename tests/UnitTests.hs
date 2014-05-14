@@ -8,7 +8,7 @@ module UnitTests (testWith) where
 import Control.Applicative ((<$>))
 import Control.Concurrent (forkIO, killThread)
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
-import Control.Exception (Exception)
+import Control.Exception (Exception, toException)
 import Control.Lens ((^.), (^?), (.~), (?~), (&))
 import Control.Monad (unless, void)
 import Data.Aeson (Value(..), object)
@@ -19,7 +19,7 @@ import Data.Maybe (isJust)
 import Data.Monoid ((<>))
 import HttpBin.Server (serve)
 import Network.HTTP.Client (HttpException(..))
-import Network.HTTP.Types.Status (status200, status401)
+import Network.HTTP.Types.Status (Status(Status), status200, status401)
 import Network.HTTP.Types.Version (http11)
 import Network.Wreq hiding
   (get, post, head_, put, options, delete,
@@ -176,6 +176,22 @@ getHeaders Verb{..} site = do
     (Just "bar")
     (r ^. responseBody ^? key "headers" . key "X-Wibble")
 
+getCheckStatus Verb {..} site = do
+  let opts = defaults & checkStatus .~ (Just customCs)
+  r <- getWith opts (site "/status/404")
+  assertThrows "Non 404 throws error" inspect $
+    getWith opts (site "/get")
+  assertEqual "Status 404" 
+    404
+    (r ^. responseStatus . statusCode)
+  where 
+    customCs (Status 404 _) _ _ = Nothing 
+    customCs s h cj             = Just . toException . StatusCodeException s h $ cj
+
+    inspect e = case e of
+      (StatusCodeException (Status sc _) _ _) -> 
+        assertEqual "200 Status Error" sc 200 
+
 getGzip Verb{..} site = do
   r <- get (site "/gzip")
   assertEqual "gzip decoded for us" (Just (Bool True))
@@ -253,6 +269,7 @@ commonTestsWith verb site = [
     , testCase "cookiesSet" $ cookiesSet verb site
     , testCase "getWithManager" $ getWithManager site
     , testCase "cookieSession" $ cookieSession site
+    , testCase "getCheckStatus" $ getCheckStatus verb site
     ]
   ]
 

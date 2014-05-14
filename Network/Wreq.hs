@@ -71,7 +71,9 @@ module Network.Wreq
     , Lens.headers
     , Lens.params
     , Lens.cookie
-    , Lens.cookies
+    , Lens.cookies 
+    , Lens.checkStatus
+    
     -- ** Authentication
     -- $auth
     , Auth

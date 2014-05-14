@@ -15,6 +15,7 @@ module Network.Wreq.Lens.TH
     , redirects
     , cookie
     , cookies
+    , checkStatus
 
     , HTTP.Cookie
     , cookieName
