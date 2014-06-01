@@ -110,7 +110,7 @@ library
 -- A convenient server for testing locally, or if httpbin.org is down.
 executable httpbin
   hs-source-dirs: httpbin
-  ghc-options:    -Wall -fwarn-tabs -threaded
+  ghc-options:    -Wall -fwarn-tabs -threaded -rtsopts
   if flag(developer)
     ghc-options:  -Werror
   default-language: Haskell98
@@ -130,13 +130,16 @@ executable httpbin
       containers,
       snap-core,
       snap-server >= 0.9.4.4,
-      text
+      text,
+      transformers,
+      unix-compat,
+      uuid
 
 test-suite tests
   type:           exitcode-stdio-1.0
   hs-source-dirs: httpbin tests
   main-is:        Tests.hs
-  ghc-options:    -Wall -fwarn-tabs -funbox-strict-fields -threaded
+  ghc-options:    -Wall -fwarn-tabs -funbox-strict-fields -threaded -rtsopts
   if flag(developer)
     ghc-options:  -Werror
   default-language: Haskell98
@@ -164,7 +167,10 @@ test-suite tests
     test-framework,
     test-framework-hunit,
     test-framework-quickcheck2,
+    transformers,
     text,
+    unix-compat,
+    uuid,
     wreq
 
 test-suite doctest

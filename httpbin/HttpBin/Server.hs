@@ -6,18 +6,22 @@
 module HttpBin.Server (serve) where
 
 import Control.Applicative ((<$>))
+import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (Value(..), eitherDecode, object, toJSON)
 import Data.Aeson.Encode.Pretty (Config(..), encodePretty')
-import qualified Data.ByteString.Base64 as B64
 import Data.ByteString.Char8 (pack)
 import Data.CaseInsensitive (original)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (catMaybes, fromMaybe)
 import Data.Monoid ((<>))
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Read (decimal)
+import Data.UUID (toASCIIBytes)
+import Data.UUID.V4 (nextRandom)
 import Snap.Core
 import Snap.Http.Server as Snap
 import Snap.Util.GZip (withCompression)
+import System.PosixCompat.Time (epochTime)
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as Map
 import qualified Data.Text.Lazy.Encoding as Lazy
@@ -96,6 +100,19 @@ oauth2token = simpleAuth $ \req ->
             [("token", toJSON (B.unpack token))])
     _ -> Nothing
 
+cache = do
+  hdrs <- headers <$> getRequest
+  let cond = not . null . catMaybes . map (flip getHeader hdrs) $
+             ["If-Modified-Since", "If-None-Match"]
+  if cond
+    then modifyResponse $ setResponseCode 304
+    else do
+      now <- liftIO $ formatHttpTime =<< epochTime
+      uuid <- liftIO nextRandom
+      modifyResponse $ setHeader "Last-Modified" now .
+                       setHeader "ETag" (toASCIIBytes uuid)
+      respond return
+
 rqIntParam name req =
   case rqParam name req of
     Just (str:_) -> case decimal (decodeUtf8 str) of
@@ -141,4 +158,5 @@ serve mkConfig = do
     , ("/cookies", methods [GET,HEAD] listCookies)
     , ("/basic-auth/:user/:pass", methods [GET,HEAD] basicAuth)
     , ("/oauth2/:kind/:token", methods [GET,HEAD] oauth2token)
+    , ("/cache", methods [GET,HEAD] cache)
     ]
