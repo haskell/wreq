@@ -431,7 +431,7 @@ will throw a
 [`HttpException`](http://hackage.haskell.org/package/http-client/docs/Network-HTTP-Client.html#t:HttpException).
 
 ~~~~ {.haskell}
-ghci> r <- get "http://httpbin.org/basic-auth/user/pass
+ghci> r <- get "http://httpbin.org/basic-auth/user/pass"
 *** Exception: StatusCodeException (Status {statusCode = 401, {-...-}
 ~~~~
 
