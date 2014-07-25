@@ -431,7 +431,7 @@ will throw a
 [`HttpException`](http://hackage.haskell.org/package/http-client/docs/Network-HTTP-Client.html#t:HttpException).
 
 ~~~~ {.haskell}
-ghci> r <- get "http://httpbin.org/basic-auth/user/pass
+ghci> r <- get "http://httpbin.org/basic-auth/user/pass"
 *** Exception: StatusCodeException (Status {statusCode = 401, {-...-}
 ~~~~
 
@@ -462,6 +462,16 @@ is the standard bearer token, while
 [`oauth2Token`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:oauth2Token)
 is GitHub's variant.  These tokens are equivalent in value to a
 username and password.
+
+To authenticate to Amazon Web Services (AWS), we use [`awsAuth`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:awsAuth). In this example, we set the `Accept` header to request JSON, as opposed to XML output from AWS.
+
+~~~~ {.haskell}
+ghci> let opts = defaults & auth ?~ awsAuth "key" "secret" & header "Accept" .~ ["application/json"]
+ghci> r <- getWith opts "https://sqs.us-east-1.amazonaws.com/?Action=ListQueues"
+ghci> r ^. responseBody
+"{\"ListQueuesResponse\":{\"ListQueuesResult\":{\"queueUrls\": ... }"
+~~~~
+
 
 
 # Error handling

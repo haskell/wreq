@@ -38,6 +38,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.Wreq.Internal.Lens as Lens
+import qualified Network.Wreq.Internal.AWS as AWS (signRequest)
 import qualified Network.Wreq.Lens as Lens hiding (checkStatus)
 
 -- This mess allows this module to continue to load during interactive
@@ -101,7 +102,8 @@ run emgr act req = either (flip HTTP.withManager go) go emgr
   where go mgr = HTTP.withResponse req mgr act
 
 prepare :: (Request -> IO Request) -> Options -> String -> IO Request
-prepare modify opts url = modify =<< (frob <$> HTTP.parseUrl url)
+prepare modify opts url = do
+  signRequest =<< modify =<< frob <$> HTTP.parseUrl url
   where
     frob req = req & Lens.requestHeaders %~ (headers opts ++)
                    & setQuery opts
@@ -110,6 +112,11 @@ prepare modify opts url = modify =<< (frob <$> HTTP.parseUrl url)
                    & setCheckStatus opts
                    & setRedirects opts
                    & Lens.cookieJar .~ Just (cookies opts)
+    signRequest :: Request -> IO Request
+    signRequest = maybe return f $ auth opts
+      where
+        f (AWSv4 key secret) = AWS.signRequest key secret
+        f _ = return
 
 setQuery :: Options -> Request -> Request
 setQuery opts =
@@ -126,6 +133,8 @@ setAuth = maybe id f . auth
     f (BasicAuth user pass) = HTTP.applyBasicAuth user pass
     f (OAuth2Bearer token)  = setHeader "Authorization" ("Bearer " <> token)
     f (OAuth2Token token)   = setHeader "Authorization" ("token " <> token)
+    -- for AWS request signature, see Internal/AWS
+    f (AWSv4 _ _)           = id
 
 setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy

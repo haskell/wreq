@@ -1,5 +1,5 @@
 name:                wreq
-version:             0.2.0.0
+version:             0.2.1.0
 synopsis:            An easy-to-use HTTP client library.
 description:
   .
@@ -82,6 +82,7 @@ library
     Network.Wreq.Internal.Lens
     Network.Wreq.Internal.Link
     Network.Wreq.Internal.Types
+    Network.Wreq.Internal.AWS
     Network.Wreq.Lens.TH
     Network.Wreq.Lens.Machinery
     Paths_wreq
@@ -90,9 +91,12 @@ library
     aeson >= 0.7.0.3,
     attoparsec >= 0.11.1.0,
     base >= 4.5 && < 5,
+    byteable,
     bytestring >= 0.9,
+    base16-bytestring,
     case-insensitive,
     containers,
+    cryptohash,
     exceptions >= 0.5,
     ghc-prim,
     hashable,

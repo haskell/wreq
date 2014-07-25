@@ -81,6 +81,7 @@ module Network.Wreq
     , basicAuth
     , oauth2Bearer
     , oauth2Token
+    , awsAuth
     -- ** Proxy settings
     , Proxy(Proxy)
     , Lens.proxy
@@ -443,6 +444,17 @@ oauth2Bearer = OAuth2Bearer
 -- @
 oauth2Token :: S.ByteString -> Auth
 oauth2Token = OAuth2Token
+
+-- | AWS v4 request signature
+--
+-- Example (note the use of TLS):
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.auth' '?~' 'awsSignature' \"key\" \"secret\"
+--'getWith' opts \"https:\/\/dynamodb.us-west-2.amazonaws.com\"
+-- @
+awsAuth :: S.ByteString -> S.ByteString -> Auth
+awsAuth = AWSv4
 
 -- | Proxy configuration.
 --
