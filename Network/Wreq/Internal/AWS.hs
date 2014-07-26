@@ -7,7 +7,7 @@ module Network.Wreq.Internal.AWS
     , addTmpPayloadHashHeader
     ) where
 
-import Control.Lens ((%~), (^.))
+import Control.Lens ((%~), (^.), (&))
 import Crypto.MAC (hmac, hmacGetDigest)
 import Data.ByteString.Base16 as HEX (encode)
 import Data.Byteable (toBytes)
@@ -87,13 +87,10 @@ signRequest key secret request = do
         , dateScope
         , HEX.encode $ SHA256.hash canonicalReq
         ]
-  -- task 3, step 1
-  let kDate    = hmac' date ("AWS4" <> secret)
-      kRegion  = hmac' region kDate
-      kService = hmac' service kRegion
-      kSigning = hmac' "aws4_request" kService
-  -- task 3, step 2
-  let signature = HEX.encode $ hmac' stringToSign kSigning
+  -- task 3, steps 1 and 2
+  let signature = ("AWS4" <> secret) &
+                  hmac' date & hmac' region & hmac' service &
+                  hmac' "aws4_request" & hmac' stringToSign & HEX.encode
       authorization = S.intercalate ", " [
           "AWS4-HMAC-SHA256 Credential=" <> key <> "/" <> dateScope
         , "SignedHeaders=" <> signedHeaders
