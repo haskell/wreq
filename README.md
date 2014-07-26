@@ -23,6 +23,7 @@ easy.
 
 * Basic and OAuth2 bearer authentication
 
+* Amazon Web Services (AWS) request signing (Version 4)
 
 # Is it done?
 
