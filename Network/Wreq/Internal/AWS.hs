@@ -121,30 +121,30 @@ addTmpPayloadHashHeader req = do
   return $ setHeader tmpPayloadHashHeader payloadHash req
 
 tmpPayloadHashHeader :: CI.CI S.ByteString
-tmpPayloadHashHeader = "X-LOCAL-CONTENT-HASH-HEADER-746352" -- 746352 to reduce collision risk
+tmpPayloadHashHeader = "X-LOCAL-CONTENT-HASH-HEADER-746352"
+                       -- 746352 to reduce collision risk
 
 -- Per AWS documentation at:
 --   http://docs.aws.amazon.com/general/latest/gr/rande.html
 -- For example: "dynamodb.us-east-1.amazonaws.com" -> ("dynamodb", "us-east-1")
 serviceAndRegion :: S.ByteString -> (S.ByteString, S.ByteString)
-serviceAndRegion endpoint =
-  -- For s3, use /<bucket> style access, as opposed to <bucket>.s3... in the hostname.
-  if "s3.amazonaws.com" == endpoint || "s3-external-1.amazonaws.com" == endpoint then
-    (s3, usEast1)
-  else
-    if s3 == servicePrefix '-' endpoint then -- format: e.g. s3-us-west-2.amazonaws.com
-      let region = S.takeWhile (/= '.') $ S.drop 3 endpoint -- drop "s3-"
-      in (s3, region)
-    else
-      -- not s3
-      let svc = servicePrefix '.' endpoint
-      in if svc `HashSet.member` noRegion then
-           (svc, usEast1)
-         else
-           let service:region:_ = S.split '.' endpoint
-           in (service, region)
+serviceAndRegion endpoint
+  -- For s3, use /<bucket> style access, as opposed to
+  -- <bucket>.s3... in the hostname.
+  | endpoint `elem` ["s3.amazonaws.com", "s3-external-1.amazonaws.com"] =
+    ("s3", "us-east-1")
+  | servicePrefix '-' endpoint == "s3" =
+    -- format: e.g. s3-us-west-2.amazonaws.com
+    let region = S.takeWhile (/= '.') $ S.drop 3 endpoint -- drop "s3-"
+    in ("s3", region)
+    -- not s3
+  | svc `HashSet.member` noRegion =
+    (svc, "us-east-1")
+  | otherwise =
+    let service:region:_ = S.split '.' endpoint
+    in (service, region)
   where
-    usEast1 = "us-east-1"
-    s3 = "s3"
+    svc = servicePrefix '.' endpoint
     servicePrefix c = S.map toLower . S.takeWhile (/= c)
-    noRegion = HashSet.fromList [ "iam", "sts", "importexport", "route53", "cloudfront"]
+    noRegion = HashSet.fromList ["iam", "sts", "importexport", "route53",
+                                 "cloudfront"]
