@@ -8,12 +8,12 @@ module Network.Wreq.Internal.AWS
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Lens ((%~), (^.), (&))
+import Control.Lens ((%~), (^.), (&), to)
 import Crypto.MAC (hmac, hmacGetDigest)
 import Data.ByteString.Base16 as HEX (encode)
 import Data.Byteable (toBytes)
 import Data.Char (toLower)
-import Data.List (sort, sortBy)
+import Data.List (sort)
 import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.Ord (comparing)
@@ -62,18 +62,17 @@ signRequest key secret request = do
               [("x-amz-content-sha256", hashedPayload) | service == "s3"]) ++) .
             deleteKey tmpPayloadHashHeader -- drop tmp header
   -- task 1
-  let hl = req ^. requestHeaders
-      signedHeaders = S.intercalate ";" . sort . map (lowerCI . fst) $ hl
+  let hl = req ^. requestHeaders . to sort
+      signedHeaders = S.intercalate ";" . map (lowerCI . fst) $ hl
       canonicalReq = S.intercalate "\n" [
           req ^. method             -- step 1
         , req ^. path               -- step 2
         ,   S.intercalate "&"       -- step 3b, incl. sort
           . map (\(k,v) -> urlEncode False k <> "=" <> urlEncode False v)
-          . sortBy (comparing fst) $
+          . sort $
           parseSimpleQuery $ req ^. queryString
         ,   S.unlines                -- step 4, incl. sort
-          . map (\(k,v) -> lowerCI k <> ":" <> trimHeaderValue v)
-          . sortBy (comparing fst) $ hl
+          . map (\(k,v) -> lowerCI k <> ":" <> trimHeaderValue v) $ hl
         , signedHeaders             -- step 5
         , hashedPayload             -- step 6, handles empty payload
         ]
