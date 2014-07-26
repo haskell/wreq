@@ -73,9 +73,8 @@ signRequest key secret request = do
           . map (\(k,v) -> urlEncode False k <> "=" <> urlEncode False v)
           . sortBy (comparing fst) $
           parseSimpleQuery $ req ^. queryString
-        ,   S.concat                -- step 4, incl. sort
-          . map (  ( <> "\n")       -- append, not intercalate!
-                 . (\(k,v) -> lowerCI k <> ":" <> trimHeaderValue v))
+        ,   S.unlines                -- step 4, incl. sort
+          . map (\(k,v) -> lowerCI k <> ":" <> trimHeaderValue v)
           . sortBy (comparing fst) $ hl
         , signedHeaders             -- step 5
         , hashedPayload             -- step 6, handles empty payload
