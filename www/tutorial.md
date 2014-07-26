@@ -463,7 +463,10 @@ is the standard bearer token, while
 is GitHub's variant.  These tokens are equivalent in value to a
 username and password.
 
-To authenticate to Amazon Web Services (AWS), we use [`awsAuth`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:awsAuth). In this example, we set the `Accept` header to request JSON, as opposed to XML output from AWS.
+To authenticate to Amazon Web Services (AWS), we use
+[`awsAuth`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:awsAuth). In
+this example, we set the `Accept` header to request JSON, as opposed
+to XML output from AWS.
 
 ~~~~ {.haskell}
 ghci> let opts = defaults & auth ?~ awsAuth "key" "secret" & header "Accept" .~ ["application/json"]
@@ -471,7 +474,6 @@ ghci> r <- getWith opts "https://sqs.us-east-1.amazonaws.com/?Action=ListQueues"
 ghci> r ^. responseBody
 "{\"ListQueuesResponse\":{\"ListQueuesResult\":{\"queueUrls\": ... }"
 ~~~~
-
 
 
 # Error handling
