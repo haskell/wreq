@@ -88,12 +88,12 @@ signRequest key secret request = do
         , HEX.encode $ SHA256.hash canonicalReq
         ]
   -- task 3, step 1
-  let kDate    = hmac' ("AWS4" <> secret) date
-      kRegion  = hmac' kDate region
-      kService = hmac' kRegion service
-      kSigning = hmac' kService "aws4_request"
+  let kDate    = hmac' date ("AWS4" <> secret)
+      kRegion  = hmac' region kDate
+      kService = hmac' service kRegion
+      kSigning = hmac' "aws4_request" kService
   -- task 3, step 2
-  let signature = HEX.encode $ hmac' kSigning stringToSign
+  let signature = HEX.encode $ hmac' stringToSign kSigning
       authorization = S.intercalate ", " [
           "AWS4-HMAC-SHA256 Credential=" <> key <> "/" <> dateScope
         , "SignedHeaders=" <> signedHeaders
@@ -110,7 +110,7 @@ signRequest key secret request = do
       let local = utcToLocalTime utc ts -- UTC printable: YYYYMMDDTHHMMSSZ
       return . S.pack $ formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" local
     hmac' :: S.ByteString -> S.ByteString -> S.ByteString
-    hmac' k s = let h = hmac k s :: (CT.HMAC CT.SHA256)
+    hmac' s k = let h = hmac k s :: (CT.HMAC CT.SHA256)
                   in toBytes $ hmacGetDigest h
 
 addTmpPayloadHashHeader :: Request -> IO Request
