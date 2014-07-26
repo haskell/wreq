@@ -51,15 +51,12 @@ signRequest key secret request = do
   ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
   let (service, region) = serviceAndRegion $ req ^. host
       date = S.takeWhile (/= 'T') ts      -- YYYYMMDD
-      hashedPayload =
-        if    "POST" == request ^. method
-           || "PUT"  == request ^. method then
+      hashedPayload
+        | request ^. method `elem` ["POST", "PUT"] =
           fromJust . lookup tmpPayloadHashHeader $ request ^. requestHeaders
-        else
-          HEX.encode $ SHA256.hash ""
-      serviceHeaders = concat $ [
-        if ("s3" == service) then [("x-amz-content-sha256", hashedPayload)] else []
-        ]
+        | otherwise = HEX.encode $ SHA256.hash ""
+      serviceHeaders =
+        [("x-amz-content-sha256", hashedPayload) | service == "s3"]
       -- add common v4 signing headers, service specific headers and drop tmp header
       req = (requestHeaders %~
                ( ( [ ("host", request ^. host), ("x-amz-date", ts) ] ++ serviceHeaders ) ++)
