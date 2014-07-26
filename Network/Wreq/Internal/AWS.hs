@@ -7,6 +7,7 @@ module Network.Wreq.Internal.AWS
     , addTmpPayloadHashHeader
     ) where
 
+import Control.Applicative ((<$>))
 import Control.Lens ((%~), (^.), (&))
 import Crypto.MAC (hmac, hmacGetDigest)
 import Data.ByteString.Base16 as HEX (encode)
@@ -100,13 +101,13 @@ signRequest key secret request = do
   where
     lowerCI = S.map toLower . CI.original
     trimHeaderValue =
-      id -- FIXME, see step 4, whitespace trimming but not in double quoted sections, AWS spec.
-    timestamp = do
-      ts <- getCurrentTime -- UTC
-      let local = utcToLocalTime utc ts -- UTC printable: YYYYMMDDTHHMMSSZ
-      return . S.pack $ formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" local
-    hmac' s k = let h = hmac k s :: (CT.HMAC CT.SHA256)
-                  in toBytes $ hmacGetDigest h
+      id -- FIXME, see step 4, whitespace trimming but not in double
+         -- quoted sections, AWS spec.
+    timestamp = render <$> getCurrentTime
+      where render = S.pack . formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" .
+                     utcToLocalTime utc -- UTC printable: YYYYMMDDTHHMMSSZ
+    hmac' s k = toBytes (hmacGetDigest h)
+      where h = hmac k s :: (CT.HMAC CT.SHA256)
 
 addTmpPayloadHashHeader :: Request -> IO Request
 addTmpPayloadHashHeader req = do
