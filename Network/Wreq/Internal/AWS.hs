@@ -20,9 +20,8 @@ import Data.Ord (comparing)
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (utc, utcToLocalTime)
-import Network.HTTP.Client (Request)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
-import Network.Wreq.Internal.Lens (requestHeaders, setHeader, method, path, queryString, host)
+import Network.Wreq.Internal.Lens
 import System.Locale (defaultTimeLocale)
 import qualified Crypto.Hash as CT (HMAC, SHA256)
 import qualified Crypto.Hash.SHA256 as SHA256 (hash, hashlazy)
@@ -56,13 +55,12 @@ signRequest key secret request = do
         | request ^. method `elem` ["POST", "PUT"] =
           fromJust . lookup tmpPayloadHashHeader $ request ^. requestHeaders
         | otherwise = HEX.encode $ SHA256.hash ""
-      serviceHeaders =
-        [("x-amz-content-sha256", hashedPayload) | service == "s3"]
-      -- add common v4 signing headers, service specific headers and drop tmp header
-      req = (requestHeaders %~
-               ( ( [ ("host", request ^. host), ("x-amz-date", ts) ] ++ serviceHeaders ) ++)
-             . filter ((/= tmpPayloadHashHeader) . fst) -- drop tmp header
-            ) request
+      -- add common v4 signing headers, service specific headers, and
+      -- drop tmp header
+      req = request & requestHeaders %~
+            (([("host", request ^. host), ("x-amz-date", ts)] ++
+              [("x-amz-content-sha256", hashedPayload) | service == "s3"]) ++) .
+            deleteKey tmpPayloadHashHeader -- drop tmp header
   -- task 1
   let hl = req ^. requestHeaders
       signedHeaders = S.intercalate ";" . sort . map (lowerCI . fst) $ hl

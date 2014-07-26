@@ -28,6 +28,7 @@ module Network.Wreq.Internal.Lens
     , assoc
     , assoc2
     , setHeader
+    , deleteKey
     ) where
 
 import Control.Lens hiding (makeLenses)
@@ -53,5 +54,7 @@ assoc2 k f = fmap (uncurry ((++) . fmap ((,) k))) .
              _1 (f . fmap snd) . partition ((==k) . fst)
 
 setHeader :: HeaderName -> S.ByteString -> Request -> Request
-setHeader name value = requestHeaders %~ ((name,value) :) .
-                       filter ((/= name) . fst)
+setHeader name value = requestHeaders %~ ((name,value) :) . deleteKey name
+
+deleteKey :: (Eq a) => a -> [(a,b)] -> [(a,b)]
+deleteKey key = filter ((/= key) . fst)
