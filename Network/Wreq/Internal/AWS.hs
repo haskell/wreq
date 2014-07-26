@@ -69,12 +69,12 @@ signRequest key secret request = do
           req ^. method             -- step 1
         , req ^. path               -- step 2
         ,   S.intercalate "&"       -- step 3b, incl. sort
-          . map (\(k,v) -> S.intercalate "=" . map (urlEncode False) $ [k,v])
+          . map (\(k,v) -> urlEncode False k <> "=" <> urlEncode False v)
           . sortBy (comparing fst) $
           parseSimpleQuery $ req ^. queryString
         ,   S.concat                -- step 4, incl. sort
           . map (  ( <> "\n")       -- append, not intercalate!
-                 . (\(k,v) -> S.intercalate ":" [ lowerCI k, trimHeaderValue v ]))
+                 . (\(k,v) -> lowerCI k <> ":" <> trimHeaderValue v))
           . sortBy (comparing fst) $ hl
         , signedHeaders             -- step 5
         , hashedPayload             -- step 6, handles empty payload
@@ -98,7 +98,6 @@ signRequest key secret request = do
         ]
   return $ setHeader "Authorization" authorization req
   where
-    lowerCI :: CI.CI S.ByteString -> S.ByteString
     lowerCI = S.map toLower . CI.original
     trimHeaderValue =
       id -- FIXME, see step 4, whitespace trimming but not in double quoted sections, AWS spec.
@@ -106,7 +105,6 @@ signRequest key secret request = do
       ts <- getCurrentTime -- UTC
       let local = utcToLocalTime utc ts -- UTC printable: YYYYMMDDTHHMMSSZ
       return . S.pack $ formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" local
-    hmac' :: S.ByteString -> S.ByteString -> S.ByteString
     hmac' s k = let h = hmac k s :: (CT.HMAC CT.SHA256)
                   in toBytes $ hmacGetDigest h
 
