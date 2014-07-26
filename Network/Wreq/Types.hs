@@ -140,6 +140,6 @@ instance (FormValue a) => FormValue (Maybe a) where
     renderFormValue Nothing  = ""
 
 payload :: S.ByteString -> HTTP.RequestBody -> Request -> IO Request
-payload ct body req = AWS.addTmpPayloadHashHeader $ req 
-                    & Lens.setHeader "Content-Type" ct 
+payload ct body req = AWS.addTmpPayloadHashHeader $ req
+                    & Lens.setHeader "Content-Type" ct
                     & Lens.requestBody .~ body

@@ -71,9 +71,9 @@ module Network.Wreq
     , Lens.headers
     , Lens.params
     , Lens.cookie
-    , Lens.cookies 
+    , Lens.cookies
     , Lens.checkStatus
-    
+
     -- ** Authentication
     -- $auth
     , Auth
@@ -445,7 +445,7 @@ oauth2Bearer = OAuth2Bearer
 oauth2Token :: S.ByteString -> Auth
 oauth2Token = OAuth2Token
 
--- | AWS v4 request signature
+-- | AWS v4 request signature.
 --
 -- Example (note the use of TLS):
 --

@@ -30,9 +30,9 @@ import qualified Data.CaseInsensitive  as CI (CI, original)
 import qualified Data.HashSet as HashSet
 import qualified Network.HTTP.Client as HTTP
 
--- Sign requests following the AWS v4 request signing specification: 
+-- Sign requests following the AWS v4 request signing specification:
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
---    
+--
 -- Q: how do we get the payload hash to the signRequest function?
 --
 -- A: we use a (temporary) HTTP header to 'tunnel' the payload hash to
@@ -47,13 +47,13 @@ import qualified Network.HTTP.Client as HTTP
 
 -- TODO: adjust when DELETE supports a body or PATCH is added
 signRequest :: S.ByteString -> S.ByteString -> Request -> IO Request
-signRequest key secret request = do   
+signRequest key secret request = do
   ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
   let (service, region) = serviceAndRegion $ req ^. host
       date = S.takeWhile (/= 'T') ts      -- YYYYMMDD
-      hashedPayload = 
-        if    "POST" == request ^. method 
-           || "PUT"  == request ^. method then    
+      hashedPayload =
+        if    "POST" == request ^. method
+           || "PUT"  == request ^. method then
           fromJust . lookup tmpPayloadHashHeader $ request ^. requestHeaders
         else
           HEX.encode $ SHA256.hash ""
@@ -61,7 +61,7 @@ signRequest key secret request = do
         if ("s3" == service) then [("x-amz-content-sha256", hashedPayload)] else []
         ]
       -- add common v4 signing headers, service specific headers and drop tmp header
-      req = (requestHeaders %~ 
+      req = (requestHeaders %~
                ( ( [ ("host", request ^. host), ("x-amz-date", ts) ] ++ serviceHeaders ) ++)
              . filter ((/= tmpPayloadHashHeader) . fst) -- drop tmp header
             ) request
@@ -71,9 +71,9 @@ signRequest key secret request = do
       canonicalReq = S.intercalate "\n" [
           req ^. method             -- step 1
         , req ^. path               -- step 2
-        ,   S.intercalate "&"       -- step 3b, incl. sort 
+        ,   S.intercalate "&"       -- step 3b, incl. sort
           . map (\(k,v) -> S.intercalate "=" . map (urlEncode False) $ [k,v])
-          . sortBy (comparing fst) $ 
+          . sortBy (comparing fst) $
           parseSimpleQuery $ req ^. queryString
         ,   S.concat                -- step 4, incl. sort
           . map (  ( <> "\n")       -- append, not intercalate!
@@ -90,7 +90,7 @@ signRequest key secret request = do
         , dateScope
         , HEX.encode $ SHA256.hash canonicalReq
         ]
-  -- task 3, step 1             
+  -- task 3, step 1
   let kDate    = hmac' ("AWS4" <> secret) date
       kRegion  = hmac' kDate region
       kService = hmac' kRegion service
@@ -102,13 +102,13 @@ signRequest key secret request = do
         , "SignedHeaders=" <> signedHeaders
         , "Signature=" <> signature
         ]
-  return $ setHeader "Authorization" authorization req 
+  return $ setHeader "Authorization" authorization req
   where
     lowerCI :: CI.CI S.ByteString -> S.ByteString
     lowerCI = S.map toLower . CI.original
     trimHeaderValue =
       id -- FIXME, see step 4, whitespace trimming but not in double quoted sections, AWS spec.
-    timestamp = do 
+    timestamp = do
       ts <- getCurrentTime -- UTC
       let local = utcToLocalTime utc ts -- UTC printable: YYYYMMDDTHHMMSSZ
       return . S.pack $ formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" local
@@ -125,7 +125,7 @@ addTmpPayloadHashHeader req = do
         HTTP.RequestBodyBS bs ->
           HEX.encode $ SHA256.hash bs
         HTTP.RequestBodyLBS lbs ->
-          HEX.encode $ SHA256.hashlazy lbs 
+          HEX.encode $ SHA256.hashlazy lbs
   return $ setHeader tmpPayloadHashHeader payloadHash req
 
 tmpPayloadHashHeader :: CI.CI S.ByteString
@@ -149,7 +149,7 @@ serviceAndRegion endpoint =
       in if svc `HashSet.member` noRegion then
            (svc, usEast1)
          else
-           let service:region:_ = S.split '.' endpoint 
+           let service:region:_ = S.split '.' endpoint
            in (service, region)
   where
     usEast1 = "us-east-1"
