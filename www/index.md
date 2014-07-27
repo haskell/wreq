@@ -29,6 +29,9 @@ easy.
 
 * Amazon Web Services (AWS) request signing (Version 4)
 
+* AWS signing supports sending requests through the
+  [Runscope Inc.](https://www.runscope.com) Traffic Inspector
+
 # Whirlwind tour
 
 ~~~~ {.haskell}

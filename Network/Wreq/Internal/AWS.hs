@@ -33,6 +33,14 @@ import qualified Network.HTTP.Client as HTTP
 -- Sign requests following the AWS v4 request signing specification:
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
 --
+-- Runscope Inc. Traffic Inspector support:
+-- We support (optionally) sending requests through the Runscope
+-- (http://www.runscope.com) Traffic Inspector. If given a Runscope
+-- URL to an AWS service, we will extract and correctly sign the
+-- request for the underlying AWS service. We support Runscope buckets
+-- with and without Bucket Authorization enabled
+-- ("Runscope-Bucket-Auth").
+--
 -- Q: how do we get the payload hash to the signRequest function?
 --
 -- A: we use a (temporary) HTTP header to 'tunnel' the payload hash to
@@ -49,18 +57,26 @@ import qualified Network.HTTP.Client as HTTP
 signRequest :: S.ByteString -> S.ByteString -> Request -> IO Request
 signRequest key secret request = do
   ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
-  let (service, region) = serviceAndRegion $ req ^. host
+  let origHost = request ^. host          -- potentially w/ runscope bucket
+      runscopeBucketAuth =
+        lookup "Runscope-Bucket-Auth" $ request ^. requestHeaders
+      noRunscopeHost = removeRunscope origHost -- rm Runscope for signing
+      (service, region) = serviceAndRegion noRunscopeHost
       date = S.takeWhile (/= 'T') ts      -- YYYYMMDD
       hashedPayload
         | request ^. method `elem` ["POST", "PUT"] =
           fromJust . lookup tmpPayloadHashHeader $ request ^. requestHeaders
         | otherwise = HEX.encode $ SHA256.hash ""
       -- add common v4 signing headers, service specific headers, and
-      -- drop tmp header
+      -- drop tmp header and Runscope-Bucket-Auth header (if present).
       req = request & requestHeaders %~
-            (([("host", request ^. host), ("x-amz-date", ts)] ++
-              [("x-amz-content-sha256", hashedPayload) | service == "s3"]) ++) .
-            deleteKey tmpPayloadHashHeader -- drop tmp header
+            (([ ("host", noRunscopeHost)
+              , ("x-amz-date", ts)] ++
+              [("x-amz-content-sha256", hashedPayload) | service == "s3"]) ++)
+            . deleteKey tmpPayloadHashHeader -- drop tmp header
+            -- Runscope (correctly) doesn't send Bucket Auth header to AWS,
+            -- remove it from the headers we sign. Adding back in at the end.
+            . deleteKey "Runscope-Bucket-Auth"
   -- task 1
   let hl = req ^. requestHeaders . to sort
       signedHeaders = S.intercalate ";" . map (lowerCI . fst) $ hl
@@ -93,7 +109,13 @@ signRequest key secret request = do
         , "SignedHeaders=" <> signedHeaders
         , "Signature=" <> signature
         ]
-  return $ setHeader "Authorization" authorization req
+  -- Add the AWS Authorization header.
+  -- Restore the Host header to the Runscope endpoint
+  -- so they can proxy accordingly (if used, otherwise this is a nop).
+  -- Add the Runscope Bucket Auth header back in, if it was set originally.
+  return $ setHeader "host" origHost
+    `fmap` maybe id (setHeader "Runscope-Bucket-Auth") runscopeBucketAuth
+    `fmap` setHeader "authorization" authorization $ req
   where
     lowerCI = S.map toLower . CI.original
     trimHeaderValue =
@@ -145,3 +167,19 @@ serviceAndRegion endpoint
     servicePrefix c = S.map toLower . S.takeWhile (/= c)
     noRegion = HashSet.fromList ["iam", "sts", "importexport", "route53",
                                  "cloudfront"]
+
+-- If the hostname doesn't end in runscope.net, return the original.
+-- For a hostname that includes runscope.net:
+-- given  sqs-us--east--1-amazonaws-com-<BUCKET>.runscope.net
+-- return sqs.us-east-1.amazonaws.com
+removeRunscope hostname
+  | ".runscope.net" `S.isSuffixOf` hostname =
+    S.concat . Prelude.map (p2 . p1) . S.group -- decode
+    -- drop suffix "-<BUCKET>.runscope.net" before decoding
+    . S.reverse . S.tail . S.dropWhile (/= '-') . S.reverse
+    $ hostname
+  | otherwise = hostname
+    where p1 "-"   = "."
+          p1 other = other
+          p2 "--"   = "-"
+          p2 other  = other

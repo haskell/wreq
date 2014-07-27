@@ -463,14 +463,44 @@ is the standard bearer token, while
 is GitHub's variant.  These tokens are equivalent in value to a
 username and password.
 
+## Amazon Web Services (AWS)
 To authenticate to Amazon Web Services (AWS), we use
 [`awsAuth`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#v:awsAuth). In
 this example, we set the `Accept` header to request JSON, as opposed
 to XML output from AWS.
 
 ~~~~ {.haskell}
-ghci> let opts = defaults & auth ?~ awsAuth "key" "secret" & header "Accept" .~ ["application/json"]
+ghci> let opts = defaults & auth ?~ awsAuth "key" "secret"
+                          & header "Accept" .~ ["application/json"]
 ghci> r <- getWith opts "https://sqs.us-east-1.amazonaws.com/?Action=ListQueues"
+ghci> r ^. responseBody
+"{\"ListQueuesResponse\":{\"ListQueuesResult\":{\"queueUrls\": ... }"
+~~~~
+
+## Runscope support for Amazon Web Services (AWS) requests
+To send requests to AWS through the [Runscope Inc.](https://www.runscope.com)
+Traffic Inspector, convert the AWS service URL to a Runscope Bucket URL
+using the "URL Helper" section in the Runscope dashboard (as you
+would for other HTTP endpoints). Then invoke the AWS service as
+before.  For example, if your Runscope bucket key is
+`7kh11example`, call AWS like so:
+
+~~~~ {.haskell}
+ghci> let opts = defaults & auth ?~ awsAuth "key" "secret"
+                          & header "Accept" .~ ["application/json"]
+ghci> r <- getWith opts "https://sqs-us--east--1-amazonaws-com-7kh11example.runscope.net/?Action=ListQueues"
+ghci> r ^. responseBody
+"{\"ListQueuesResponse\":{\"ListQueuesResult\":{\"queueUrls\": ... }"
+~~~~
+
+If you enabled "Require Authentication Token" in the "Bucket Settings"
+of your Runscope dashboard, set the `Runscope-Bucket-Auth` header like so:
+
+~~~~ {.haskell}
+ghci> let opts = defaults & auth ?~ awsAuth "key" "secret"
+                          & header "Accept" .~ ["application/json"]
+                          & header "Runscope-Bucket-Auth" .~ ["1example-1111-4yyyy-zzzz-xxxxxxxx"]
+ghci> r <- getWith opts "https://sqs-us--east--1-amazonaws-com-7kh11example.runscope.net/?Action=ListQueues"
 ghci> r ^. responseBody
 "{\"ListQueuesResponse\":{\"ListQueuesResult\":{\"queueUrls\": ... }"
 ~~~~
