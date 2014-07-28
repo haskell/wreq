@@ -18,6 +18,7 @@ module Network.Wreq.Internal.Types
       Options(..)
     , Mgr
     , Auth(..)
+    , AWSAuthVersion(..)
     -- * Request payloads
     , Payload(..)
     , Postable(..)
@@ -173,10 +174,14 @@ data Auth = BasicAuth S.ByteString S.ByteString
             -- to be used only by GitHub). This is treated by whoever
             -- accepts it as the equivalent of a username and
             -- password.
-          | AWSv4 S.ByteString S.ByteString
-            -- ^ Amazon Web Services Version 4 request signing
-            -- key secret
+          | AWSAuth AWSAuthVersion S.ByteString S.ByteString
+            -- ^ Amazon Web Services request signing
+            -- AWSAuthVersion key secret
           deriving (Eq, Show, Typeable)
+
+data AWSAuthVersion = AWSv4
+                      -- ^ AWS request signing version 4
+                    deriving (Eq, Show)
 
 instance Show Options where
   show (Options{..}) = concat ["Options { "

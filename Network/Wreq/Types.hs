@@ -17,6 +17,7 @@ module Network.Wreq.Types
     -- * Client configuration
       Options(..)
     , Auth(..)
+    , AWSAuthVersion(..)
     -- * Request payloads
     , Payload(..)
     , Postable(..)

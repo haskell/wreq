@@ -22,6 +22,7 @@ import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (utc, utcToLocalTime)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
 import Network.Wreq.Internal.Lens
+import Network.Wreq.Internal.Types(AWSAuthVersion(..))
 import System.Locale (defaultTimeLocale)
 import qualified Crypto.Hash as CT (HMAC, SHA256)
 import qualified Crypto.Hash.SHA256 as SHA256 (hash, hashlazy)
@@ -54,8 +55,12 @@ import qualified Network.HTTP.Client as HTTP
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
 
 -- Todo: adjust when DELETE supports a body or PATCH is added
-signRequest :: S.ByteString -> S.ByteString -> Request -> IO Request
-signRequest key secret request = do
+signRequest :: AWSAuthVersion -> S.ByteString -> S.ByteString ->
+               Request -> IO Request
+signRequest AWSv4 = signRequestV4
+
+signRequestV4 :: S.ByteString -> S.ByteString -> Request -> IO Request
+signRequestV4 key secret request = do
   !ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
   let origHost = request ^. host          -- potentially w/ runscope bucket
       runscopeBucketAuth =

@@ -115,7 +115,7 @@ prepare modify opts url = do
     signRequest :: Request -> IO Request
     signRequest = maybe return f $ auth opts
       where
-        f (AWSv4 key secret) = AWS.signRequest key secret
+        f (AWSAuth version key secret) = AWS.signRequest version key secret
         f _ = return
 
 setQuery :: Options -> Request -> Request
@@ -134,7 +134,7 @@ setAuth = maybe id f . auth
     f (OAuth2Bearer token)  = setHeader "Authorization" ("Bearer " <> token)
     f (OAuth2Token token)   = setHeader "Authorization" ("token " <> token)
     -- for AWS request signature, see Internal/AWS
-    f (AWSv4 _ _)           = id
+    f (AWSAuth _ _ _)       = id
 
 setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy
