@@ -54,7 +54,7 @@ import qualified Network.HTTP.Client as HTTP
 -- documentation Item 6: "use empty string" in
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
 
--- Todo: adjust when DELETE supports a body or PATCH is added
+-- TODO: adjust when DELETE supports a body or PATCH is added
 signRequest :: AWSAuthVersion -> S.ByteString -> S.ByteString ->
                Request -> IO Request
 signRequest AWSv4 = signRequestV4
@@ -120,8 +120,8 @@ signRequestV4 key secret request = do
   -- so they can proxy accordingly (if used, otherwise this is a nop).
   -- Add the Runscope Bucket Auth header back in, if it was set originally.
   return $ setHeader "host" origHost
-    `fmap` maybe id (setHeader "Runscope-Bucket-Auth") runscopeBucketAuth
-    `fmap` setHeader "authorization" authorization $ req
+        <$> maybe id (setHeader "Runscope-Bucket-Auth") runscopeBucketAuth
+        <$> setHeader "authorization" authorization $ req
   where
     lowerCI = S.map toLower . CI.original
     trimHeaderValue =
