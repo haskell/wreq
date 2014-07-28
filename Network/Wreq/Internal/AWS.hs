@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, BangPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.Wreq.Internal.AWS
@@ -53,10 +53,10 @@ import qualified Network.HTTP.Client as HTTP
 -- documentation Item 6: "use empty string" in
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
 
--- TODO: adjust when DELETE supports a body or PATCH is added
+-- Todo: adjust when DELETE supports a body or PATCH is added
 signRequest :: S.ByteString -> S.ByteString -> Request -> IO Request
 signRequest key secret request = do
-  ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
+  !ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
   let origHost = request ^. host          -- potentially w/ runscope bucket
       runscopeBucketAuth =
         lookup "Runscope-Bucket-Auth" $ request ^. requestHeaders
@@ -84,7 +84,8 @@ signRequest key secret request = do
           req ^. method             -- step 1
         , req ^. path               -- step 2
         ,   S.intercalate "&"       -- step 3b, incl. sort
-          . map (\(k,v) -> urlEncode False k <> "=" <> urlEncode False v)
+            -- urlEncode True (QS) to encode ':' and '/' (e.g. in AWS arns)
+          . map (\(k,v) -> urlEncode True k <> "=" <> urlEncode True v)
           . sort $
           parseSimpleQuery $ req ^. queryString
         ,   S.unlines                -- step 4, incl. sort
