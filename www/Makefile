@@ -3,13 +3,15 @@ bootstrap := bootstrap-3.1.1-dist
 files := index.html tutorial.html
 deps = bootstrap-custom.css background.jpg
 install := $(files) $(deps)
+destdir := $(HOME)/public_html/wreq
 
 all: $(files)
 
 install: $(files)
-	-mkdir -p $(HOME)/public_html/wreq
-	cp -a $(install) $(HOME)/public_html/wreq
-	cp -a $(bootstrap) $(HOME)/public_html/wreq
+	-mkdir -p $(destdir)
+	cp -a $(install) $(destdir)
+	cp -a $(bootstrap) $(destdir)
+	-chcon -R -t httpd_sys_content_t $(destdir)
 
 %.html: %.md template.html $(deps)
 	pandoc $< -o $@ --smart --template template.html \
