@@ -16,13 +16,12 @@ import Data.Char (toLower)
 import Data.List (sort)
 import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
-import Data.Ord (comparing)
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (utc, utcToLocalTime)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
 import Network.Wreq.Internal.Lens
-import Network.Wreq.Internal.Types(AWSAuthVersion(..))
+import Network.Wreq.Internal.Types (AWSAuthVersion(..))
 import System.Locale (defaultTimeLocale)
 import qualified Crypto.Hash as CT (HMAC, SHA256)
 import qualified Crypto.Hash.SHA256 as SHA256 (hash, hashlazy)
@@ -135,14 +134,12 @@ signRequestV4 key secret request = do
 
 addTmpPayloadHashHeader :: Request -> IO Request
 addTmpPayloadHashHeader req = do
-  -- Causes a warning because we don't support e.g. Streaming -
-  -- preferring the warning over adding an explicit error case. The BS
-  -- and LBS support matches Network.Wreq.Types(Putable).
   let payloadHash = case HTTP.requestBody req of
         HTTP.RequestBodyBS bs ->
           HEX.encode $ SHA256.hash bs
         HTTP.RequestBodyLBS lbs ->
           HEX.encode $ SHA256.hashlazy lbs
+        _ -> error "addTmpPayloadHashHeader: unexpected request body type"
   return $ setHeader tmpPayloadHashHeader payloadHash req
 
 tmpPayloadHashHeader :: CI.CI S.ByteString
@@ -178,6 +175,7 @@ serviceAndRegion endpoint
 -- For a hostname that includes runscope.net:
 -- given  sqs-us--east--1-amazonaws-com-<BUCKET>.runscope.net
 -- return sqs.us-east-1.amazonaws.com
+removeRunscope :: S.ByteString -> S.ByteString
 removeRunscope hostname
   | ".runscope.net" `S.isSuffixOf` hostname =
     S.concat . Prelude.map (p2 . p1) . S.group -- decode

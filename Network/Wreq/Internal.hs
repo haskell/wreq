@@ -115,7 +115,7 @@ prepare modify opts url = do
     signRequest :: Request -> IO Request
     signRequest = maybe return f $ auth opts
       where
-        f (AWSAuth version key secret) = AWS.signRequest version key secret
+        f (AWSAuth versn key secret) = AWS.signRequest versn key secret
         f _ = return
 
 setQuery :: Options -> Request -> Request

@@ -11,7 +11,7 @@ module Network.Wreq.Cache
 import Control.Applicative
 import Control.Lens ((^?), (^.), (^..), folded, non, pre, to)
 import Control.Monad (guard)
-import Data.Attoparsec.Char8 as A
+import Data.Attoparsec.ByteString.Char8 as A
 import Data.CaseInsensitive (mk)
 import Data.Foldable (forM_)
 import Data.HashSet (HashSet)

@@ -102,7 +102,7 @@ module Network.Wreq.Lens
 import Control.Applicative ((<*))
 import Control.Exception (SomeException)
 import Control.Lens (Fold, Lens, Lens', Traversal', folding)
-import Data.Attoparsec (Parser, endOfInput, parseOnly)
+import Data.Attoparsec.ByteString (Parser, endOfInput, parseOnly)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
