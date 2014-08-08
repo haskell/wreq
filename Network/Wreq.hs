@@ -77,6 +77,7 @@ module Network.Wreq
     -- ** Authentication
     -- $auth
     , Auth
+    , AWSAuthVersion(..)
     , Lens.auth
     , basicAuth
     , oauth2Bearer
@@ -450,11 +451,11 @@ oauth2Token = OAuth2Token
 -- Example (note the use of TLS):
 --
 -- @
---let opts = 'defaults' '&' 'Lens.auth' '?~' 'awsSignature' \"key\" \"secret\"
+--let opts = 'defaults' '&' 'Lens.auth' '?~' 'awsAuth AWSv4' \"key\" \"secret\"
 --'getWith' opts \"https:\/\/dynamodb.us-west-2.amazonaws.com\"
 -- @
-awsAuth :: S.ByteString -> S.ByteString -> Auth
-awsAuth = AWSv4
+awsAuth :: AWSAuthVersion -> S.ByteString -> S.ByteString -> Auth
+awsAuth = AWSAuth
 
 -- | Proxy configuration.
 --

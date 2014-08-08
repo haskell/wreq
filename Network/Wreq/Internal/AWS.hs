@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, BangPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.Wreq.Internal.AWS
@@ -22,6 +22,7 @@ import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (utc, utcToLocalTime)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
 import Network.Wreq.Internal.Lens
+import Network.Wreq.Internal.Types(AWSAuthVersion(..))
 import System.Locale (defaultTimeLocale)
 import qualified Crypto.Hash as CT (HMAC, SHA256)
 import qualified Crypto.Hash.SHA256 as SHA256 (hash, hashlazy)
@@ -32,6 +33,14 @@ import qualified Network.HTTP.Client as HTTP
 
 -- Sign requests following the AWS v4 request signing specification:
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
+--
+-- Runscope Inc. Traffic Inspector support:
+-- We support (optionally) sending requests through the Runscope
+-- (http://www.runscope.com) Traffic Inspector. If given a Runscope
+-- URL to an AWS service, we will extract and correctly sign the
+-- request for the underlying AWS service. We support Runscope buckets
+-- with and without Bucket Authorization enabled
+-- ("Runscope-Bucket-Auth").
 --
 -- Q: how do we get the payload hash to the signRequest function?
 --
@@ -46,21 +55,33 @@ import qualified Network.HTTP.Client as HTTP
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
 
 -- TODO: adjust when DELETE supports a body or PATCH is added
-signRequest :: S.ByteString -> S.ByteString -> Request -> IO Request
-signRequest key secret request = do
-  ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
-  let (service, region) = serviceAndRegion $ req ^. host
+signRequest :: AWSAuthVersion -> S.ByteString -> S.ByteString ->
+               Request -> IO Request
+signRequest AWSv4 = signRequestV4
+
+signRequestV4 :: S.ByteString -> S.ByteString -> Request -> IO Request
+signRequestV4 key secret request = do
+  !ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
+  let origHost = request ^. host          -- potentially w/ runscope bucket
+      runscopeBucketAuth =
+        lookup "Runscope-Bucket-Auth" $ request ^. requestHeaders
+      noRunscopeHost = removeRunscope origHost -- rm Runscope for signing
+      (service, region) = serviceAndRegion noRunscopeHost
       date = S.takeWhile (/= 'T') ts      -- YYYYMMDD
       hashedPayload
         | request ^. method `elem` ["POST", "PUT"] =
           fromJust . lookup tmpPayloadHashHeader $ request ^. requestHeaders
         | otherwise = HEX.encode $ SHA256.hash ""
       -- add common v4 signing headers, service specific headers, and
-      -- drop tmp header
+      -- drop tmp header and Runscope-Bucket-Auth header (if present).
       req = request & requestHeaders %~
-            (([("host", request ^. host), ("x-amz-date", ts)] ++
-              [("x-amz-content-sha256", hashedPayload) | service == "s3"]) ++) .
-            deleteKey tmpPayloadHashHeader -- drop tmp header
+            (([ ("host", noRunscopeHost)
+              , ("x-amz-date", ts)] ++
+              [("x-amz-content-sha256", hashedPayload) | service == "s3"]) ++)
+            . deleteKey tmpPayloadHashHeader -- drop tmp header
+            -- Runscope (correctly) doesn't send Bucket Auth header to AWS,
+            -- remove it from the headers we sign. Adding back in at the end.
+            . deleteKey "Runscope-Bucket-Auth"
   -- task 1
   let hl = req ^. requestHeaders . to sort
       signedHeaders = S.intercalate ";" . map (lowerCI . fst) $ hl
@@ -68,7 +89,8 @@ signRequest key secret request = do
           req ^. method             -- step 1
         , req ^. path               -- step 2
         ,   S.intercalate "&"       -- step 3b, incl. sort
-          . map (\(k,v) -> urlEncode False k <> "=" <> urlEncode False v)
+            -- urlEncode True (QS) to encode ':' and '/' (e.g. in AWS arns)
+          . map (\(k,v) -> urlEncode True k <> "=" <> urlEncode True v)
           . sort $
           parseSimpleQuery $ req ^. queryString
         ,   S.unlines                -- step 4, incl. sort
@@ -93,7 +115,13 @@ signRequest key secret request = do
         , "SignedHeaders=" <> signedHeaders
         , "Signature=" <> signature
         ]
-  return $ setHeader "Authorization" authorization req
+  -- Add the AWS Authorization header.
+  -- Restore the Host header to the Runscope endpoint
+  -- so they can proxy accordingly (if used, otherwise this is a nop).
+  -- Add the Runscope Bucket Auth header back in, if it was set originally.
+  return $ setHeader "host" origHost
+        <$> maybe id (setHeader "Runscope-Bucket-Auth") runscopeBucketAuth
+        <$> setHeader "authorization" authorization $ req
   where
     lowerCI = S.map toLower . CI.original
     trimHeaderValue =
@@ -145,3 +173,19 @@ serviceAndRegion endpoint
     servicePrefix c = S.map toLower . S.takeWhile (/= c)
     noRegion = HashSet.fromList ["iam", "sts", "importexport", "route53",
                                  "cloudfront"]
+
+-- If the hostname doesn't end in runscope.net, return the original.
+-- For a hostname that includes runscope.net:
+-- given  sqs-us--east--1-amazonaws-com-<BUCKET>.runscope.net
+-- return sqs.us-east-1.amazonaws.com
+removeRunscope hostname
+  | ".runscope.net" `S.isSuffixOf` hostname =
+    S.concat . Prelude.map (p2 . p1) . S.group -- decode
+    -- drop suffix "-<BUCKET>.runscope.net" before decoding
+    . S.reverse . S.tail . S.dropWhile (/= '-') . S.reverse
+    $ hostname
+  | otherwise = hostname
+    where p1 "-"   = "."
+          p1 other = other
+          p2 "--"   = "-"
+          p2 other  = other
