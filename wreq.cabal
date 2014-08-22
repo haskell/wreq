@@ -1,5 +1,5 @@
 name:                wreq
-version:             0.2.1.0
+version:             0.2.1.1
 synopsis:            An easy-to-use HTTP client library.
 description:
   .
@@ -103,7 +103,7 @@ library
     http-client >= 0.3.1.1,
     http-client-tls >= 0.2,
     http-types >= 0.8,
-    lens >= 4.1,
+    lens >= 4.1 && < 4.4,
     mime-types,
     old-locale,
     template-haskell,
@@ -164,7 +164,7 @@ test-suite tests
     hashable,
     http-client,
     http-types,
-    lens >= 4.1,
+    lens >= 4.1 && < 4.4,
     snap-core,
     snap-server >= 0.9.4.4,
     temporary,
