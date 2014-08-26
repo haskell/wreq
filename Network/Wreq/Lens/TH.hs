@@ -63,7 +63,6 @@ module Network.Wreq.Lens.TH
 import Control.Lens hiding (makeLenses)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
-import Language.Haskell.TH.Syntax (mkName, nameBase)
 import Network.Wreq.Internal.Lens (assoc, assoc2)
 import Network.Wreq.Internal.Link
 import Network.Wreq.Lens.Machinery (fieldName, makeLenses, toCamelCase)
