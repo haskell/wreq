@@ -79,21 +79,21 @@ library
     Network.Wreq.Types
   other-modules:
     Network.Wreq.Internal
+    Network.Wreq.Internal.AWS
     Network.Wreq.Internal.Lens
     Network.Wreq.Internal.Link
     Network.Wreq.Internal.Types
-    Network.Wreq.Internal.AWS
-    Network.Wreq.Lens.TH
     Network.Wreq.Lens.Machinery
+    Network.Wreq.Lens.TH
     Paths_wreq
   build-depends:
     PSQueue >= 1.1,
     aeson >= 0.7.0.3,
     attoparsec >= 0.11.1.0,
     base >= 4.5 && < 5,
+    base16-bytestring,
     byteable,
     bytestring >= 0.9,
-    base16-bytestring,
     case-insensitive,
     containers,
     cryptohash,
@@ -171,8 +171,8 @@ test-suite tests
     test-framework,
     test-framework-hunit,
     test-framework-quickcheck2,
-    transformers,
     text,
+    transformers,
     unix-compat,
     uuid,
     wreq
