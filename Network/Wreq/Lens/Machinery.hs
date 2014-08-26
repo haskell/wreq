@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module Network.Wreq.Lens.Machinery
     (
       makeLenses

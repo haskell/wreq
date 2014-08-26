@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, FlexibleContexts, OverloadedStrings, RankNTypes,
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, RankNTypes,
     TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
