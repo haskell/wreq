@@ -63,24 +63,18 @@ module Network.Wreq.Lens.TH
 import Control.Lens hiding (makeLenses)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
-#if MIN_VERSION_lens(4,4,0)
 import Language.Haskell.TH.Syntax (mkName, nameBase)
-#endif
 import Network.Wreq.Internal.Lens (assoc, assoc2)
-import Network.Wreq.Lens.Machinery (makeLenses, toCamelCase)
+import Network.Wreq.Internal.Link
+import Network.Wreq.Lens.Machinery (fieldName, makeLenses, toCamelCase)
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.HTTP.Types.Header as HTTP
 import qualified Network.HTTP.Types.Status as HTTP
 import qualified Network.Wreq.Types as Types
-import Network.Wreq.Internal.Link
 
 makeLenses ''Types.Options
-#if MIN_VERSION_lens(4,4,0)
-makeLensesWith (lensRules & lensField .~ const ((:[]) . TopName . mkName . toCamelCase . nameBase)) ''HTTP.Cookie
-#else
-makeLensesWith (defaultRules & lensField .~ Just . toCamelCase) ''HTTP.Cookie
-#endif
+makeLensesWith (lensRules & lensField .~ fieldName toCamelCase) ''HTTP.Cookie
 makeLenses ''HTTP.Proxy
 makeLenses ''HTTP.Response
 makeLenses ''HTTP.Status
