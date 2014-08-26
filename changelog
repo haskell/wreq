@@ -1,5 +1,11 @@
 -*- markdown -*-
 
+2014-08-25 0.2.1.0
+
+* Support for lens 4.4
+
+* Support for AWS request signing
+
 * httpProxy, basicAuth, oauth2Bearer, oauth2Token: removed Maybe from
   result types, changed documentation to suggest use of (?~)
 
