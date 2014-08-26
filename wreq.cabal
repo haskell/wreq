@@ -1,5 +1,5 @@
 name:                wreq
-version:             0.1.0.1
+version:             0.2.0.0
 synopsis:            An easy-to-use HTTP client library.
 description:
   .
@@ -71,8 +71,8 @@ library
     Network.Wreq.Internal.Lens
     Network.Wreq.Internal.Link
     Network.Wreq.Internal.Types
-    Network.Wreq.Lens.TH
     Network.Wreq.Lens.Machinery
+    Network.Wreq.Lens.TH
     Paths_wreq
   build-depends:
     aeson >= 0.7.0.3,
@@ -83,7 +83,8 @@ library
     http-client >= 0.3.1.1,
     http-client-tls >= 0.2,
     http-types >= 0.8,
-    lens >= 4.1,
+    lens >= 4.4,
+    lens-aeson,
     mime-types,
     template-haskell,
     text,
@@ -125,7 +126,8 @@ test-suite tests
     bytestring,
     http-client,
     http-types,
-    lens >= 4.1,
+    lens >= 4.4,
+    lens-aeson,
     temporary,
     test-framework,
     test-framework-hunit,

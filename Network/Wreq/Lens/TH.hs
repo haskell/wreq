@@ -60,20 +60,19 @@ module Network.Wreq.Lens.TH
     ) where
 
 import Control.Lens hiding (makeLenses)
-import Control.Lens.TH (defaultRules, lensField, makeLensesWith)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Network.Wreq.Internal.Lens (assoc, assoc2)
-import Network.Wreq.Lens.Machinery (makeLenses, toCamelCase)
+import Network.Wreq.Internal.Link
+import Network.Wreq.Lens.Machinery (fieldName, makeLenses, toCamelCase)
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.HTTP.Types.Header as HTTP
 import qualified Network.HTTP.Types.Status as HTTP
 import qualified Network.Wreq.Types as Types
-import Network.Wreq.Internal.Link
 
 makeLenses ''Types.Options
-makeLensesWith (defaultRules & lensField .~ Just . toCamelCase) ''HTTP.Cookie
+makeLensesWith (lensRules & lensField .~ fieldName toCamelCase) ''HTTP.Cookie
 makeLenses ''HTTP.Proxy
 makeLenses ''HTTP.Response
 makeLenses ''HTTP.Status
