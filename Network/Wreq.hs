@@ -327,7 +327,7 @@ deleteWith opts url = runRead =<< prepareDelete opts url
 --
 -- Example:
 -- @
--- 'customMethod' \"PATCH\" \"http://httpbin.org/patch\"
+-- 'customMethod' \"PATCH\" \"http:\/\/httpbin.org\/patch\"
 -- @
 --
 -- >>> r <- customMethod "PATCH" "http://httpbin.org/patch"
