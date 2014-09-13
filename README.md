@@ -28,6 +28,10 @@ easy.
 * AWS signing supports sending requests through the
   [Runscope Inc.](https://www.runscope.com) Traffic Inspector
 
+# Documentation
+
+Tutorials and Documentation available [here](http://www.serpentine.com/wreq/).
+
 # Is it done?
 
 No!  See [`TODO.md`](TODO.md) for a rather long list of ideas.
