@@ -3,7 +3,6 @@
 `wreq` is a library that makes HTTP client programming in Haskell
 easy.
 
-
 # Features
 
 * Simple but powerful `lens`-based API
@@ -28,9 +27,9 @@ easy.
 * AWS signing supports sending requests through the
   [Runscope Inc.](https://www.runscope.com) Traffic Inspector
 
-# Documentation
+# Tutorials
 
-Tutorials and Documentation available [here](http://www.serpentine.com/wreq/).
+See [the tutorials](http://www.serpentine.com/wreq/) for a quick-start.
 
 # Is it done?
 
