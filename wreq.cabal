@@ -151,12 +151,18 @@ test-suite tests
   other-modules:
     Properties.Store
     UnitTests
+    AWS
+    AWS.DynamoDB
+    AWS.IAM
+    AWS.S3
+    AWS.SQS
 
   build-depends:
     HUnit,
     QuickCheck >= 2.7,
     aeson >= 0.7,
     aeson-pretty >= 0.7.1,
+    aeson-qq,
     base >= 4.5 && < 5,
     base64-bytestring,
     bytestring,
@@ -167,6 +173,7 @@ test-suite tests
     http-types,
     lens >= 4.4,
     lens-aeson,
+    network-info,
     snap-core,
     snap-server >= 0.9.4.4,
     temporary,
