@@ -63,6 +63,7 @@ import Control.Concurrent.MVar
 import Control.Lens
 import Data.ByteString.Char8 as BS8 (pack)
 import Data.Maybe (fromMaybe, isJust)
+import Network.Info (getNetworkInterfaces, mac)
 import Network.Wreq
 import System.Environment (getEnv, lookupEnv)
 import Test.Framework (Test, testGroup)
@@ -70,9 +71,6 @@ import qualified AWS.DynamoDB (tests)
 import qualified AWS.IAM (tests)
 import qualified AWS.S3 (tests)
 import qualified AWS.SQS (tests)
-
-import Control.Monad (forM_)
-import Network.Info (getNetworkInterfaces, mac)
 
 tests :: IO Test
 tests = do
