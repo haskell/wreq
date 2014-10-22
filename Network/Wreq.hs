@@ -120,6 +120,7 @@ module Network.Wreq
     , Lens.responseStatus
     , Lens.Status
     , Lens.statusCode
+    , Lens.statusMessage
     -- ** Link headers
     , Lens.Link
     , Lens.linkURL
