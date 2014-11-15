@@ -130,6 +130,20 @@ import qualified Network.Wreq.Lens.TH as TH
 --'Network.HTTP.Client.OpenSSL.withOpenSSL' $
 --  'Network.Wreq.getWith' opts \"https:\/\/httpbin.org\/get\"
 -- @
+--
+-- In this example, we also set the response timeout to 10000 microseconds:
+--
+-- @
+--import "OpenSSL.Session" ('OpenSSL.Session.context')
+--import "Network.HTTP.Client.OpenSSL"
+--import "Network.HTTP.Client" ('Network.HTTP.Client.defaultManagerSettings', 'Network.HTTP.Client.managerResponseTimeout')
+--
+--let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'manager' 'Control.Lens..~' Left ('Network.HTTP.Client.OpenSSL.opensslManagerSettings' 'OpenSSL.Session.context')
+--                    'Control.Lens.&' 'manager' 'Control.Lens..~' Left ('Network.HTTP.Client.defaultManagerSettings' { 'Network.HTTP.Client.managerResponseTimeout' = Just 10000 } )
+--
+--'Network.HTTP.Client.OpenSSL.withOpenSSL' $
+--  'Network.Wreq.getWith' opts \"https:\/\/httpbin.org\/get\"
+-- @
 manager :: Lens' Options (Either ManagerSettings Manager)
 manager = TH.manager
 

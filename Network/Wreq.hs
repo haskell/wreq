@@ -56,6 +56,9 @@ module Network.Wreq
     -- ** DELETE
     , delete
     , deleteWith
+    -- ** Custom Method
+    , customMethod
+    , customMethodWith
     -- * Incremental consumption of responses
     -- ** GET
     , foldGet
@@ -120,6 +123,7 @@ module Network.Wreq
     , Lens.responseStatus
     , Lens.Status
     , Lens.statusCode
+    , Lens.statusMessage
     -- ** Link headers
     , Lens.Link
     , Lens.linkURL
@@ -147,7 +151,6 @@ import Control.Lens ((.~), (&))
 import Control.Monad (unless)
 import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Aeson (FromJSON)
-import Data.ByteString.Char8 ()
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
@@ -164,6 +167,7 @@ import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form
 import qualified Network.Wreq.Lens as Lens
 import qualified Network.Wreq.Types as Wreq
+import qualified Data.ByteString.Char8 as BC8
 
 -- | Issue a GET request.
 --
@@ -319,6 +323,37 @@ delete = deleteWith defaults
 -- 200
 deleteWith :: Options -> String -> IO (Response L.ByteString)
 deleteWith opts url = runRead =<< prepareDelete opts url
+
+-- | Issue a custom-method request
+--
+-- Example:
+-- @
+-- 'customMethod' \"PATCH\" \"http:\/\/httpbin.org\/patch\"
+-- @
+--
+-- >>> r <- customMethod "PATCH" "http://httpbin.org/patch"
+-- >>> r ^. responseStatus . statusCode
+-- 200
+customMethod :: String -> String -> IO (Response L.ByteString)
+customMethod method url = customMethodWith method defaults url
+
+-- | Issue a custom request method request, using the supplied 'Options'.
+--
+-- Example:
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.redirects' '.~' 0
+--'customMethodWith' \"PATCH\" opts \"http:\/\/httpbin.org\/patch\"
+-- @
+--
+-- >>> let opts = defaults & redirects .~ 0
+-- >>> r <- customMethodWith "PATCH" opts "http://httpbin.org/patch"
+-- >>> r ^. responseStatus . statusCode
+-- 200
+customMethodWith :: String -> Options -> String -> IO (Response L.ByteString)
+customMethodWith method opts url = runRead =<< prepareMethod methodBS opts url
+  where
+    methodBS = BC8.pack method
 
 foldGet :: (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGet f z url = foldGetWith defaults f z url
