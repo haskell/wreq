@@ -58,6 +58,7 @@ module Network.Wreq.Lens.TH
     , partFilename
     , partContentType
     , partGetBody
+    , partHeaders
     ) where
 
 import Control.Lens hiding (makeLenses)
