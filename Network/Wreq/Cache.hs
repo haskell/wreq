@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveFunctor, DeriveGeneric,
+{-# LANGUAGE CPP, DeriveDataTypeable, DeriveFunctor, DeriveGeneric,
     OverloadedStrings, RecordWildCards #-}
 
 module Network.Wreq.Cache
@@ -17,7 +17,7 @@ import Data.Foldable (forM_)
 import Data.HashSet (HashSet)
 import Data.Hashable (Hashable)
 import Data.IntSet (IntSet)
-import Data.IORef (atomicModifyIORef', newIORef)
+import Data.IORef (newIORef)
 import Data.List (sort)
 import Data.Maybe (listToMaybe)
 import Data.Monoid (First(..), mconcat)
@@ -34,6 +34,15 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.HashSet as HashSet
 import qualified Data.IntSet as IntSet
 import qualified Network.Wreq.Cache.Store as Store
+
+#if MIN_VERSION_base(4,6,0)
+import Data.IORef (atomicModifyIORef')
+#else
+import Data.IORef (atomicModifyIORef)
+
+atomicModifyIORef' :: IORef a -> (a -> (a, b)) -> IO b
+atomicModifyIORef' = atomicModifyIORef
+#endif
 
 cacheStore :: Int -> IO (Run body -> Run body)
 cacheStore capacity = do
