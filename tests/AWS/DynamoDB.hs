@@ -7,7 +7,6 @@ import Data.Aeson.Lens (key, _String, values, _Double)
 import Data.Aeson.QQ
 import Data.Text as T (pack)
 import Network.Wreq
-import Network.Wreq.Lens (statusMessage)
 import System.Timeout (timeout)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)

@@ -3,7 +3,6 @@ module AWS.IAM (tests) where
 
 import Control.Lens
 import Network.Wreq
-import Network.Wreq.Lens (statusMessage)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool)

@@ -6,8 +6,7 @@ import Data.Aeson.QQ
 import Data.Char (toLower)
 import Data.Monoid ((<>))
 import Network.Wreq
-import Network.Wreq.Lens (statusMessage)
-import Test.Framework (Test,testGroup)
+import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool)
 import qualified Data.ByteString.Char8 as BS8 (ByteString, pack)
