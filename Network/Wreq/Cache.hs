@@ -38,7 +38,7 @@ import qualified Network.Wreq.Cache.Store as Store
 #if MIN_VERSION_base(4,6,0)
 import Data.IORef (atomicModifyIORef')
 #else
-import Data.IORef (atomicModifyIORef)
+import Data.IORef (IORef, atomicModifyIORef)
 
 atomicModifyIORef' :: IORef a -> (a -> (a, b)) -> IO b
 atomicModifyIORef' = atomicModifyIORef
