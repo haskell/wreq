@@ -1,6 +1,11 @@
 -*- markdown -*-
 
-* Support for AWS request signing
+2014-12-02 0.3.0.0
+
+* Support for Amazon Web Services request signing
+
+* New customMethod, customMethodWith functions allow use of arbitrary
+  HTTP verbs
 
 * httpProxy, basicAuth, oauth2Bearer, oauth2Token: removed Maybe from
   result types, changed documentation to suggest use of (?~)
