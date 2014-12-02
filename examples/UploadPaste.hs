@@ -19,7 +19,8 @@ import Data.Maybe (listToMaybe)
 import Data.Monoid (mempty)
 import Network.Wreq (FormParam((:=)), post, responseBody)
 import Network.Wreq.Types (FormValue(..))
-import Options.Applicative as Opts hiding ((&), header)
+import Options.Applicative as Opts
+import Options.Applicative.Types (readerAsk)
 import System.FilePath (takeExtension, takeFileName)
 import Text.HTML.TagSoup
 import qualified Data.ByteString.Char8 as B
@@ -97,8 +98,9 @@ makeLenses ''Paste
 
 -- Try to match a user-supplied name to a Language type, looking at
 -- both full names and filename extensions.
-readLanguage :: Monad m => String -> m Language
-readLanguage l = do
+readLanguage :: ReadM Language
+readLanguage = do
+  l <- readerAsk
   let ll = toLower <$> l
       ms = [lang | (suffixes, lang) <- languages,
             ll == (toLower <$> show lang) || ll `elem` (tail <$> suffixes)]
@@ -158,9 +160,9 @@ main = upload =<< execParser opts
           (optional . fmap Channel . strOption $
            long "channel" <> short 'c' <> metavar "CHANNEL" <>
            help "name of IRC channel to announce") <*>
-          (optional . nullOption $
+          (optional . option readLanguage $
            long "language" <> short 'l' <> metavar "LANG" <>
-           help "language to use" <> reader readLanguage) <*>
+           help "language to use") <*>
           (Opts.argument str $ metavar "PATH" <>
                                help "file to upload") <*>
           (pure ())

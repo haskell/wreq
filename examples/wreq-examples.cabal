@@ -32,13 +32,14 @@ executable upload-paste
   default-language: Haskell98
 
   build-depends:
-    aeson >= 0.7.0.3,
+    aeson,
     ansi-wl-pprint >= 0.6.6,
     base >= 4.5 && < 5,
     bytestring,
     filepath,
     lens,
-    optparse-applicative,
+    optparse-applicative >= 0.11,
+    mtl,
     tagsoup,
     text,
     wreq
