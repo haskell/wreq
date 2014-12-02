@@ -12,6 +12,8 @@ module Network.Wreq.Internal.Lens
     , queryString
     , requestHeaders
     , requestBody
+    , requestVersion
+    , onRequestBodyException
     , proxy
     , hostAddress
     , rawBody
