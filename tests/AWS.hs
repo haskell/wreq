@@ -59,9 +59,9 @@ or machine. The default prefix used for all resources created
 
 module AWS (tests) where
 
-import Control.Concurrent.MVar
 import Control.Lens
 import Data.ByteString.Char8 as BS8 (pack)
+import Data.IORef (newIORef)
 import Data.Maybe (fromMaybe, isJust)
 import Network.Info (getNetworkInterfaces, mac)
 import Network.Wreq
@@ -93,7 +93,7 @@ tests0 True = do
   let baseopts = defaults & auth ?~ awsAuth AWSv4 key secret
   prefix <- fromMaybe "deleteWreqTest" `fmap`
             lookupEnv "WREQ_AWS_TEST_PREFIX"
-  sqsTestState <- newEmptyMVar
+  sqsTestState <- newIORef "missing"
   uniq <- uniqueMachineId
   return $ testGroup "aws" [
       AWS.DynamoDB.tests (prefix ++ "DynamoDB") region baseopts

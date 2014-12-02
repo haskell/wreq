@@ -1,13 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module AWS.SQS (tests) where
 
-import Control.Concurrent.MVar (MVar, tryReadMVar, putMVar)
 import Control.Lens
 import Data.Aeson.Lens (key, _String, values)
-import Data.Maybe (fromMaybe)
+import Data.IORef (IORef, readIORef, writeIORef)
 import Data.Text as T (Text, pack, unpack, split)
 import Network.Wreq
-import Network.Wreq.Lens (statusMessage)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool)
@@ -17,7 +15,7 @@ import Test.HUnit (assertBool)
 -- 'create' testcase and all others will fails. Rerun after awaiting
 -- the SQS 1 min window.
 
-tests :: String -> String -> Options -> MVar String -> Test
+tests :: String -> String -> Options -> IORef String -> Test
 tests prefix region baseopts sqsTestState = testGroup "sqs" [
     testCase "createQueue" $ createQueue prefix region baseopts sqsTestState
   , testCase "listQueues"  $ listQueues prefix region baseopts
@@ -26,7 +24,7 @@ tests prefix region baseopts sqsTestState = testGroup "sqs" [
   , testCase "deleteQueue" $ deleteQueue prefix region baseopts sqsTestState
   ]
 
-createQueue :: String -> String -> Options -> MVar String -> IO ()
+createQueue :: String -> String -> Options -> IORef String -> IO ()
 createQueue prefix region baseopts sqsTestState = do
   let opts = baseopts
              & param  "Action" .~ ["CreateQueue"]
@@ -40,7 +38,7 @@ createQueue prefix region baseopts sqsTestState = do
                               . key "CreateQueueResult"
                               . key "QueueUrl"
                               . _String
-  putMVar sqsTestState $ acctFromQueueUrl qurl
+  writeIORef sqsTestState $ acctFromQueueUrl qurl
 
 listQueues :: String -> String -> Options -> IO ()
 listQueues prefix region baseopts = do
@@ -60,9 +58,9 @@ listQueues prefix region baseopts = do
   assertBool "listQueues contains test queue" $
     elem (prefix ++ queuename) qurls'
 
-deleteQueue :: String -> String -> Options -> MVar String -> IO ()
+deleteQueue :: String -> String -> Options -> IORef String -> IO ()
 deleteQueue prefix region baseopts sqsTestState = do
-  acct <- fromMaybe "missing" `fmap` tryReadMVar sqsTestState
+  acct <- readIORef sqsTestState
   let opts = baseopts
              & param "Action" .~ ["DeleteQueue"]
              & param "Version" .~ ["2009-02-01"]
@@ -71,9 +69,9 @@ deleteQueue prefix region baseopts sqsTestState = do
   assertBool "deleteQueues 200" $ r ^. responseStatus . statusCode == 200
   assertBool "deleteQueues OK" $ r ^. responseStatus . statusMessage == "OK"
 
-sendMessage :: String -> String -> Options -> MVar String -> IO ()
+sendMessage :: String -> String -> Options -> IORef String -> IO ()
 sendMessage prefix region baseopts sqsTestState = do
-  acct <- fromMaybe "missing" `fmap` tryReadMVar sqsTestState
+  acct <- readIORef sqsTestState
   let opts = baseopts
              & param "Action" .~ ["SendMessage"]
              & param "Version" .~ ["2012-11-05"]
@@ -83,9 +81,9 @@ sendMessage prefix region baseopts sqsTestState = do
   assertBool "sendMessage 200" $ r ^. responseStatus . statusCode == 200
   assertBool "sendMessage OK" $ r ^. responseStatus . statusMessage == "OK"
 
-receiveMessage :: String -> String -> Options -> MVar String -> IO ()
+receiveMessage :: String -> String -> Options -> IORef String -> IO ()
 receiveMessage prefix region baseopts sqsTestState = do
-  acct <- fromMaybe "missing" `fmap` tryReadMVar sqsTestState
+  acct <- readIORef sqsTestState
   let opts = baseopts
              & param "Action" .~ ["ReceiveMessage"]
              & param "Version" .~ ["2009-02-01"]
