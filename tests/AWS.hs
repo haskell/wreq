@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 {-
 A set of end to end Amazon Web Services (AWS) tests to make sure we
 can access a number of AWS services that use various AWS request
@@ -59,13 +61,13 @@ or machine. The default prefix used for all resources created
 
 module AWS (tests) where
 
+import Control.Exception as E (IOException, catch)
 import Control.Lens
 import Data.ByteString.Char8 as BS8 (pack)
 import Data.IORef (newIORef)
-import Data.Maybe (fromMaybe, isJust)
 import Network.Info (getNetworkInterfaces, mac)
 import Network.Wreq
-import System.Environment (getEnv, lookupEnv)
+import System.Environment (getEnv)
 import Test.Framework (Test, testGroup)
 import qualified AWS.DynamoDB (tests)
 import qualified AWS.IAM (tests)
@@ -80,19 +82,19 @@ tests = do
   -- Workaround: for now, the presence of the
   --   WREQ_AWS_ACCESS_KEY_ID
   -- env variable enables the tests.
-  flag <- isJust `fmap` lookupEnv "WREQ_AWS_ACCESS_KEY_ID"
+  flag <- (getEnv "WREQ_AWS_ACCESS_KEY_ID" >> return True) `E.catch`
+          \(_::IOException) -> return False
   tests0 flag
 
 tests0 :: Bool -> IO Test
 tests0 False =
   return $ testGroup "aws" [] -- skip AWS tests
 tests0 True = do
-  region <- fromMaybe "us-west-2" `fmap` lookupEnv "WREQ_AWS_REGION"
+  region <- env "us-west-2" "WREQ_AWS_REGION"
   key <- BS8.pack `fmap` getEnv "WREQ_AWS_ACCESS_KEY_ID"
   secret <- BS8.pack `fmap` getEnv "WREQ_AWS_SECRET_ACCESS_KEY"
   let baseopts = defaults & auth ?~ awsAuth AWSv4 key secret
-  prefix <- fromMaybe "deleteWreqTest" `fmap`
-            lookupEnv "WREQ_AWS_TEST_PREFIX"
+  prefix <- env "deleteWreqTest" "WREQ_AWS_TEST_PREFIX"
   sqsTestState <- newIORef "missing"
   uniq <- uniqueMachineId
   return $ testGroup "aws" [
@@ -115,3 +117,6 @@ uniqueMachineId = do
          . show
          . mac
          . head $ l
+
+env :: String -> String -> IO String
+env defVal name = getEnv name `E.catch` \(_::IOException) -> return defVal
