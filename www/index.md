@@ -34,13 +34,24 @@ easy.
 
 # Whirlwind tour
 
+All of the examples that follow assume that you are using the
+[`OverloadedStrings`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/type-class-extensions.html#overloaded-strings)
+language extension, which you can enable in `ghci` as follows:
+
+~~~~ {.haskell}
+ghci> :set -XOverloadedStrings
+~~~~
+
+And now let's get started.
+
 ~~~~ {.haskell}
 ghci> import Network.Wreq
 ghci> r <- get "http://httpbin.org/get"
 ~~~~
 
-Its `lens`-based API is easy to learn (the tutorial walks you through
-the [basics of lenses](tutorial.html#a-quick-lens-backgrounder) and
+This library's `lens`-based API is easy to learn (the tutorial walks
+you through the
+[basics of lenses](tutorial.html#a-quick-lens-backgrounder) and
 powerful to work with.
 
 ~~~~ {.haskell}
