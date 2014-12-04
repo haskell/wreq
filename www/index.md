@@ -49,8 +49,8 @@ ghci> import Network.Wreq
 ghci> r <- get "http://httpbin.org/get"
 ~~~~
 
-This library's `lens`-based API is easy to learn (the tutorial walks
-you through the
+The `wreq` library's `lens`-based API is easy to learn (the tutorial
+walks you through the
 [basics of lenses](tutorial.html#a-quick-lens-backgrounder) and
 powerful to work with.
 
@@ -66,7 +66,7 @@ popular implementations of Tetris in Haskell.
 ~~~~ {.haskell}
 ghci> let opts = defaults & param "q" .~ ["tetris"]
                           & param "language" .~ ["haskell"]
-ghci> r <- getWith opts "https://api.github.com/search/code"
+ghci> r <- getWith opts "https://api.github.com/search/repositories"
 ~~~~
 
 Haskell-to-JSON interoperation is seamless.
