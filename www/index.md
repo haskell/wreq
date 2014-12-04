@@ -51,7 +51,7 @@ ghci> r <- get "http://httpbin.org/get"
 
 The `wreq` library's `lens`-based API is easy to learn (the tutorial
 walks you through the
-[basics of lenses](tutorial.html#a-quick-lens-backgrounder) and
+[basics of lenses](tutorial.html#a-quick-lens-backgrounder)) and
 powerful to work with.
 
 ~~~~ {.haskell}
