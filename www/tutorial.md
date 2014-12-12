@@ -593,4 +593,4 @@ The key differences from the basic API are as follows.
   with `sess`, the `Session` value we'll use.
 
 * Instead of `get` and `post`, we call the `Session`-specific
-  versions, `S.get` and `S.post`, and pass `sess` to each of them.
+  versions, [`S.get`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq-Session.html#v:get) and [`S.post`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq-Session.html#v:post), and pass `sess` to each of them.
