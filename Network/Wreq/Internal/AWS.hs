@@ -4,7 +4,6 @@
 module Network.Wreq.Internal.AWS
     (
       signRequest
-    , addTmpPayloadHashHeader
     ) where
 
 import Control.Applicative ((<$>))
@@ -14,7 +13,6 @@ import Data.ByteString.Base16 as HEX (encode)
 import Data.Byteable (toBytes)
 import Data.Char (toLower)
 import Data.List (sort)
-import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
@@ -26,7 +24,7 @@ import System.Locale (defaultTimeLocale)
 import qualified Crypto.Hash as CT (HMAC, SHA256)
 import qualified Crypto.Hash.SHA256 as SHA256 (hash, hashlazy)
 import qualified Data.ByteString.Char8 as S
-import qualified Data.CaseInsensitive  as CI (CI, original)
+import qualified Data.CaseInsensitive  as CI (original)
 import qualified Data.HashSet as HashSet
 import qualified Network.HTTP.Client as HTTP
 
@@ -68,8 +66,7 @@ signRequestV4 key secret request = do
       (service, region) = serviceAndRegion noRunscopeHost
       date = S.takeWhile (/= 'T') ts      -- YYYYMMDD
       hashedPayload
-        | request ^. method `elem` ["POST", "PUT"] =
-          fromJust . lookup tmpPayloadHashHeader $ request ^. requestHeaders
+        | request ^. method `elem` ["POST", "PUT"] = payloadHash req
         | otherwise = HEX.encode $ SHA256.hash ""
       -- add common v4 signing headers, service specific headers, and
       -- drop tmp header and Runscope-Bucket-Auth header (if present).
@@ -77,7 +74,6 @@ signRequestV4 key secret request = do
             (([ ("host", noRunscopeHost)
               , ("x-amz-date", ts)] ++
               [("x-amz-content-sha256", hashedPayload) | service == "s3"]) ++)
-            . deleteKey tmpPayloadHashHeader -- drop tmp header
             -- Runscope (correctly) doesn't send Bucket Auth header to AWS,
             -- remove it from the headers we sign. Adding back in at the end.
             . deleteKey "Runscope-Bucket-Auth"
@@ -132,19 +128,14 @@ signRequestV4 key secret request = do
     hmac' s k = toBytes (hmacGetDigest h)
       where h = hmac k s :: (CT.HMAC CT.SHA256)
 
-addTmpPayloadHashHeader :: Request -> IO Request
-addTmpPayloadHashHeader req = do
-  let payloadHash = case HTTP.requestBody req of
-        HTTP.RequestBodyBS bs ->
-          HEX.encode $ SHA256.hash bs
-        HTTP.RequestBodyLBS lbs ->
-          HEX.encode $ SHA256.hashlazy lbs
-        _ -> error "addTmpPayloadHashHeader: unexpected request body type"
-  return $ setHeader tmpPayloadHashHeader payloadHash req
-
-tmpPayloadHashHeader :: CI.CI S.ByteString
-tmpPayloadHashHeader = "X-LOCAL-CONTENT-HASH-HEADER-746352"
-                       -- 746352 to reduce collision risk
+payloadHash :: Request -> S.ByteString
+payloadHash req = 
+  case HTTP.requestBody req of
+    HTTP.RequestBodyBS bs ->
+      HEX.encode $ SHA256.hash bs
+    HTTP.RequestBodyLBS lbs ->
+      HEX.encode $ SHA256.hashlazy lbs
+    _ -> error "addTmpPayloadHashHeader: unexpected request body type"
 
 -- Per AWS documentation at:
 --   http://docs.aws.amazon.com/general/latest/gr/rande.html
