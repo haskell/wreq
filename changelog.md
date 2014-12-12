@@ -1,5 +1,9 @@
 -*- markdown -*-
 
+2014-12-11 0.3.0.1
+
+* Bump lower bound on http-client to 0.3.0.1
+
 2014-12-02 0.3.0.0
 
 * Support for Amazon Web Services request signing

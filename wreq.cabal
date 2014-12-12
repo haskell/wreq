@@ -40,7 +40,7 @@ cabal-version:       >=1.10
 extra-source-files:
   README.md
   TODO.md
-  changelog
+  changelog.md
   examples/*.cabal
   examples/*.hs
   www/*.css
