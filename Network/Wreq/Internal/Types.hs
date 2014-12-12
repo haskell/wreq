@@ -255,6 +255,10 @@ data Link = Link {
 -- | A request that is ready to be submitted.
 data Req = Req Mgr Request
 
+-- | Return the URL associated with the given 'Req'.
+--
+-- This includes the port number if not standard, and the query string
+-- if one exists.
 reqURL :: Req -> S.ByteString
 reqURL (Req _ req) = mconcat [
     if https then "https" else "http"
@@ -275,7 +279,8 @@ reqURL (Req _ req) = mconcat [
 -- response.
 type Run body = Req -> IO (Response body)
 
--- | A session that spans multiple requests.
+-- | A session that spans multiple requests.  This is responsible for
+-- cookie management and TCP connection reuse.
 data Session = Session {
       seshCookies :: MVar CookieJar
     , seshManager :: Manager

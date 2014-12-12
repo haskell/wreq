@@ -37,6 +37,10 @@
 module Network.Wreq
     (
     -- * HTTP verbs
+
+    -- ** Sessions
+    -- $session
+
     -- ** GET
       get
     , getWith
@@ -525,6 +529,20 @@ partString :: Text           -- ^ Name of the corresponding \<input\>.
            -> String         -- ^ The body for this 'Form.Part'.
            -> Form.Part
 partString name value = Form.partBS name (encodeUtf8 (T.pack value))
+
+-- $session
+--
+-- The basic HTTP functions ('get', 'post', and so on) in this module
+-- have a few key drawbacks:
+--
+-- * If several requests go to the same server, there is no reuse of
+--   TCP connections.
+--
+-- * There is no management of cookies across multiple requests.
+--
+-- This makes these functions inefficient and verbose for many common
+-- uses.  For greater efficiency, use the "Network.Wreq.Session"
+-- module.
 
 -- $cookielenses
 --
