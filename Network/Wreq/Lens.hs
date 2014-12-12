@@ -232,6 +232,10 @@ checkStatus :: Lens' Options (Maybe (Status -> ResponseHeaders -> CookieJar -> M
 checkStatus = TH.checkStatus
 
 -- | A traversal onto the cookie with the given name, if one exists.
+--
+-- N.B. This is an \"illegal\" 'Traversal'': we can change the
+-- 'cookieName' of the associated 'Cookie' so that it differs from the
+-- name provided to this function.
 cookie :: ByteString -> Traversal' Options Cookie
 cookie = TH.cookie
 
