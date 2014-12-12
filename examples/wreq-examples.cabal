@@ -26,6 +26,17 @@ executable wreq-example-json-response
     text,
     wreq
 
+
+executable wreq-example-simple-session
+  main-is:        SimpleSession.hs
+  ghc-options:    -Wall -fwarn-tabs -threaded
+  default-language: Haskell98
+
+  build-depends:
+    base >= 4.5 && < 5,
+    lens,
+    wreq
+
 executable upload-paste
   main-is:          UploadPaste.hs
   ghc-options:      -Wall -fwarn-tabs -threaded

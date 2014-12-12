@@ -414,6 +414,9 @@ ghci> r ^. responseCookie "foo" . cookieValue
 "bar"
 ~~~~
 
+To make cookies even easier to deal with, we'll want to
+[use the `Session` API](#session), but we'll come back to that later.
+
 
 # Authentication
 
@@ -540,3 +543,54 @@ getAuth url myauth = get url `E.catch` handler
 authentication during a session, to avoid the need for an
 unauthenticated failure followed by an authenticated success if we
 visit the same endpoint repeatedly.)
+
+
+# Handling multiple HTTP requests
+
+<a id="session">For non-trivial applications</a>, we'll always want to
+use a
+[`Session`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq-Session.html#t:Session)
+to efficiently and correctly handle multiple requests.
+
+The `Session` API provides two important features:
+
+* When we issue multiple HTTP requests to the same server, a `Session`
+  will reuse TCP and TLS connections for us.  (The simpler API we've
+  discussed so far does not do this.)  This greatly improves
+  efficiency.
+
+* A `Session` transparently manages HTTP cookies.  (We can manage them
+  by hand, but it's awkward and verbose, so we won't cover it in this
+  tutorial.)
+
+Here's a complete example.
+
+~~~~ {.haskell}
+{-# LANGUAGE OverloadedStrings #-}
+
+import Control.Lens
+import Network.Wreq
+import qualified Network.Wreq.Session as S
+
+main :: IO ()
+main = S.withSession $ \sess -> do
+  -- First request: tell the server to set a cookie
+  S.get sess "http://httpbin.org/cookies/set?name=hi"
+
+  -- Second request: the cookie should still be set afterwards.
+  r <- S.post sess "http://httpbin.org/post" ["a" := (3 :: Int)]
+  print $ r ^. responseCookie "name" . cookieValue
+~~~~
+
+The key differences from the basic API are as follows.
+
+* We import the
+  [`Network.Wreq.Session`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq-Session.html)
+  module qualified, and we'll identify its functions by prefixing them
+  with "`S.`".
+
+* To create a `Session`, we use `S.withSession`. It calls our code
+  with `sess`, the `Session` value we'll use.
+
+* Instead of `get` and `post`, we call the `Session`-specific
+  versions, `S.get` and `S.post`, and pass `sess` to each of them.
