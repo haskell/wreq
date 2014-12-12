@@ -181,16 +181,16 @@ getCheckStatus Verb {..} site = do
   r <- getWith opts (site "/status/404")
   assertThrows "Non 404 throws error" inspect $
     getWith opts (site "/get")
-  assertEqual "Status 404" 
+  assertEqual "Status 404"
     404
     (r ^. responseStatus . statusCode)
-  where 
-    customCs (Status 404 _) _ _ = Nothing 
+  where
+    customCs (Status 404 _) _ _ = Nothing
     customCs s h cj             = Just . toException . StatusCodeException s h $ cj
 
     inspect e = case e of
-      (StatusCodeException (Status sc _) _ _) -> 
-        assertEqual "200 Status Error" sc 200 
+      (StatusCodeException (Status sc _) _ _) ->
+        assertEqual "200 Status Error" sc 200
 
 getGzip Verb{..} site = do
   r <- get (site "/gzip")

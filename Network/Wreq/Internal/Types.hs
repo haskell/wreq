@@ -149,13 +149,13 @@ data Options = Options {
   -- etc.), this field will be used only for the /first/ HTTP request
   -- to be issued during a 'Network.Wreq.Session.Session'. Any changes
   -- changes made for subsequent requests will be ignored.
-  , checkStatus :: 
+  , checkStatus ::
     Maybe (Status -> ResponseHeaders -> CookieJar -> Maybe SomeException)
   -- ^ Function that checks the status code and potentially returns an exception.
   --
   -- This defaults to 'Nothing', which will just use the default of
   -- 'Network.HTTP.Client.Request' which throws a 'StatusException' if the status
-  -- is not 2XX. 
+  -- is not 2XX.
   } deriving (Typeable)
 
 -- | Supported authentication types.
