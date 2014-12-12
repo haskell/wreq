@@ -11,7 +11,7 @@ import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 import Control.Exception (Exception, toException)
 import Control.Lens ((^.), (^?), (.~), (?~), (&))
 import Control.Monad (unless, void)
-import Data.Aeson (Value(..), object)
+import Data.Aeson
 import Data.Aeson.Lens (key)
 import Data.ByteString (ByteString)
 import Data.Char (toUpper)
@@ -112,6 +112,42 @@ basicHead Verb{..} site = do
 basicPut Verb{..} site = do
   r <- put (site "/put") ("wibble" :: ByteString)
   assertEqual "PUT succeeds" status200 (r ^. responseStatus)
+
+data SolrAdd = SolrAdd
+    { doc          :: String
+    , boost        :: Float
+    , overwrite    :: Bool
+    , commitWithin :: Integer
+    }
+
+instance ToJSON SolrAdd where
+    toJSON (SolrAdd doc boost overwrite commitWithin) =
+        object
+            [
+                "add" .= object
+                [ "doc" .= toJSON doc
+                , "boost" .= boost
+                , "overwrite" .= overwrite
+                , "commitWithin" .= commitWithin
+                ]
+            ]
+
+solrAdd :: SolrAdd
+solrAdd = SolrAdd "wibble" 1.0 True 10000
+
+jsonPut Verb{..} site = do
+  r <- put (site "/put") $ toJSON solrAdd
+  assertEqual "toJSON PUT request has correct Content-Type header"
+    (Just "application/json")
+    (r ^. responseBody ^? key "headers" . key "Content-Type")
+
+-- FAILS :-(
+byteStringPut Verb{..} site = do
+  let opts = defaults & header "Content-Type" .~ ["application/json"]
+  r <- put (site "/put") $ encode solrAdd
+  assertEqual "ByteString PUT request has correct Content-Type header"
+    (Just "application/json")
+    (r ^. responseBody ^? key "headers" . key "Content-Type")
 
 basicDelete Verb{..} site = do
   r <- delete (site "/delete")
@@ -266,6 +302,8 @@ commonTestsWith verb site = [
     , testCase "params" $ getParams verb site
     , testCase "headers" $ getHeaders verb site
     , testCase "gzip" $ getGzip verb site
+    , testCase "json put" $ jsonPut verb site
+    , testCase "bytestring put" $ byteStringPut verb site
     , testCase "cookiesSet" $ cookiesSet verb site
     , testCase "getWithManager" $ getWithManager site
     , testCase "cookieSession" $ cookieSession site
