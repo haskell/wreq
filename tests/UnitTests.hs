@@ -144,7 +144,7 @@ jsonPut Verb{..} site = do
 -- FAILS :-(
 byteStringPut Verb{..} site = do
   let opts = defaults & header "Content-Type" .~ ["application/json"]
-  r <- put (site "/put") $ encode solrAdd
+  r <- putWith opts (site "/put") $ encode solrAdd
   assertEqual "ByteString PUT request has correct Content-Type header"
     (Just "application/json")
     (r ^. responseBody ^? key "headers" . key "Content-Type")
