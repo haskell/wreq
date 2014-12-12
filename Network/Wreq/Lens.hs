@@ -167,7 +167,7 @@ proxy = TH.proxy
 -- Example (note the use of TLS):
 --
 -- @
---let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'Lens.auth' 'Control.Lens..~' 'Network.Wreq.basicAuth' \"user\" \"pass\"
+--let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'Lens.auth' 'Control.Lens.?~' 'Network.Wreq.basicAuth' \"user\" \"pass\"
 --'Network.Wreq.getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
 -- @
 auth :: Lens' Options (Maybe Auth)
