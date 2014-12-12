@@ -141,7 +141,6 @@ jsonPut Verb{..} site = do
     (Just "application/json")
     (r ^. responseBody ^? key "headers" . key "Content-Type")
 
--- FAILS :-(
 byteStringPut Verb{..} site = do
   let opts = defaults & header "Content-Type" .~ ["application/json"]
   r <- putWith opts (site "/put") $ encode solrAdd

@@ -30,6 +30,7 @@ module Network.Wreq.Internal.Lens
     , assoc
     , assoc2
     , setHeader
+    , maybeSetHeader
     , deleteKey
     ) where
 
@@ -55,8 +56,17 @@ assoc2 :: Eq k => k -> Lens' [(k,a)] [a]
 assoc2 k f = fmap (uncurry ((++) . fmap ((,) k))) .
              _1 (f . fmap snd) . partition ((==k) . fst)
 
+-- | Set a header to the given value, replacing any prior value.
 setHeader :: HeaderName -> S.ByteString -> Request -> Request
 setHeader name value = requestHeaders %~ ((name,value) :) . deleteKey name
+
+-- | Set a header to the given value, but only if the header was not
+-- already set.
+maybeSetHeader :: HeaderName -> S.ByteString -> Request -> Request
+maybeSetHeader name value = requestHeaders %~
+  \hdrs -> case lookup name hdrs of
+             Just _  -> hdrs
+             Nothing -> (name,value) : hdrs
 
 deleteKey :: (Eq a) => a -> [(a,b)] -> [(a,b)]
 deleteKey key = filter ((/= key) . fst)

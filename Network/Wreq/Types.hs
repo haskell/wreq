@@ -142,5 +142,5 @@ instance (FormValue a) => FormValue (Maybe a) where
 
 payload :: S.ByteString -> HTTP.RequestBody -> Request -> IO Request
 payload ct body req = AWS.addTmpPayloadHashHeader $ req
-                    & Lens.setHeader "Content-Type" ct
+                    & Lens.maybeSetHeader "Content-Type" ct
                     & Lens.requestBody .~ body
