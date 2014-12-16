@@ -89,6 +89,7 @@ JSON search result we just received from GitHub above, and pulls out
 the authors of our popular Tetris clones.
 
 ~~~~ {.haskell}
+ghci> import Data.Aeson.Lens
 ghci> r ^.. responseBody . key "items" . values .
             key "owner" . key "login" . _String
 ["steffi2392","rmies","Spacejoker","walpen",{-...-}
