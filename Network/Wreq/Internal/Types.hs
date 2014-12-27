@@ -178,6 +178,19 @@ data Auth = BasicAuth S.ByteString S.ByteString
             -- ^ Amazon Web Services request signing
             -- AWSAuthVersion key secret
           | OAuth1 S.ByteString S.ByteString S.ByteString S.ByteString
+            -- ^ OAuth1 authentication to access protected requests
+            -- OAuth1 consumerToken consumerSecret token tokenSecret
+            -- consumerToken and consumerSecret are specific to your application
+            -- token and tokenSecret are specific to the (protected) resource-owner
+          | OAuth1Temp S.ByteString S.ByteString S.ByteString
+            -- ^ OAuth1Temp authentication used to request temporary credentials
+            -- to request an access token pair
+            -- OAuth1Temp consumerToken consumerSecret callbackUri
+          | OAuth1ReqAccessToken S.ByteString S.ByteString S.ByteString S.ByteString S.ByteString
+            -- ^ OAuth1RequestAccessToken used to request an access token
+            -- using a pair of (already procured) temporary credentials
+            -- OAuth1RequestAccessToken consumerToken consumerSecret tempToken tempSecret oauthVerifier
+
           deriving (Eq, Show, Typeable)
 
 data AWSAuthVersion = AWSv4

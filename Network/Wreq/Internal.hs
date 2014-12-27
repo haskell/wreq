@@ -117,8 +117,10 @@ prepare modify opts url = do
     signRequest :: Request -> IO Request
     signRequest = maybe return f $ auth opts
       where
-        f (AWSAuth versn key secret) = AWS.signRequest versn key secret
-        f oauth1Credentials@(OAuth1 _ _ _ _) = OAuth1.signRequest oauth1Credentials
+        f (AWSAuth versn key secret)     = AWS.signRequest versn key secret
+        f creds@(OAuth1{})               = OAuth1.signRequest creds
+        f creds@(OAuth1Temp{})           = OAuth1.signRequest creds
+        f creds@(OAuth1ReqAccessToken{}) = OAuth1.signRequest creds
         f _ = return
 
 
@@ -138,8 +140,8 @@ setAuth = maybe id f . auth
     f (OAuth2Bearer token)  = setHeader "Authorization" ("Bearer " <> token)
     f (OAuth2Token token)   = setHeader "Authorization" ("token " <> token)
     -- for AWS request signature, see Internal/AWS
-    f (AWSAuth _ _ _)       = id
-    f (OAuth1 _ _ _ _)      = id
+    f (AWSAuth _ _ _) = id
+    f _               = id
 
 setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy
