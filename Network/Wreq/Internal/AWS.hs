@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, BangPatterns #-}
+{-# LANGUAGE OverloadedStrings, BangPatterns, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.Wreq.Internal.AWS
@@ -16,11 +16,15 @@ import Data.List (sort)
 import Data.Monoid ((<>))
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
+#if MIN_VERSION_time(1,5,0)
+import Data.Time.Format (defaultTimeLocale)
+#else
+import System.Locale (defaultTimeLocale)
+#endif
 import Data.Time.LocalTime (utc, utcToLocalTime)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
 import Network.Wreq.Internal.Lens
 import Network.Wreq.Internal.Types (AWSAuthVersion(..))
-import System.Locale (defaultTimeLocale)
 import qualified Crypto.Hash as CT (HMAC, SHA256)
 import qualified Crypto.Hash.SHA256 as SHA256 (hash, hashlazy)
 import qualified Data.ByteString.Char8 as S
@@ -129,7 +133,7 @@ signRequestV4 key secret request = do
       where h = hmac k s :: (CT.HMAC CT.SHA256)
 
 payloadHash :: Request -> S.ByteString
-payloadHash req = 
+payloadHash req =
   case HTTP.requestBody req of
     HTTP.RequestBodyBS bs ->
       HEX.encode $ SHA256.hash bs
