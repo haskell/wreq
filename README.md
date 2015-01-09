@@ -1,4 +1,4 @@
-# wreq: a Haskell web client library
+# wreq: a Haskell web client library [![Build Status](https://travis-ci.org/bos/wreq.svg)](https://travis-ci.org/bos/wreq)
 
 `wreq` is a library that makes HTTP client programming in Haskell
 easy.
