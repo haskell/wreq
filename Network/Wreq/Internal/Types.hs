@@ -178,6 +178,8 @@ data Auth = BasicAuth S.ByteString S.ByteString
             -- ^ Amazon Web Services request signing
             -- AWSAuthVersion key secret
           | OAuth1 S.ByteString S.ByteString S.ByteString S.ByteString
+            -- ^ OAuth1 request signing
+            -- OAuth1 consumerToken consumerSecret token secret
           deriving (Eq, Show, Typeable)
 
 data AWSAuthVersion = AWSv4

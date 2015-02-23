@@ -118,7 +118,7 @@ prepare modify opts url = do
     signRequest = maybe return f $ auth opts
       where
         f (AWSAuth versn key secret) = AWS.signRequest versn key secret
-        f oauth1Credentials@(OAuth1 _ _ _ _) = OAuth1.signRequest oauth1Credentials
+        f (OAuth1 consumerToken consumerSecret token secret) = OAuth1.signRequest consumerToken consumerSecret token secret
         f _ = return
 
 
