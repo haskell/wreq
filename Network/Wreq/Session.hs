@@ -60,8 +60,9 @@ module Network.Wreq.Session
     , Lens.seshRun
     ) where
 
-import Control.Concurrent.MVar (modifyMVar, newMVar)
-import Control.Lens ((&), (?~), (^.))
+import Control.Lens ((&), (?~))
+import Data.IORef (newIORef, readIORef, atomicModifyIORef)
+import Data.Time (getCurrentTime)
 import Network.Wreq (Options, Response)
 import Network.Wreq.Internal
 import Network.Wreq.Internal.Types (Body(..), Req(..), Session(..))
@@ -69,7 +70,6 @@ import Network.Wreq.Types (Postable, Putable, Run)
 import Prelude hiding (head)
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
-import qualified Network.Wreq as Wreq
 import qualified Network.Wreq.Internal.Lens as Lens
 
 -- | Create a 'Session', passing it to the given function.  The
@@ -80,9 +80,9 @@ withSession = withSessionWith defaultManagerSettings
 -- | Create a session, using the given manager settings.
 withSessionWith :: HTTP.ManagerSettings -> (Session -> IO a) -> IO a
 withSessionWith settings act = do
-  mv <- newMVar $ HTTP.createCookieJar []
+  ref <- newIORef $ HTTP.createCookieJar []
   HTTP.withManager settings $ \mgr ->
-    act Session { seshCookies = mv
+    act Session { seshCookies = ref
                 , seshManager = mgr
                 , seshRun = runWith
                 }
@@ -139,10 +139,12 @@ deleteWith :: Options -> Session -> String -> IO (Response L.ByteString)
 deleteWith opts sesh url = run string sesh =<< prepareDelete opts url
 
 runWith :: Session -> Run Body -> Run Body
-runWith Session{..} act (Req _ req) =
-  modifyMVar seshCookies $ \cj -> do
-    resp <- act (Req (Right seshManager) (req & Lens.cookieJar ?~ cj))
-    return (resp ^. Wreq.responseCookieJar, resp)
+runWith Session{..} act (Req _ req) = do
+  cj <- readIORef seshCookies
+  let req' = req & Lens.cookieJar ?~ cj
+  resp <- act (Req (Right seshManager) req')
+  now <- getCurrentTime
+  atomicModifyIORef seshCookies $ HTTP.updateCookieJar resp req' now
 
 type Mapping a = (Body -> a, a -> Body, Run a)
 

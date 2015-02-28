@@ -42,8 +42,8 @@ module Network.Wreq.Internal.Types
     , CacheEntry(..)
     ) where
 
-import Control.Concurrent.MVar (MVar)
 import Control.Exception (Exception, SomeException)
+import Data.IORef (IORef)
 import Data.Monoid ((<>), mconcat)
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
@@ -282,7 +282,7 @@ type Run body = Req -> IO (Response body)
 -- | A session that spans multiple requests.  This is responsible for
 -- cookie management and TCP connection reuse.
 data Session = Session {
-      seshCookies :: MVar CookieJar
+      seshCookies :: IORef CookieJar
     , seshManager :: Manager
     , seshRun :: Session -> Run Body -> Run Body
     }
