@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP, DeriveDataTypeable, DeriveFunctor, DeriveGeneric,
-    OverloadedStrings, RecordWildCards #-}
+    OverloadedStrings, RecordWildCards, FlexibleContexts #-}
 
 module Network.Wreq.Cache
     (
@@ -29,7 +29,11 @@ import Network.HTTP.Types (HeaderName, Method)
 import Network.Wreq.Internal.Lens
 import Network.Wreq.Internal.Types
 import Network.Wreq.Lens
+#if MIN_VERSION_time(1,5,0)
+import Data.Time.Format (defaultTimeLocale)
+#else
 import System.Locale (defaultTimeLocale)
+#endif
 import qualified Data.ByteString.Char8 as B
 import qualified Data.HashSet as HashSet
 import qualified Data.IntSet as IntSet
