@@ -39,18 +39,6 @@ import qualified Network.HTTP.Client as HTTP
 -- with and without Bucket Authorization enabled
 -- ("Runscope-Bucket-Auth").
 --
--- Q: how do we get the payload hash to the signRequest function?
---
--- A: we use a (temporary) HTTP header to 'tunnel' the payload hash to
--- the signing function.  For POST and PUT requests, the
--- Network.Wreq.Types.payload function adds a HTTP header (name
--- defined in 'tmpPayloadHashHeader'). The
--- Network.Wreq.Internal.AWS.signRequest function reads the value of
--- the header and then removes it from the request.  For GET, HEAD,
--- and (currently) DELETE that carry no body, we use "" per AWS
--- documentation Item 6: "use empty string" in
--- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
-
 -- TODO: adjust when DELETE supports a body or PATCH is added
 signRequest :: AWSAuthVersion -> S.ByteString -> S.ByteString ->
                Request -> IO Request
@@ -129,7 +117,7 @@ signRequestV4 key secret request = do
       where h = hmac k s :: (CT.HMAC CT.SHA256)
 
 payloadHash :: Request -> S.ByteString
-payloadHash req = 
+payloadHash req =
   case HTTP.requestBody req of
     HTTP.RequestBodyBS bs ->
       HEX.encode $ SHA256.hash bs
@@ -151,6 +139,8 @@ serviceAndRegion endpoint
     let region = S.takeWhile (/= '.') $ S.drop 3 endpoint -- drop "s3-"
     in ("s3", region)
     -- not s3
+  | endpoint `elem` ["sts.amazonaws.com"] =
+    ("sts", "us-east-1")
   | svc `HashSet.member` noRegion =
     (svc, "us-east-1")
   | otherwise =
@@ -159,8 +149,7 @@ serviceAndRegion endpoint
   where
     svc = servicePrefix '.' endpoint
     servicePrefix c = S.map toLower . S.takeWhile (/= c)
-    noRegion = HashSet.fromList ["iam", "sts", "importexport", "route53",
-                                 "cloudfront"]
+    noRegion = HashSet.fromList ["iam", "importexport", "route53", "cloudfront"]
 
 -- If the hostname doesn't end in runscope.net, return the original.
 -- For a hostname that includes runscope.net:

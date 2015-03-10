@@ -37,6 +37,39 @@
       ]
     },
     {
+      "Sid": "b2",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/deleteWreqTestIAM*"
+      ]
+    },
+    {
+      "Sid": "b3",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListRoles"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/*"
+      ]
+    },
+    {
+      "Sid": "b4",
+      "Effect": "Allow",
+      "Action": [
+        "sts:AssumeRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/deleteWreqTestIAM*"
+      ]
+    },
+    {
       "Sid": "c1",
       "Effect": "Allow",
       "Action": [

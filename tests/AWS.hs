@@ -96,10 +96,11 @@ tests0 True = do
   let baseopts = defaults & auth ?~ awsAuth AWSv4 key secret
   prefix <- env "deleteWreqTest" "WREQ_AWS_TEST_PREFIX"
   sqsTestState <- newIORef "missing"
+  iamTestState <- newIORef "missing"
   uniq <- uniqueMachineId
   return $ testGroup "aws" [
       AWS.DynamoDB.tests (prefix ++ "DynamoDB") region baseopts
-    , AWS.IAM.tests (prefix ++ "IAM") region baseopts
+    , AWS.IAM.tests (prefix ++ "IAM") region baseopts iamTestState
     , AWS.SQS.tests (prefix ++ "SQS") region baseopts sqsTestState
       -- S3 buckets are global entities and the namespace shared among
       -- all AWS customers. We will use a unique id based on the MAC
