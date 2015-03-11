@@ -47,12 +47,10 @@ createRole prefix region baseopts iamTestState = do
   r <- getWith opts (iamUrl region)
   assertBool "createRole 200" $ r ^. responseStatus . statusCode == 200
   assertBool "createRole OK" $ r ^. responseStatus . statusMessage == "OK"
-  putStrLn $ show $ r ^.. responseBody
   let [arn] = r ^.. responseBody . key "CreateRoleResponse"
                                  . key "CreateRoleResult"
                                  . key "Role"
                                  . key "Arn" . _String
-  putStrLn $ show $ T.unpack $ arn
   writeIORef iamTestState $ T.unpack arn
 
 putRolePolicy :: String -> String -> Options -> IO ()
@@ -67,7 +65,6 @@ putRolePolicy prefix region baseopts = do
   r <- getWith opts (iamUrl region)
   assertBool "putRolePolicy 200" $ r ^. responseStatus . statusCode == 200
   assertBool "putRolePolicy OK" $ r ^. responseStatus . statusMessage == "OK"
-  putStrLn $ show $ r ^.. responseBody
   threadDelay $ 30*1000*1000 -- 30 sleep, allow change to propagate to region
 
 deleteRolePolicy :: String -> String -> Options -> IO ()
@@ -82,7 +79,6 @@ deleteRolePolicy prefix region baseopts = do
   r <- getWith opts (iamUrl region)
   assertBool "deleteRolePolicy 200" $ r ^. responseStatus . statusCode == 200
   assertBool "deleteRolePolicy OK" $ r ^. responseStatus . statusMessage == "OK"
-  putStrLn $ show $ r ^.. responseBody
 
 deleteRole :: String -> String -> Options -> IO ()
 deleteRole prefix region baseopts = do
@@ -104,7 +100,6 @@ listRoles prefix region baseopts = do
   r <- getWith opts (iamUrl region)
   assertBool "listRoles 200" $ r ^. responseStatus . statusCode == 200
   assertBool "listRoles OK" $ r ^. responseStatus . statusMessage == "OK"
-  putStrLn $ show $ r ^.. responseBody
   let arns = r ^.. responseBody . key "ListRolesResponse" .
                                   key "ListRolesResult" .
                                   key "Roles" .
@@ -127,7 +122,6 @@ stsAssumeRole _prefix region baseopts iamTestState = do
              & param  "RoleSessionName" .~ ["Bob"]
              & header "Accept"  .~ ["application/json"]
   r <- getWith opts (stsUrl region) -- STS call (part of IAM service family)
-  putStrLn $ show $ r ^.. responseBody
   assertBool "stsAssumeRole 200" $ r ^. responseStatus . statusCode == 200
   assertBool "stsAssumeRole OK" $ r ^. responseStatus . statusMessage == "OK"
 
