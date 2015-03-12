@@ -65,7 +65,7 @@ import Control.Exception as E (IOException, catch)
 import Control.Lens
 import Data.ByteString.Char8 as BS8 (pack)
 import Data.IORef (newIORef)
-import Network.Info (getNetworkInterfaces, mac)
+import Network.Info (getNetworkInterfaces, mac, ipv6)
 import Network.Wreq
 import System.Environment (getEnv)
 import Test.Framework (Test, testGroup)
@@ -97,6 +97,7 @@ tests0 True = do
   prefix <- env "deleteWreqTest" "WREQ_AWS_TEST_PREFIX"
   sqsTestState <- newIORef "missing"
   uniq <- uniqueMachineId
+  let bucketname = prefix ++ uniq
   return $ testGroup "aws" [
       AWS.DynamoDB.tests (prefix ++ "DynamoDB") region baseopts
     , AWS.IAM.tests (prefix ++ "IAM") region baseopts
@@ -105,18 +106,27 @@ tests0 True = do
       -- all AWS customers. We will use a unique id based on the MAC
       -- address of our client to avoid naming conflicts among different
       -- developers running the tests.
-    , AWS.S3.tests (prefix ++ "S3" ++ uniq) region baseopts
+    , AWS.S3.tests bucketname region baseopts
+    --, AWS.S3.tests bucketname "us-east-1" baseopts -- classic
+    --, AWS.S3.tests bucketname "external-1" baseopts -- Virginia
     ]
 
 -- return a globally unique machine id (uses a MAC address)
 uniqueMachineId :: IO String
 uniqueMachineId = do
-  l <- (filter $ (/=) "00:00:00:00:00:00" . show . mac) `fmap`
-         getNetworkInterfaces
-  return $ concatMap (\c -> if c == ':' then [] else [c])
-         . show
-         . mac
-         . head $ l
+  nis <- getNetworkInterfaces
+  let lmac = filter ((/=) "00:00:00:00:00:00") $ map (show . mac) nis
+  -- travis-ci.org doesn't show mac addresses - use ipv6 (e.g. of venet0)
+  let lipv6 = filter (\s -> (s /=    "0:0:0:0:0:0:0:0") &&
+                            (s /=    "0:0:0:0:0:0:0:1") &&
+                            (s /= "fe80:0:0:0:0:0:0:1"))
+            $ map (show . ipv6) nis
+  if (null $ lmac ++ lipv6)
+    then error "FATAL: can't determine unique id automatically in this runtime env!"
+    else do
+      let uniq = concatMap (\c -> if c == ':' then [] else [c])
+               $ head (lmac ++ lipv6)
+      return uniq
 
 env :: String -> String -> IO String
 env defVal name = getEnv name `E.catch` \(_::IOException) -> return defVal
