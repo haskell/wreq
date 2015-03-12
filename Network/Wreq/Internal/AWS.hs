@@ -135,6 +135,13 @@ payloadHash req =
 -- For example: "dynamodb.us-east-1.amazonaws.com" -> ("dynamodb", "us-east-1")
 serviceAndRegion :: S.ByteString -> (S.ByteString, S.ByteString)
 serviceAndRegion endpoint
+  -- For s3, check <bucket>.s3..., i.e. virtual-host style access
+  | ".s3.amazonaws.com" `S.isSuffixOf` endpoint = -- vhost style, classic
+    ("s3", "us-east-1")
+  | ".s3-external-1.amazonaws.com" `S.isSuffixOf` endpoint =
+    ("s3", "us-east-1")
+  | ".s3-" `S.isInfixOf` endpoint = -- vhost style, regional
+    ("s3", regionInS3VHost endpoint)
   -- For s3, use /<bucket> style access, as opposed to
   -- <bucket>.s3... in the hostname.
   | endpoint `elem` ["s3.amazonaws.com", "s3-external-1.amazonaws.com"] =
@@ -154,6 +161,13 @@ serviceAndRegion endpoint
   where
     svc = servicePrefix '.' endpoint
     servicePrefix c = S.map toLower . S.takeWhile (/= c)
+    regionInS3VHost s =
+        S.takeWhile (/= '.') -- "eu-west-1"
+      . S.reverse            -- "eu-west-1.amazonaws.com"
+      . fst                  -- "moc.swanozama.1-tsew-ue"
+      . S.breakSubstring (S.pack "-3s.")
+      . S.reverse
+      $ s                  -- johnsmith.eu.s3-eu-west-1.amazonaws.com
     noRegion = HashSet.fromList ["iam", "importexport", "route53", "cloudfront"]
 
 -- If the hostname doesn't end in runscope.net, return the original.
