@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, BangPatterns #-}
+{-# LANGUAGE CPP, OverloadedStrings, BangPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.Wreq.Internal.AWS
@@ -20,13 +20,18 @@ import Data.Time.LocalTime (utc, utcToLocalTime)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
 import Network.Wreq.Internal.Lens
 import Network.Wreq.Internal.Types (AWSAuthVersion(..))
-import System.Locale (defaultTimeLocale)
 import qualified Crypto.Hash as CT (HMAC, SHA256)
 import qualified Crypto.Hash.SHA256 as SHA256 (hash, hashlazy)
 import qualified Data.ByteString.Char8 as S
 import qualified Data.CaseInsensitive  as CI (original)
 import qualified Data.HashSet as HashSet
 import qualified Network.HTTP.Client as HTTP
+
+#if MIN_VERSION_time(1,5,0)
+import Data.Time.Format (defaultTimeLocale)
+#else
+import System.Locale (defaultTimeLocale)
+#endif
 
 -- Sign requests following the AWS v4 request signing specification:
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
