@@ -1,11 +1,11 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedLists, OverloadedStrings #-}
 module AWS.IAM (tests) where
 
+import AWS.Aeson
 import Control.Concurrent (threadDelay)
-import Control.Lens
+import Control.Lens hiding ((.=))
 import Data.Aeson.Encode (encode)
 import Data.Aeson.Lens (key, _String, values)
-import Data.Aeson.QQ
 import Data.IORef (IORef, readIORef, writeIORef)
 import Data.Text as T (Text, pack, unpack, split)
 import Data.Text.Lazy as LT (toStrict)
@@ -159,27 +159,28 @@ externalId = "someExternalId"
 
 rolePolicyDoc :: T.Text
 rolePolicyDoc = LT.toStrict . E.decodeUtf8 . encode $
-  [aesonQQ| {
-      "Version":"2012-10-17",
-      "Statement": [
-        {
-          "Effect":"Allow",
-          "Action":"sts:AssumeRole",
-          "Principal": { "AWS": "*" },
-          "Condition": { "StringEquals": { "sts:ExternalId": #{externalId} }}
-        }
+  object [
+      "Version" .= "2012-10-17",
+      "Statement" .= [
+        object [
+          "Effect" .= "Allow",
+          "Action" .= "sts:AssumeRole",
+          "Principal" .= object ["AWS" .= "*"],
+          "Condition" .= object ["StringEquals" .=
+                                 object ["sts:ExternalId" .= string externalId]]
+        ]
       ]
-  } |]
+  ]
 
 policyDoc :: T.Text
 policyDoc = LT.toStrict . E.decodeUtf8 . encode $
-  [aesonQQ| {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Effect": "Allow",
-          "Action": ["*"],
-          "Resource": ["*"]
-        }
+  object [
+      "Version" .= "2012-10-17",
+      "Statement" .= [
+        object [
+          "Effect" .= "Allow",
+          "Action" .= ["*"],
+          "Resource" .= ["*"]
+        ]
       ]
-  } |]
+  ]

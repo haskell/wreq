@@ -152,6 +152,7 @@ test-suite tests
     Properties.Store
     UnitTests
     AWS
+    AWS.Aeson
     AWS.DynamoDB
     AWS.IAM
     AWS.S3
@@ -162,8 +163,7 @@ test-suite tests
     QuickCheck >= 2.7,
     aeson,
     aeson-pretty >= 0.7.1,
-    aeson-qq,
-    base >= 4.5 && < 5,
+    base >= 4.7 && < 5,
     base64-bytestring,
     bytestring,
     case-insensitive,
@@ -184,6 +184,7 @@ test-suite tests
     transformers,
     unix-compat,
     uuid,
+    vector,
     wreq
 
 test-suite doctest

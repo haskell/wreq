@@ -1,8 +1,8 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedLists, OverloadedStrings #-}
 module AWS.S3 (tests) where
 
-import Control.Lens
-import Data.Aeson.QQ
+import AWS.Aeson
+import Control.Lens hiding ((.=))
 import Data.Char (toLower)
 import Data.Monoid ((<>))
 import Network.Wreq
@@ -47,7 +47,7 @@ putObjectJSON :: String -> String -> Options -> IO ()
 putObjectJSON prefix region baseopts = do
   -- S3 write object, incl. correct content-type, uses /bucket/object syntax
   r <- putWith baseopts (url region ++ prefix ++ "testbucket/blabla-json") $
-         [aesonQQ| { "test": "key", "testdata": [ 1, 2, 3 ] } |]
+       object ["test" .= "key", "testdata" .= [1, 2, 3]]
   assertBool "putObjectJSON 200" $ r ^. responseStatus . statusCode == 200
   assertBool "putObjectJSON OK" $ r ^. responseStatus . statusMessage == "OK"
 

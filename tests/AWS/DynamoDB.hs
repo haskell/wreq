@@ -1,10 +1,10 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedLists, OverloadedStrings #-}
 module AWS.DynamoDB (tests) where
 
+import AWS.Aeson
 import Control.Concurrent (threadDelay)
-import Control.Lens
+import Control.Lens hiding ((.=))
 import Data.Aeson.Lens (key, _String, values, _Double)
-import Data.Aeson.QQ
 import Data.Text as T (pack)
 import Network.Wreq
 import System.Timeout (timeout)
@@ -34,21 +34,21 @@ createTable prefix region baseopts = do
              & header "X-Amz-Target" .~ ["DynamoDB_20120810.CreateTable"]
              & header "Content-Type" .~ ["application/x-amz-json-1.0"]
   r <- postWith opts (url region) $
-         [aesonQQ| {
-             "TableName": #{prefix ++ tablename},
-             "KeySchema": [
-               { "AttributeName": "name", "KeyType": "HASH" },
-               { "AttributeName": "age", "KeyType": "RANGE" }
-             ],
-             "AttributeDefinitions": [
-               { "AttributeName": "name", "AttributeType": "S" },
-               { "AttributeName": "age", "AttributeType": "S" }
-             ],
-             "ProvisionedThroughput": {
-               "ReadCapacityUnits": 1,
-               "WriteCapacityUnits": 1
-             }
-         } |]
+       object [
+           "TableName" .= string (prefix ++ tablename),
+           "KeySchema" .= [
+             object ["AttributeName" .= "name", "KeyType" .= "HASH"],
+             object ["AttributeName" .= "age", "KeyType" .= "RANGE"]
+           ],
+           "AttributeDefinitions" .= [
+             object ["AttributeName" .= "name", "AttributeType" .= "S"],
+             object ["AttributeName" .= "age", "AttributeType" .= "S"]
+           ],
+           "ProvisionedThroughput" .= object [
+             "ReadCapacityUnits" .= 1,
+             "WriteCapacityUnits" .= 1
+           ]
+       ]
   assertBool "createTables 200" $ r ^. responseStatus . statusCode == 200
   assertBool "createTables OK" $ r ^. responseStatus . statusMessage == "OK"
   assertBool "createTables status CREATING" $
@@ -62,7 +62,7 @@ listTables prefix region baseopts = do
              & header "X-Amz-Target" .~ ["DynamoDB_20120810.ListTables"]
              & header "Content-Type" .~ ["application/x-amz-json-1.0"]
   -- FIXME avoid limit to keep tests from failing if there are > tables?
-  r <- postWith opts (url region) [aesonQQ| { "Limit": 100 } |]
+  r <- postWith opts (url region) $ object ["Limit" .= 100]
   assertBool "listTables 200" $ r ^. responseStatus . statusCode == 200
   assertBool "listTables OK" $ r ^. responseStatus . statusMessage == "OK"
   assertBool "listTables contains test table" $
@@ -83,8 +83,8 @@ awaitTableActive prefix region baseopts = do
       let opts = baseopts
                  & header "X-Amz-Target" .~ ["DynamoDB_20120810.DescribeTable"]
                  & header "Content-Type" .~ ["application/x-amz-json-1.0"]
-      r <- postWith opts (url region)
-             [aesonQQ| { "TableName": #{prefix ++ tablename} } |]
+      r <- postWith opts (url region) $
+           object ["TableName" .= string (prefix ++ tablename)]
       assertBool "awaitTableActive 200" $ r ^. responseStatus . statusCode == 200
       assertBool "awaitTableActive OK" $ r ^. responseStatus . statusMessage == "OK"
       -- Prelude.putStr "."
@@ -101,7 +101,7 @@ deleteTable prefix region baseopts = do
              & header "X-Amz-Target" .~ ["DynamoDB_20120810.DeleteTable"]
              & header "Content-Type" .~ ["application/x-amz-json-1.0"]
   r <- postWith opts (url region) $
-         [aesonQQ| { "TableName": #{prefix ++ tablename} } |]
+       object ["TableName" .= string (prefix ++ tablename)]
   assertBool "deleteTable 200" $ r ^. responseStatus . statusCode == 200
   assertBool "deleteTable OK" $ r ^. responseStatus . statusMessage == "OK"
 
@@ -111,14 +111,14 @@ putItem prefix region baseopts = do
              & header "X-Amz-Target" .~ ["DynamoDB_20120810.PutItem"]
              & header "Content-Type" .~ ["application/x-amz-json-1.0"]
   r <- postWith opts (url region) $
-         [aesonQQ| {
-           "TableName": #{prefix ++ tablename},
-           "Item": {
-             "name": { "S": "someone" },
-             "age": {"S": "whatever"},
-             "bar": {"S": "baz"}
-           }
-         } |]
+       object [
+         "TableName" .= string (prefix ++ tablename),
+         "Item" .= object [
+                     "name" .= object ["S" .= "someone"],
+                     "age" .= object ["S" .= "whatever"],
+                     "bar" .= object ["S" .= "baz"]
+                    ]
+       ]
   assertBool "putItem 200" $ r ^. responseStatus . statusCode == 200
   assertBool "putItem OK" $ r ^. responseStatus . statusMessage == "OK"
 
@@ -128,16 +128,16 @@ getItem prefix region baseopts = do
              & header "X-Amz-Target" .~ ["DynamoDB_20120810.GetItem"]
              & header "Content-Type" .~ ["application/x-amz-json-1.0"]
   r <- postWith opts (url region) $
-         [aesonQQ| {
-           "TableName": #{prefix ++ tablename},
-           "Key": {
-             "name": { "S": "someone" },
-             "age": {"S": "whatever"}
-           },
-           "AttributesToGet": [ "bar" ],
-           "ConsistentRead": true,
-           "ReturnConsumedCapacity": "TOTAL"
-         } |]
+         object [
+           "TableName" .= string (prefix ++ tablename),
+           "Key" .= object [
+             "name" .= object ["S" .= "someone"],
+             "age" .= object ["S" .= "whatever"]
+           ],
+           "AttributesToGet" .= ["bar"],
+           "ConsistentRead" .= true,
+           "ReturnConsumedCapacity" .= "TOTAL"
+         ]
   assertBool "getItem 200" $ r ^. responseStatus . statusCode == 200
   assertBool "getItem OK" $ r ^. responseStatus . statusMessage == "OK"
   assertBool "getItem baz value is bar" $
@@ -149,14 +149,14 @@ deleteItem prefix region baseopts = do
              & header "X-Amz-Target" .~ ["DynamoDB_20120810.DeleteItem"]
              & header "Content-Type" .~ ["application/x-amz-json-1.0"]
   r <- postWith opts (url region) $
-         [aesonQQ| {
-           "TableName": #{prefix ++ tablename},
-           "Key": {
-             "name": { "S": "someone" },
-             "age": {"S": "whatever"}
-           },
-           "ReturnValues": "ALL_OLD"
-         } |]
+       object [
+         "TableName" .= string (prefix ++ tablename),
+         "Key" .= object [
+           "name" .= object ["S" .= "someone"],
+           "age" .= object ["S" .= "whatever"]
+         ],
+         "ReturnValues" .= "ALL_OLD"
+       ]
   assertBool "getItem 200" $ r ^. responseStatus . statusCode == 200
   assertBool "getItem OK" $ r ^. responseStatus . statusMessage == "OK"
 
