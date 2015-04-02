@@ -53,6 +53,12 @@ flag doctest
   default: True
   manual: True
 
+-- enable aws with -faws
+flag aws
+  description: enable AWS tests
+  default: False
+  manual: True
+
 -- enable httpbin with -fhttpbin
 flag httpbin
   description: enable httpbin test daemon
@@ -151,19 +157,26 @@ test-suite tests
   other-modules:
     Properties.Store
     UnitTests
-    AWS
-    AWS.Aeson
-    AWS.DynamoDB
-    AWS.IAM
-    AWS.S3
-    AWS.SQS
+
+  if flag(aws)
+    cpp-options: -DAWS_TESTS
+    other-modules:
+      AWS
+      AWS.Aeson
+      AWS.DynamoDB
+      AWS.IAM
+      AWS.S3
+      AWS.SQS
+
+  if flag(aws)
+    build-depends: base >= 4.7 && < 5
 
   build-depends:
     HUnit,
     QuickCheck >= 2.7,
     aeson,
     aeson-pretty >= 0.7.1,
-    base >= 4.7 && < 5,
+    base >= 4.5 && < 5,
     base64-bytestring,
     bytestring,
     case-insensitive,
