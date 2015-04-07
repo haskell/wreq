@@ -112,7 +112,7 @@ library
     lens >= 4.5,
     lens-aeson,
     mime-types,
-    old-locale,
+    time-locale-compat,
     template-haskell,
     text,
     time,
