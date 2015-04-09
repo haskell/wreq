@@ -42,6 +42,7 @@ module Network.Wreq.Session
       Session
     , withSession
     , withSessionWith
+    , withSessionWithMgr
     -- * HTTP verbs
     , get
     , post
@@ -86,6 +87,13 @@ withSessionWith settings act = do
                 , seshManager = mgr
                 , seshRun = runWith
                 }
+withSessionWithMgr :: HTTP.Manager -> (Session -> IO a) -> IO a
+withSessionWithMgr mgr act = do
+  mv <- newMVar $ HTTP.createCookieJar []
+  act Session { seshCookies = mv
+              , seshManager = mgr
+              , seshRun = runWith
+              }
 
 -- | 'Session'-specific version of 'Network.Wreq.get'.
 get :: Session -> String -> IO (Response L.ByteString)
