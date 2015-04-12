@@ -50,7 +50,7 @@ import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
-                            RequestBody, destroyCookieJar)
+                            RequestBody)
 import Network.HTTP.Client.Internal (Response, Proxy)
 import Network.HTTP.Types (Header, Status, ResponseHeaders)
 import Prelude hiding (head)
@@ -141,7 +141,7 @@ data Options = Options {
   --let opts = 'Network.Wreq.defaults' { 'redirects' = 3 }
   --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/redirect/5\"
   -- @
-  , cookies :: CookieJar
+  , cookies :: Maybe CookieJar
   -- ^ Cookies to set when issuing requests.
   --
   -- /Note/: when issuing HTTP requests using 'Options'-based
@@ -200,7 +200,7 @@ instance Show Options where
     , ", headers = ", show headers
     , ", params = ", show params
     , ", redirects = ", show redirects
-    , ", cookies = ", show (destroyCookieJar cookies)
+    , ", cookies = ", show cookies
     , " }"
     ]
 

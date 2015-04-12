@@ -101,7 +101,6 @@ module Network.Wreq.Lens
     ) where
 
 import Control.Applicative ((<*))
-import Control.Exception (SomeException)
 import Control.Lens (Fold, Lens, Lens', Traversal', folding)
 import Data.Attoparsec.ByteString (Parser, endOfInput, parseOnly)
 import Data.ByteString (ByteString)
@@ -241,7 +240,7 @@ cookie :: ByteString -> Traversal' Options Cookie
 cookie = TH.cookie
 
 -- | A lens onto all cookies.
-cookies :: Lens' Options CookieJar
+cookies :: Lens' Options (Maybe CookieJar)
 cookies = TH.cookies
 
 -- | A lens onto the name of a cookie.

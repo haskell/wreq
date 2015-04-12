@@ -36,8 +36,9 @@
 -- subsequent functions.  When talking to a REST-like service that does
 -- not use cookies, it is more efficient to use 'withAPISession'.
 --
--- Note the use of a qualified import statement, so that we can refer
--- unambiguously to the 'Session'-specific implementation of HTTP GET.
+-- Note the use of qualified import statements in the examples above,
+-- so that we can refer unambiguously to the 'Session'-specific
+-- implementation of HTTP GET.
 
 module Network.Wreq.Session
     (
@@ -66,7 +67,7 @@ module Network.Wreq.Session
     , Lens.seshRun
     ) where
 
-import Control.Lens ((&), (?~))
+import Control.Lens ((&), (?~), (.~))
 import Data.Foldable (forM_)
 import Data.IORef (newIORef, readIORef, writeIORef)
 import Network.Wreq (Options, Response)
@@ -168,7 +169,7 @@ deleteWith opts sesh url = run string sesh =<< prepareDelete opts url
 runWith :: Session -> Run Body -> Run Body
 runWith Session{..} act (Req _ req) = do
   req' <- case seshCookies of
-            Nothing -> return req
+            Nothing -> return (req & Lens.cookieJar .~ Nothing)
             Just ref -> (\s -> req & Lens.cookieJar ?~ s) `fmap` readIORef ref
   resp <- act (Req (Right seshManager) req')
   forM_ seshCookies $ \ref ->
