@@ -18,6 +18,7 @@ module Network.Wreq.Types
       Options(..)
     , Auth(..)
     , AWSAuthVersion(..)
+    , StatusChecker
     -- * Request payloads
     , Payload(..)
     , Postable(..)
@@ -140,6 +141,6 @@ instance (FormValue a) => FormValue (Maybe a) where
     renderFormValue Nothing  = ""
 
 payload :: S.ByteString -> HTTP.RequestBody -> Request -> IO Request
-payload ct body req = 
+payload ct body req =
   return $ req & Lens.maybeSetHeader "Content-Type" ct
                & Lens.requestBody .~ body

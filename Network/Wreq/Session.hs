@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes, RecordWildCards #-}
 
 -- |
--- Module      : Network.Wreq
+-- Module      : Network.Wreq.Session
 -- Copyright   : (c) 2014 Bryan O'Sullivan
 --
 -- License     : BSD-style
