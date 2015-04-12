@@ -289,7 +289,7 @@ type Run body = Req -> IO (Response body)
 -- | A session that spans multiple requests.  This is responsible for
 -- cookie management and TCP connection reuse.
 data Session = Session {
-      seshCookies :: IORef CookieJar
+      seshCookies :: Maybe (IORef CookieJar)
     , seshManager :: Manager
     , seshRun :: Session -> Run Body -> Run Body
     }
