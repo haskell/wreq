@@ -144,7 +144,10 @@ runWith Session{..} act (Req _ req) = do
   let req' = req & Lens.cookieJar ?~ cj
   resp <- act (Req (Right seshManager) req')
   now <- getCurrentTime
-  atomicModifyIORef seshCookies $ HTTP.updateCookieJar resp req' now
+  atomicModifyIORef seshCookies $ \ceej ->
+    case HTTP.destroyCookieJar ceej of
+      [] -> (HTTP.responseCookieJar resp, resp)
+      _  -> HTTP.updateCookieJar resp req' now ceej
 
 type Mapping a = (Body -> a, a -> Body, Run a)
 
