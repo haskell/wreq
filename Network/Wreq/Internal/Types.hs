@@ -190,18 +190,19 @@ data AWSAuthVersion = AWSv4
                     deriving (Eq, Show)
 
 instance Show Options where
-  show (Options{..}) = concat ["Options { "
-                              , "manager = ", case manager of
-                                                Left _  -> "Left _"
-                                                Right _ -> "Right _"
-                              , ", proxy = ", show proxy
-                              , ", auth = ", show auth
-                              , ", headers = ", show headers
-                              , ", params = ", show params
-                              , ", redirects = ", show redirects
-                              , ", cookies = ", show (destroyCookieJar cookies)
-                              , " }"
-                              ]
+  show (Options{..}) = concat [
+      "Options { "
+    , "manager = ", case manager of
+                      Left _  -> "Left _"
+                      Right _ -> "Right _"
+    , ", proxy = ", show proxy
+    , ", auth = ", show auth
+    , ", headers = ", show headers
+    , ", params = ", show params
+    , ", redirects = ", show redirects
+    , ", cookies = ", show (destroyCookieJar cookies)
+    , " }"
+    ]
 
 -- | A type that can be converted into a POST request payload.
 class Postable a where
