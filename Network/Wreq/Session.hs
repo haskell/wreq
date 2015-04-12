@@ -61,8 +61,7 @@ module Network.Wreq.Session
     ) where
 
 import Control.Lens ((&), (?~))
-import Data.IORef (newIORef, readIORef, atomicModifyIORef)
-import Data.Time (getCurrentTime)
+import Data.IORef (newIORef, readIORef, writeIORef)
 import Network.Wreq (Options, Response)
 import Network.Wreq.Internal
 import Network.Wreq.Internal.Types (Body(..), Req(..), Session(..))
@@ -143,11 +142,8 @@ runWith Session{..} act (Req _ req) = do
   cj <- readIORef seshCookies
   let req' = req & Lens.cookieJar ?~ cj
   resp <- act (Req (Right seshManager) req')
-  now <- getCurrentTime
-  atomicModifyIORef seshCookies $ \ceej ->
-    case HTTP.destroyCookieJar ceej of
-      [] -> (HTTP.responseCookieJar resp, resp)
-      _  -> HTTP.updateCookieJar resp req' now ceej
+  writeIORef seshCookies (HTTP.responseCookieJar resp)
+  return resp
 
 type Mapping a = (Body -> a, a -> Body, Run a)
 
