@@ -15,6 +15,7 @@ import Data.Maybe (catMaybes, fromMaybe)
 import Data.Monoid ((<>))
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Read (decimal)
+import Data.Time.Clock (UTCTime(..))
 import Data.UUID (toASCIIBytes)
 import Data.UUID.V4 (nextRandom)
 import Snap.Core
@@ -48,6 +49,16 @@ status = do
 gzip =
   localRequest (setHeader "Accept-Encoding" "gzip") . withCompression .
   respond $ \obj -> return $ obj <> [("gzipped", Bool True)]
+
+deleteCookies = do
+  req <- getRequest
+  let expire name = Cookie name "" (Just mcfly) Nothing (Just "/") False False
+      mcfly = UTCTime (read "1985-10-26") 4800
+  modifyResponse . foldr (.) id $ [
+      addResponseCookie (expire name) . deleteResponseCookie name
+      | name <- Map.keys (rqQueryParams req)
+    ]
+  redirect "/cookies"
 
 setCookies = do
   params <- rqQueryParams <$> getRequest
@@ -141,22 +152,26 @@ respond act = do
                      , ("origin", toJSON . decodeUtf8 . rqRemoteAddr $ req)
                      ] <> url)
 
+meths ms h = methods ms (path "" h)
+meth m h   = method m (path "" h)
+
 serve mkConfig = do
   cfg <- mkConfig
        . setAccessLog ConfigNoLog
        . setErrorLog ConfigNoLog
        $ defaultConfig
   httpServe cfg $ route [
-      ("/get", methods [GET,HEAD] get)
-    , ("/post", method POST post)
-    , ("/put", method PUT put)
-    , ("/delete", method DELETE delete)
+      ("/get", meths [GET,HEAD] get)
+    , ("/post", meth POST post)
+    , ("/put", meth PUT put)
+    , ("/delete", meth DELETE delete)
     , ("/redirect/:n", redirect_)
     , ("/status/:val", status)
-    , ("/gzip", methods [GET,HEAD] gzip)
-    , ("/cookies/set", methods [GET,HEAD] setCookies)
-    , ("/cookies", methods [GET,HEAD] listCookies)
-    , ("/basic-auth/:user/:pass", methods [GET,HEAD] basicAuth)
-    , ("/oauth2/:kind/:token", methods [GET,HEAD] oauth2token)
-    , ("/cache", methods [GET,HEAD] cache)
+    , ("/gzip", meths [GET,HEAD] gzip)
+    , ("/cookies/delete", meths [GET,HEAD] deleteCookies)
+    , ("/cookies/set", meths [GET,HEAD] setCookies)
+    , ("/cookies", meths [GET,HEAD] listCookies)
+    , ("/basic-auth/:user/:pass", meths [GET,HEAD] basicAuth)
+    , ("/oauth2/:kind/:token", meths [GET,HEAD] oauth2token)
+    , ("/cache", meths [GET,HEAD] cache)
     ]
