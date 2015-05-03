@@ -62,7 +62,10 @@ module Network.Wreq
     , deleteWith
     -- ** Custom Method
     , customMethod
+    , customMethodPayload
     , customMethodWith
+    , customMethodPayloadWith
+    , customMethodPayloadMaybeWith
     -- * Incremental consumption of responses
     -- ** GET
     , foldGet
@@ -341,6 +344,20 @@ deleteWith opts url = runRead =<< prepareDelete opts url
 customMethod :: String -> String -> IO (Response L.ByteString)
 customMethod method url = customMethodWith method defaults url
 
+-- | Issue a custom-method request with a body payload.
+--   Payload reuses the Putable type.
+--
+-- Example:
+-- @
+-- 'customMethodPayload' \"PATCH\" \"http:\/\/httpbin.org\/patch\" (toJSON [1,2,3])
+-- @
+--
+-- >>> r <- customMethodPayload "PATCH" "http://httpbin.org/patch" (toJSON [1,2,3])
+-- >>> r ^. responseStatus . statusCode
+-- 200
+customMethodPayload :: Putable a => String -> String -> a -> IO (Response L.ByteString)
+customMethodPayload method url payload = customMethodPayloadWith method defaults url payload
+
 -- | Issue a custom request method request, using the supplied 'Options'.
 --
 -- Example:
@@ -356,6 +373,46 @@ customMethod method url = customMethodWith method defaults url
 -- 200
 customMethodWith :: String -> Options -> String -> IO (Response L.ByteString)
 customMethodWith method opts url = runRead =<< prepareMethod methodBS opts url
+  where
+    methodBS = BC8.pack method
+
+-- | Issue a custom request method request, using the supplied 'Options' and a payload.
+--   Payload it Putable.
+--
+-- Example:
+--
+-- @
+-- let opts = 'defaults' '&' 'Lens.redirects' '.~' 0
+-- 'customMethodWith' \"PATCH\" opts \"http:\/\/httpbin.org\/patch\" (toJSON [1,2,3])
+-- @
+--
+-- >>> let opts = defaults & redirects .~ 0
+-- >>> r <- customMethodPayloadWith "PATCH" opts "http://httpbin.org/patch" (toJSON [1,2,3])
+-- >>> r ^. responseStatus . statusCode
+-- 200
+customMethodPayloadWith :: Putable a => String -> Options -> String -> a -> IO (Response L.ByteString)
+customMethodPayloadWith method opts url payload = runRead =<< prepareMethodPayload methodBS opts url payload
+  where
+    methodBS = BC8.pack method
+
+-- | Issue a custom request method request, using the supplied 'Options' and Maybe a payload.
+--   Payload is Putable. Payload wraped in a Maybe here, so as to allow the data to determine
+--   if a payload needs to be sent.
+--
+-- Example:
+--
+-- @
+-- let opts = 'defaults' '&' 'Lens.redirects' '.~' 0
+-- 'customMethodPayloadMaybeWith' \"PATCH\" opts \"http:\/\/httpbin.org\/patch\" (Just (toJSON [1,2,3]))
+-- @
+--
+-- >>> let opts = defaults & redirects .~ 0
+-- >>> r <- customMethodPayloadMaybeWith "PATCH" opts "http://httpbin.org/patch" (Just (toJSON [1,2,3]))
+-- >>> r ^. responseStatus . statusCode
+-- 200
+customMethodPayloadMaybeWith :: Putable a => String -> Options -> String -> Maybe a -> IO (Response L.ByteString)
+customMethodPayloadMaybeWith method opts url Nothing        = customMethodWith method opts url
+customMethodPayloadMaybeWith method opts url (Just payload) = runRead =<< prepareMethodPayload methodBS opts url payload
   where
     methodBS = BC8.pack method
 

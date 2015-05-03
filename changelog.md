@@ -1,5 +1,12 @@
 -*- markdown -*-
 
+xxx-xxx 0.4.1.0
+
+* Introducing prepareMethodPayload, customMethodPayload,
+  customMethodPayloadWith, customMethodPayloadMaybeWith in order for
+  custom HTTP verbs to be able to take a payload. Re-using Putable
+  payload class for now.
+
 xxx-xxx 0.4.0.0
 
 * Compatible with GHC 7.10.

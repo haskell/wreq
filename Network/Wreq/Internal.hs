@@ -13,6 +13,7 @@ module Network.Wreq.Internal
     , preparePost
     , runRead
     , prepareHead
+    , prepareMethodPayload
     , runIgnore
     , prepareOptions
     , preparePut
@@ -158,6 +159,10 @@ preparePost opts url payload = Req (manager opts) <$>
 prepareMethod :: HTTP.Method -> Options -> String -> IO Req
 prepareMethod method opts url = Req (manager opts) <$>
   prepare (return . (Lens.method .~ method)) opts url
+
+prepareMethodPayload :: Putable a => HTTP.Method -> Options -> String -> a -> IO Req
+prepareMethodPayload method opts url payload = Req (manager opts) <$>
+  prepare (putPayload payload . (Lens.method .~ method)) opts url
 
 prepareHead :: Options -> String -> IO Req
 prepareHead = prepareMethod HTTP.methodHead
