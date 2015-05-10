@@ -1,6 +1,6 @@
 -*- markdown -*-
 
-xxx-xxx 0.4.0.0
+2015-05-10 0.4.0.0
 
 * Compatible with GHC 7.10.
 
