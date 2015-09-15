@@ -23,6 +23,7 @@ module Network.Wreq.Internal.Types
     -- * Request payloads
     , Payload(..)
     , Postable(..)
+    , Deletable(..)
     , Putable(..)
     -- ** URL-encoded forms
     , FormParam(..)
@@ -209,6 +210,12 @@ class Postable a where
     postPayload :: a -> Request -> IO Request
     -- ^ Represent a value in the request body (and perhaps the
     -- headers) of a POST request.
+    
+-- | A type that can be converted into a DELETE request payload.
+class Deletable a where
+    deletePayload :: a -> Request -> IO Request
+    -- ^ Represent a value in the request body (and perhaps the
+    -- headers) of a DELETE request.
 
 -- | A type that can be converted into a PUT request payload.
 class Putable a where

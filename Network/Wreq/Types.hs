@@ -22,6 +22,7 @@ module Network.Wreq.Types
     -- * Request payloads
     , Payload(..)
     , Postable(..)
+    , Deletable(..)
     , Putable(..)
     -- ** URL-encoded forms
     , FormParam(..)
@@ -84,6 +85,17 @@ instance Postable L.ByteString where
 instance Postable Value where
     postPayload = putPayload
 
+instance Deletable Payload where
+    deletePayload = putPayload
+
+instance Deletable S.ByteString where
+    deletePayload = putPayload
+
+instance Deletable L.ByteString where
+    deletePayload = putPayload
+
+instance Deletable Value where
+    deletePayload = putPayload
 
 instance Putable Payload where
     putPayload pl =

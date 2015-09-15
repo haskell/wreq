@@ -309,7 +309,7 @@ optionsWith opts url = runIgnore =<< prepareOptions opts url
 -- >>> r <- delete "http://httpbin.org/delete"
 -- >>> r ^. responseStatus . statusCode
 -- 200
-delete :: String -> IO (Response L.ByteString)
+delete :: Deletable a => String -> Maybe a -> IO (Response L.ByteString)
 delete = deleteWith defaults
 
 -- | Issue a DELETE request, using the supplied 'Options'.
@@ -322,11 +322,12 @@ delete = deleteWith defaults
 -- @
 --
 -- >>> let opts = defaults & redirects .~ 0
--- >>> r <- deleteWith opts "http://httpbin.org/delete"
+-- >>> r <- deleteWith opts "http://httpbin.org/delete" Nothing
 -- >>> r ^. responseStatus . statusCode
 -- 200
-deleteWith :: Options -> String -> IO (Response L.ByteString)
-deleteWith opts url = runRead =<< prepareDelete opts url
+deleteWith :: Deletable a => Options -> String -> Maybe a -> IO (Response L.ByteString)
+deleteWith opts url Nothing = runRead =<< prepareDelete opts url
+deleteWith opts url (Just payload) = runRead =<< prepareDeleteWithBody opts url payload
 
 -- | Issue a custom-method request
 --

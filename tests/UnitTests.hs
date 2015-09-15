@@ -25,7 +25,7 @@ import Network.Wreq hiding
   (get, post, head_, put, options, delete,
    getWith, postWith, headWith, putWith, optionsWith, deleteWith)
 import Network.Wreq.Lens
-import Network.Wreq.Types (Postable, Putable)
+import Network.Wreq.Types (Postable, Deletable, Putable)
 import Snap.Http.Server.Config
 import System.IO (hClose, hPutStr)
 import System.IO.Temp (withSystemTempFile)
@@ -50,8 +50,8 @@ data Verb = Verb {
   , putWith :: Putable a => Options -> String -> a -> IO (Response L.ByteString)
   , options :: String -> IO (Response ())
   , optionsWith :: Options -> String -> IO (Response ())
-  , delete :: String -> IO (Response L.ByteString)
-  , deleteWith :: Options -> String -> IO (Response L.ByteString)
+  , delete :: Deletable a => String -> Maybe a -> IO (Response L.ByteString)
+  , deleteWith :: Deletable a => Options -> String -> Maybe a -> IO (Response L.ByteString)
   }
 
 basic :: Verb
@@ -149,7 +149,7 @@ byteStringPut Verb{..} site = do
     (r ^. responseBody ^? key "headers" . key "Content-Type")
 
 basicDelete Verb{..} site = do
-  r <- delete (site "/delete")
+  r <- delete (site "/delete") (Nothing :: Maybe ByteString)
   assertEqual "DELETE succeeds" status200 (r ^. responseStatus)
 
 throwsStatusCode Verb{..} site =
