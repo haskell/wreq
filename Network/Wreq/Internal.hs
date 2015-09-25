@@ -18,6 +18,7 @@ module Network.Wreq.Internal
     , preparePut
     , prepareDelete
     , prepareMethod
+    , prepare
     ) where
 
 import Control.Applicative ((<$>))

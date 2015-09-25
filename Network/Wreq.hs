@@ -159,6 +159,7 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import Network.HTTP.Client.Internal (Proxy(..), Response)
+import Network.URI (URI)
 import Network.Wreq.Internal
 import Network.Wreq.Types (Options)
 import Network.Wreq.Types hiding (Options(..))
@@ -358,6 +359,11 @@ customMethodWith :: String -> Options -> String -> IO (Response L.ByteString)
 customMethodWith method opts url = runRead =<< prepareMethod methodBS opts url
   where
     methodBS = BC8.pack method
+
+-- | Get full 'URI' of a get-request, including protocol, query-parameters etc.
+-- Convenient for debugging.
+getFullUri :: Options -> String -> IO URI
+getFullUri opts url = return . HTTP.getUri =<< prepare return opts url
 
 foldGet :: (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGet f z url = foldGetWith defaults f z url
