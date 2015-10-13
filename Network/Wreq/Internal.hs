@@ -64,7 +64,7 @@ defaults = Options {
   , headers     = [("User-Agent", userAgent)]
   , params      = []
   , redirects   = 10
-  , cookies     = HTTP.createCookieJar []
+  , cookies     = Just (HTTP.createCookieJar [])
   , checkStatus = Nothing
   }
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
@@ -113,7 +113,7 @@ prepare modify opts url = do
                    & setProxy opts
                    & setCheckStatus opts
                    & setRedirects opts
-                   & Lens.cookieJar .~ Just (cookies opts)
+                   & Lens.cookieJar .~ cookies opts
     signRequest :: Request -> IO Request
     signRequest = maybe return f $ auth opts
       where

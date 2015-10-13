@@ -19,6 +19,7 @@ module Network.Wreq.Internal.Types
     , Mgr
     , Auth(..)
     , AWSAuthVersion(..)
+    , StatusChecker
     -- * Request payloads
     , Payload(..)
     , Postable(..)
@@ -42,14 +43,14 @@ module Network.Wreq.Internal.Types
     , CacheEntry(..)
     ) where
 
-import Control.Concurrent.MVar (MVar)
 import Control.Exception (Exception, SomeException)
+import Data.IORef (IORef)
 import Data.Monoid ((<>), mconcat)
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
-                            RequestBody, destroyCookieJar)
+                            RequestBody)
 import Network.HTTP.Client.Internal (Response, Proxy)
 import Network.HTTP.Types (Header, Status, ResponseHeaders)
 import Prelude hiding (head)
@@ -140,7 +141,7 @@ data Options = Options {
   --let opts = 'Network.Wreq.defaults' { 'redirects' = 3 }
   --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/redirect/5\"
   -- @
-  , cookies :: CookieJar
+  , cookies :: Maybe CookieJar
   -- ^ Cookies to set when issuing requests.
   --
   -- /Note/: when issuing HTTP requests using 'Options'-based
@@ -149,14 +150,19 @@ data Options = Options {
   -- etc.), this field will be used only for the /first/ HTTP request
   -- to be issued during a 'Network.Wreq.Session.Session'. Any changes
   -- changes made for subsequent requests will be ignored.
-  , checkStatus ::
-    Maybe (Status -> ResponseHeaders -> CookieJar -> Maybe SomeException)
-  -- ^ Function that checks the status code and potentially returns an exception.
+  , checkStatus :: Maybe StatusChecker
+  -- ^ Function that checks the status code and potentially returns an
+  -- exception.
   --
   -- This defaults to 'Nothing', which will just use the default of
-  -- 'Network.HTTP.Client.Request' which throws a 'StatusException' if the status
-  -- is not 2XX.
+  -- 'Network.HTTP.Client.Request' which throws a 'StatusException' if
+  -- the status is not 2XX.
   } deriving (Typeable)
+
+-- | A function that checks the result of a HTTP request and
+-- potentially returns an exception.
+type StatusChecker = Status -> ResponseHeaders -> CookieJar
+                   -> Maybe SomeException
 
 -- | Supported authentication types.
 --
@@ -184,18 +190,19 @@ data AWSAuthVersion = AWSv4
                     deriving (Eq, Show)
 
 instance Show Options where
-  show (Options{..}) = concat ["Options { "
-                              , "manager = ", case manager of
-                                                Left _  -> "Left _"
-                                                Right _ -> "Right _"
-                              , ", proxy = ", show proxy
-                              , ", auth = ", show auth
-                              , ", headers = ", show headers
-                              , ", params = ", show params
-                              , ", redirects = ", show redirects
-                              , ", cookies = ", show (destroyCookieJar cookies)
-                              , " }"
-                              ]
+  show (Options{..}) = concat [
+      "Options { "
+    , "manager = ", case manager of
+                      Left _  -> "Left _"
+                      Right _ -> "Right _"
+    , ", proxy = ", show proxy
+    , ", auth = ", show auth
+    , ", headers = ", show headers
+    , ", params = ", show params
+    , ", redirects = ", show redirects
+    , ", cookies = ", show cookies
+    , " }"
+    ]
 
 -- | A type that can be converted into a POST request payload.
 class Postable a where
@@ -282,7 +289,7 @@ type Run body = Req -> IO (Response body)
 -- | A session that spans multiple requests.  This is responsible for
 -- cookie management and TCP connection reuse.
 data Session = Session {
-      seshCookies :: MVar CookieJar
+      seshCookies :: Maybe (IORef CookieJar)
     , seshManager :: Manager
     , seshRun :: Session -> Run Body -> Run Body
     }

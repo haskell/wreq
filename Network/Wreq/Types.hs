@@ -18,6 +18,7 @@ module Network.Wreq.Types
       Options(..)
     , Auth(..)
     , AWSAuthVersion(..)
+    , StatusChecker
     -- * Request payloads
     , Payload(..)
     , Postable(..)
@@ -51,7 +52,6 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Builder as TL
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.Wreq.Internal.Lens as Lens
-import qualified Network.Wreq.Internal.AWS as AWS (addTmpPayloadHashHeader)
 
 instance Postable Part where
     postPayload a = postPayload [a]
@@ -141,6 +141,6 @@ instance (FormValue a) => FormValue (Maybe a) where
     renderFormValue Nothing  = ""
 
 payload :: S.ByteString -> HTTP.RequestBody -> Request -> IO Request
-payload ct body req = AWS.addTmpPayloadHashHeader $ req
-                    & Lens.maybeSetHeader "Content-Type" ct
-                    & Lens.requestBody .~ body
+payload ct body req =
+  return $ req & Lens.maybeSetHeader "Content-Type" ct
+               & Lens.requestBody .~ body

@@ -1,10 +1,9 @@
-{-# LANGUAGE OverloadedStrings, BangPatterns #-}
+{-# LANGUAGE CPP, OverloadedStrings, BangPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.Wreq.Internal.AWS
     (
       signRequest
-    , addTmpPayloadHashHeader
     ) where
 
 import Control.Applicative ((<$>))
@@ -14,7 +13,6 @@ import Data.ByteString.Base16 as HEX (encode)
 import Data.Byteable (toBytes)
 import Data.Char (toLower)
 import Data.List (sort)
-import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
@@ -22,13 +20,18 @@ import Data.Time.LocalTime (utc, utcToLocalTime)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
 import Network.Wreq.Internal.Lens
 import Network.Wreq.Internal.Types (AWSAuthVersion(..))
-import System.Locale (defaultTimeLocale)
 import qualified Crypto.Hash as CT (HMAC, SHA256)
 import qualified Crypto.Hash.SHA256 as SHA256 (hash, hashlazy)
 import qualified Data.ByteString.Char8 as S
-import qualified Data.CaseInsensitive  as CI (CI, original)
+import qualified Data.CaseInsensitive  as CI (original)
 import qualified Data.HashSet as HashSet
 import qualified Network.HTTP.Client as HTTP
+
+#if MIN_VERSION_time(1,5,0)
+import Data.Time.Format (defaultTimeLocale)
+#else
+import System.Locale (defaultTimeLocale)
+#endif
 
 -- Sign requests following the AWS v4 request signing specification:
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
@@ -41,18 +44,6 @@ import qualified Network.HTTP.Client as HTTP
 -- with and without Bucket Authorization enabled
 -- ("Runscope-Bucket-Auth").
 --
--- Q: how do we get the payload hash to the signRequest function?
---
--- A: we use a (temporary) HTTP header to 'tunnel' the payload hash to
--- the signing function.  For POST and PUT requests, the
--- Network.Wreq.Types.payload function adds a HTTP header (name
--- defined in 'tmpPayloadHashHeader'). The
--- Network.Wreq.Internal.AWS.signRequest function reads the value of
--- the header and then removes it from the request.  For GET, HEAD,
--- and (currently) DELETE that carry no body, we use "" per AWS
--- documentation Item 6: "use empty string" in
--- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
-
 -- TODO: adjust when DELETE supports a body or PATCH is added
 signRequest :: AWSAuthVersion -> S.ByteString -> S.ByteString ->
                Request -> IO Request
@@ -68,8 +59,7 @@ signRequestV4 key secret request = do
       (service, region) = serviceAndRegion noRunscopeHost
       date = S.takeWhile (/= 'T') ts      -- YYYYMMDD
       hashedPayload
-        | request ^. method `elem` ["POST", "PUT"] =
-          fromJust . lookup tmpPayloadHashHeader $ request ^. requestHeaders
+        | request ^. method `elem` ["POST", "PUT"] = payloadHash req
         | otherwise = HEX.encode $ SHA256.hash ""
       -- add common v4 signing headers, service specific headers, and
       -- drop tmp header and Runscope-Bucket-Auth header (if present).
@@ -77,7 +67,6 @@ signRequestV4 key secret request = do
             (([ ("host", noRunscopeHost)
               , ("x-amz-date", ts)] ++
               [("x-amz-content-sha256", hashedPayload) | service == "s3"]) ++)
-            . deleteKey tmpPayloadHashHeader -- drop tmp header
             -- Runscope (correctly) doesn't send Bucket Auth header to AWS,
             -- remove it from the headers we sign. Adding back in at the end.
             . deleteKey "Runscope-Bucket-Auth"
@@ -132,25 +121,27 @@ signRequestV4 key secret request = do
     hmac' s k = toBytes (hmacGetDigest h)
       where h = hmac k s :: (CT.HMAC CT.SHA256)
 
-addTmpPayloadHashHeader :: Request -> IO Request
-addTmpPayloadHashHeader req = do
-  let payloadHash = case HTTP.requestBody req of
-        HTTP.RequestBodyBS bs ->
-          HEX.encode $ SHA256.hash bs
-        HTTP.RequestBodyLBS lbs ->
-          HEX.encode $ SHA256.hashlazy lbs
-        _ -> error "addTmpPayloadHashHeader: unexpected request body type"
-  return $ setHeader tmpPayloadHashHeader payloadHash req
-
-tmpPayloadHashHeader :: CI.CI S.ByteString
-tmpPayloadHashHeader = "X-LOCAL-CONTENT-HASH-HEADER-746352"
-                       -- 746352 to reduce collision risk
+payloadHash :: Request -> S.ByteString
+payloadHash req =
+  case HTTP.requestBody req of
+    HTTP.RequestBodyBS bs ->
+      HEX.encode $ SHA256.hash bs
+    HTTP.RequestBodyLBS lbs ->
+      HEX.encode $ SHA256.hashlazy lbs
+    _ -> error "addTmpPayloadHashHeader: unexpected request body type"
 
 -- Per AWS documentation at:
 --   http://docs.aws.amazon.com/general/latest/gr/rande.html
 -- For example: "dynamodb.us-east-1.amazonaws.com" -> ("dynamodb", "us-east-1")
 serviceAndRegion :: S.ByteString -> (S.ByteString, S.ByteString)
 serviceAndRegion endpoint
+  -- For s3, check <bucket>.s3..., i.e. virtual-host style access
+  | ".s3.amazonaws.com" `S.isSuffixOf` endpoint = -- vhost style, classic
+    ("s3", "us-east-1")
+  | ".s3-external-1.amazonaws.com" `S.isSuffixOf` endpoint =
+    ("s3", "us-east-1")
+  | ".s3-" `S.isInfixOf` endpoint = -- vhost style, regional
+    ("s3", regionInS3VHost endpoint)
   -- For s3, use /<bucket> style access, as opposed to
   -- <bucket>.s3... in the hostname.
   | endpoint `elem` ["s3.amazonaws.com", "s3-external-1.amazonaws.com"] =
@@ -160,6 +151,8 @@ serviceAndRegion endpoint
     let region = S.takeWhile (/= '.') $ S.drop 3 endpoint -- drop "s3-"
     in ("s3", region)
     -- not s3
+  | endpoint `elem` ["sts.amazonaws.com"] =
+    ("sts", "us-east-1")
   | svc `HashSet.member` noRegion =
     (svc, "us-east-1")
   | otherwise =
@@ -168,8 +161,14 @@ serviceAndRegion endpoint
   where
     svc = servicePrefix '.' endpoint
     servicePrefix c = S.map toLower . S.takeWhile (/= c)
-    noRegion = HashSet.fromList ["iam", "sts", "importexport", "route53",
-                                 "cloudfront"]
+    regionInS3VHost s =
+        S.takeWhile (/= '.') -- "eu-west-1"
+      . S.reverse            -- "eu-west-1.amazonaws.com"
+      . fst                  -- "moc.swanozama.1-tsew-ue"
+      . S.breakSubstring (S.pack "-3s.")
+      . S.reverse
+      $ s                  -- johnsmith.eu.s3-eu-west-1.amazonaws.com
+    noRegion = HashSet.fromList ["iam", "importexport", "route53", "cloudfront"]
 
 -- If the hostname doesn't end in runscope.net, return the original.
 -- For a hostname that includes runscope.net:

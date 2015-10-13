@@ -262,13 +262,42 @@ cookiesSet Verb{..} site = do
   assertEqual "cookies are set correctly" (Just "y")
     (r ^? responseCookie "x" . cookieValue)
 
+
 cookieSession site = Session.withSession $ \s -> do
-  void $ Session.get s (site "/cookies/set?foo=bar")
-  r <- Session.get s (site "/cookies")
-  assertEqual "cookies are set correctly" (Just "bar")
-    (r ^? responseCookie "foo" . cookieValue)
-  assertEqual "whee" (Just "bar")
-    (r ^. responseBody ^? key "cookies" . key "foo")
+  r0 <- Session.get s (site "/cookies/set?foo=bar")
+  assertEqual "after set foo, foo set" (Just "bar")
+    (r0 ^? responseCookie "foo" . cookieValue)
+  assertEqual "a different accessor works" (Just "bar")
+    (r0 ^. responseBody ^? key "cookies" . key "foo")
+
+  r1 <- Session.get s (site "/cookies")
+  assertEqual "long after set foo, foo still set" (Just "bar")
+    (r1 ^? responseCookie "foo" . cookieValue)
+
+  r2 <- Session.get s (site "/cookies/set?baz=quux")
+  assertEqual "after set baz, foo still set" (Just "bar")
+    (r2 ^? responseCookie "foo" . cookieValue)
+  assertEqual "after set baz, baz set" (Just "quux")
+    (r2 ^? responseCookie "baz" . cookieValue)
+
+  r3 <- Session.get s (site "/cookies")
+  assertEqual "long after set baz, foo still set" (Just "bar")
+    (r3 ^? responseCookie "foo" . cookieValue)
+  assertEqual "long after set baz, baz still set" (Just "quux")
+    (r3 ^? responseCookie "baz" . cookieValue)
+
+  r4 <- Session.get s (site "/cookies/delete?foo")
+  assertEqual "after delete foo, foo deleted" Nothing
+    (r4 ^? responseCookie "foo" . cookieValue)
+  assertEqual "after delete foo, baz still set" (Just "quux")
+    (r4 ^? responseCookie "baz" . cookieValue)
+
+  r5 <- Session.get s (site "/cookies")
+  assertEqual "long after delete foo, foo still deleted" Nothing
+    (r5 ^? responseCookie "foo" . cookieValue)
+  assertEqual "long after delete foo, baz still set" (Just "quux")
+    (r5 ^? responseCookie "baz" . cookieValue)
+
 
 getWithManager site = withManager $ \opts -> do
   void $ Wreq.getWith opts (site "/get?a=b")

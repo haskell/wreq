@@ -45,6 +45,7 @@ module Network.Wreq.Lens
     , params
     , cookie
     , cookies
+    , StatusChecker
     , checkStatus
 
     -- ** Proxy setup
@@ -100,7 +101,6 @@ module Network.Wreq.Lens
     ) where
 
 import Control.Applicative ((<*))
-import Control.Exception (SomeException)
 import Control.Lens (Fold, Lens, Lens', Traversal', folding)
 import Data.Attoparsec.ByteString (Parser, endOfInput, parseOnly)
 import Data.ByteString (ByteString)
@@ -113,7 +113,7 @@ import Network.HTTP.Types.Header (Header, HeaderName, ResponseHeaders)
 import Network.HTTP.Types.Status (Status)
 import Network.HTTP.Types.Version (HttpVersion)
 import Network.Mime (MimeType)
-import Network.Wreq.Types (Auth, Link, Options)
+import Network.Wreq.Types (Auth, Link, Options, StatusChecker)
 import qualified Network.Wreq.Lens.TH as TH
 
 -- | A lens onto configuration of the connection manager provided by
@@ -228,7 +228,7 @@ redirects :: Lens' Options Int
 redirects = TH.redirects
 
 -- | A lens to get the optional status check function
-checkStatus :: Lens' Options (Maybe (Status -> ResponseHeaders -> CookieJar -> Maybe SomeException))
+checkStatus :: Lens' Options (Maybe StatusChecker)
 checkStatus = TH.checkStatus
 
 -- | A traversal onto the cookie with the given name, if one exists.
@@ -240,7 +240,7 @@ cookie :: ByteString -> Traversal' Options Cookie
 cookie = TH.cookie
 
 -- | A lens onto all cookies.
-cookies :: Lens' Options CookieJar
+cookies :: Lens' Options (Maybe CookieJar)
 cookies = TH.cookies
 
 -- | A lens onto the name of a cookie.

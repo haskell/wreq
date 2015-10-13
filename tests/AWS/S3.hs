@@ -1,8 +1,8 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedLists, OverloadedStrings #-}
 module AWS.S3 (tests) where
 
-import Control.Lens
-import Data.Aeson.QQ
+import AWS.Aeson
+import Control.Lens hiding ((.=))
 import Data.Char (toLower)
 import Data.Monoid ((<>))
 import Network.Wreq
@@ -20,57 +20,79 @@ import qualified Data.ByteString.Char8 as BS8 (ByteString, pack)
 tests :: String -> String -> Options -> Test
 tests prefix region baseopts = let
   lowerPrefix = map toLower prefix
-  in testGroup "s3" [
-        testCase "createBucket" $ createBucket lowerPrefix region baseopts
-      , testCase "putObjectJSON" $ putObjectJSON lowerPrefix region baseopts
-      , testCase "getObjectJSON" $ getObjectJSON lowerPrefix region baseopts
-      , testCase "deleteObjectJSON" $ deleteObjectJSON lowerPrefix region baseopts
-      , testCase "deleteBucket" $ deleteBucket lowerPrefix region baseopts -- call last
-      ]
+  t = \(mkUrl, label) ->
+    testGroup (region ++ "_" ++ label)  [
+      testCase "createBucket" $
+        createBucket mkUrl lowerPrefix region baseopts
+    , testCase "putObjectJSON" $
+        putObjectJSON mkUrl lowerPrefix region baseopts
+    , testCase "getObjectJSON" $
+        getObjectJSON mkUrl lowerPrefix region baseopts
+    , testCase "deleteObjectJSON" $
+        deleteObjectJSON mkUrl lowerPrefix region baseopts
+    , testCase "deleteBucket" $
+        deleteBucket mkUrl lowerPrefix region baseopts -- call last
+    ]
+  in testGroup "s3" $ map t [ (urlPath,  "bucket-in-path")
+                            , (urlVHost, "bucket-in-vhost") ]
 
-createBucket :: String -> String -> Options -> IO ()
-createBucket prefix region baseopts = do
-  r <- putWith baseopts (url region ++ prefix ++ "testbucket") $
+-- Path based bucket access
+createBucket :: MkURL -> String -> String -> Options -> IO ()
+createBucket url prefix region baseopts = do
+  r <- putWith baseopts (url region prefix "testbucket") $
          locationConstraint region
   assertBool "createBucket 200" $ r ^. responseStatus . statusCode == 200
   assertBool "createBucket OK" $ r ^. responseStatus . statusMessage == "OK"
 
-deleteBucket :: String -> String -> Options -> IO ()
-deleteBucket prefix region baseopts = do
-  r <- deleteWith baseopts (url region ++ prefix ++ "testbucket")
+deleteBucket :: MkURL -> String -> String -> Options -> IO ()
+deleteBucket url prefix region baseopts = do
+  r <- deleteWith baseopts (url region prefix "testbucket")
   assertBool "deleteBucket 204 - no content" $
     r ^. responseStatus . statusCode == 204
   assertBool "deleteBucket OK" $
     r ^. responseStatus . statusMessage == "No Content"
 
-putObjectJSON :: String -> String -> Options -> IO ()
-putObjectJSON prefix region baseopts = do
-  -- S3 write object, incl. correct content-type, uses /bucket/object syntax
-  r <- putWith baseopts (url region ++ prefix ++ "testbucket/blabla-json") $
-         [aesonQQ| { "test": "key", "testdata": [ 1, 2, 3 ] } |]
+putObjectJSON :: MkURL -> String -> String -> Options -> IO ()
+putObjectJSON url prefix region baseopts = do
+  -- S3 write object, incl. correct content-type
+  r <- putWith baseopts (url region prefix "testbucket" ++ "blabla-json") $
+       object ["test" .= "key", "testdata" .= [1, 2, 3]]
   assertBool "putObjectJSON 200" $ r ^. responseStatus . statusCode == 200
   assertBool "putObjectJSON OK" $ r ^. responseStatus . statusMessage == "OK"
 
-getObjectJSON :: String -> String -> Options -> IO ()
-getObjectJSON prefix region baseopts = do
-  r <- getWith baseopts (url region ++ prefix ++ "testbucket/blabla-json")
+getObjectJSON :: MkURL -> String -> String -> Options -> IO ()
+getObjectJSON url prefix region baseopts = do
+  r <- getWith baseopts (url region prefix "testbucket" ++ "blabla-json")
   assertBool "getObjectJSON 200" $ r ^. responseStatus . statusCode == 200
   assertBool "getObjectJSON OK" $ r ^. responseStatus . statusMessage == "OK"
 
-deleteObjectJSON :: String -> String -> Options -> IO ()
-deleteObjectJSON prefix region baseopts = do
-  r <- deleteWith baseopts (url region ++ prefix ++ "testbucket/blabla-json")
+deleteObjectJSON :: MkURL -> String -> String -> Options -> IO ()
+deleteObjectJSON url prefix region baseopts = do
+  r <- deleteWith baseopts (url region prefix "testbucket" ++ "blabla-json")
   assertBool "deleteObjectJSON 204 - no content" $
     r ^. responseStatus . statusCode == 204
   assertBool "deleteObjectJSON OK" $
     r ^. responseStatus . statusMessage == "No Content"
 
+type MkURL = String -> String -> String -> String --region prefix bucket
+
 -- see http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
-url :: String -> String
-url "us-east-1" = "https://s3.amazonaws.com/" -- uses 'classic'
-url region      = "https://s3-" ++ region ++ ".amazonaws.com/"
+urlPath :: MkURL
+urlPath "us-east-1" prefix bucketname =
+  "https://s3.amazonaws.com/" ++ prefix ++ bucketname ++ "/"-- uses 'classic'
+urlPath region prefix bucketname =
+  "https://s3-" ++ region ++ ".amazonaws.com/" ++ prefix ++ bucketname ++ "/"
+
+-- Generate a VirtualHost style URL
+urlVHost :: MkURL
+urlVHost "us-east-1" prefix bucketname =
+  "https://" ++ prefix ++ bucketname ++ ".s3.amazonaws.com/"
+urlVHost region prefix bucketname =
+  "https://" ++ prefix ++ bucketname ++ ".s3-" ++ region ++ ".amazonaws.com/"
 
 -- see http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUT.html
+-- and http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
 locationConstraint :: String -> BS8.ByteString
-locationConstraint "us-east-1" = "" -- no loc needed for classic and Virginia
+locationConstraint "us-east-1"  = "" -- no loc needed for classic and Virginia
+locationConstraint "external-1" = "" -- no loc needed for Virginia
 locationConstraint region = "<CreateBucketConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><LocationConstraint>" <> BS8.pack region <> "</LocationConstraint></CreateBucketConfiguration>"

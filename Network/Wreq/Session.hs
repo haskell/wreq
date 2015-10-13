@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes, RecordWildCards #-}
 
 -- |
--- Module      : Network.Wreq
+-- Module      : Network.Wreq.Session
 -- Copyright   : (c) 2014 Bryan O'Sullivan
 --
 -- License     : BSD-style
@@ -17,7 +17,8 @@
 --   being used.
 --
 -- * Transparent cookie management.  Any cookies set by the server
---   persist from one request to the next.
+--   persist from one request to the next.  (Bypass this overhead
+--   using 'withAPISession'.)
 --
 --
 -- This module is designed to be used alongside the "Network.Wreq"
@@ -32,16 +33,22 @@
 -- @
 --
 -- We create a 'Session' using 'withSession', then pass the session to
--- subsequent functions.
+-- subsequent functions.  When talking to a REST-like service that does
+-- not use cookies, it is more efficient to use 'withAPISession'.
 --
--- Note the use of a qualified import statement, so that we can refer
--- unambiguously to the 'Session'-specific implementation of HTTP GET.
+-- Note the use of qualified import statements in the examples above,
+-- so that we can refer unambiguously to the 'Session'-specific
+-- implementation of HTTP GET.
 
 module Network.Wreq.Session
     (
+    -- * Session creation
       Session
     , withSession
+    , withAPISession
+    -- ** More control-oriented session creation
     , withSessionWith
+    , withSessionControl
     -- * HTTP verbs
     , get
     , post
@@ -60,8 +67,9 @@ module Network.Wreq.Session
     , Lens.seshRun
     ) where
 
-import Control.Concurrent.MVar (modifyMVar, newMVar)
-import Control.Lens ((&), (?~), (^.))
+import Control.Lens ((&), (?~), (.~))
+import Data.Foldable (forM_)
+import Data.IORef (newIORef, readIORef, writeIORef)
 import Network.Wreq (Options, Response)
 import Network.Wreq.Internal
 import Network.Wreq.Internal.Types (Body(..), Req(..), Session(..))
@@ -69,20 +77,40 @@ import Network.Wreq.Types (Postable, Putable, Run)
 import Prelude hiding (head)
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
-import qualified Network.Wreq as Wreq
 import qualified Network.Wreq.Internal.Lens as Lens
 
 -- | Create a 'Session', passing it to the given function.  The
 -- 'Session' will no longer be valid after that function returns.
+--
+-- This session manages cookies and uses default session manager
+-- configuration.
 withSession :: (Session -> IO a) -> IO a
 withSession = withSessionWith defaultManagerSettings
 
--- | Create a session, using the given manager settings.
+-- | Create a session.
+--
+-- This uses the default session manager settings, but does not manage
+-- cookies.  It is intended for use with REST-like HTTP-based APIs,
+-- which typically do not use cookies.
+withAPISession :: (Session -> IO a) -> IO a
+withAPISession = withSessionControl Nothing defaultManagerSettings
+
+-- | Create a session, using the given manager settings.  This session
+-- manages cookies.
 withSessionWith :: HTTP.ManagerSettings -> (Session -> IO a) -> IO a
-withSessionWith settings act = do
-  mv <- newMVar $ HTTP.createCookieJar []
+withSessionWith = withSessionControl (Just (HTTP.createCookieJar []))
+{-# DEPRECATED withSessionWith "Use withSessionControl instead." #-}
+
+-- | Create a session, using the given cookie jar and manager settings.
+withSessionControl :: Maybe HTTP.CookieJar
+                  -- ^ If 'Nothing' is specified, no cookie management
+                  -- will be performed.
+               -> HTTP.ManagerSettings
+               -> (Session -> IO a) -> IO a
+withSessionControl mj settings act = do
+  mref <- maybe (return Nothing) (fmap Just . newIORef) mj
   HTTP.withManager settings $ \mgr ->
-    act Session { seshCookies = mv
+    act Session { seshCookies = mref
                 , seshManager = mgr
                 , seshRun = runWith
                 }
@@ -139,10 +167,14 @@ deleteWith :: Options -> Session -> String -> IO (Response L.ByteString)
 deleteWith opts sesh url = run string sesh =<< prepareDelete opts url
 
 runWith :: Session -> Run Body -> Run Body
-runWith Session{..} act (Req _ req) =
-  modifyMVar seshCookies $ \cj -> do
-    resp <- act (Req (Right seshManager) (req & Lens.cookieJar ?~ cj))
-    return (resp ^. Wreq.responseCookieJar, resp)
+runWith Session{..} act (Req _ req) = do
+  req' <- case seshCookies of
+            Nothing -> return (req & Lens.cookieJar .~ Nothing)
+            Just ref -> (\s -> req & Lens.cookieJar ?~ s) `fmap` readIORef ref
+  resp <- act (Req (Right seshManager) req')
+  forM_ seshCookies $ \ref ->
+    writeIORef ref (HTTP.responseCookieJar resp)
+  return resp
 
 type Mapping a = (Body -> a, a -> Body, Run a)
 

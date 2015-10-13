@@ -95,7 +95,7 @@ _CookieJar = iso HTTP.destroyCookieJar HTTP.createCookieJar
 
 -- N.B. This is an "illegal" traversal because we can change its cookie_name.
 cookie :: ByteString -> Traversal' Types.Options HTTP.Cookie
-cookie name = cookies . _CookieJar . traverse . filtered
+cookie name = cookies . _Just . _CookieJar . traverse . filtered
               (\c -> HTTP.cookie_name c == name)
 
 responseCookie :: ByteString -> Fold (HTTP.Response body) HTTP.Cookie

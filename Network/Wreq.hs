@@ -219,8 +219,8 @@ getWith opts url = runRead =<< prepareGet opts url
 -- @
 --
 -- >>> r <- post "http://httpbin.org/post" (toJSON [1,2,3])
--- >>> r ^? responseBody . key "json"
--- Just (Array (fromList [Number 1.0,Number 2.0,Number 3.0]))
+-- >>> r ^? responseBody . key "json" . nth 2
+-- Just (Number 3.0)
 post :: Postable a => String -> a -> IO (Response L.ByteString)
 post url payload = postWith defaults url payload
 
