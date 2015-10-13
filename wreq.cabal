@@ -112,6 +112,7 @@ library
     lens >= 4.5,
     lens-aeson,
     mime-types,
+    network-uri,
     old-locale,
     template-haskell,
     text,
