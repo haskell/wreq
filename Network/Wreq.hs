@@ -87,6 +87,9 @@ module Network.Wreq
     , AWSAuthVersion(..)
     , Lens.auth
     , basicAuth
+    , oauth1Auth
+    , oauth1Temp
+    , oauth1ReqAccessToken
     , oauth2Bearer
     , oauth2Token
     , awsAuth
@@ -459,6 +462,33 @@ basicAuth :: S.ByteString       -- ^ Username.
           -> S.ByteString       -- ^ Password.
           -> Auth
 basicAuth = BasicAuth
+
+-- | OAuth1 authentication. This consists of a consumer token,
+-- a consumer secret, a token and a token secret
+oauth1Auth :: S.ByteString      -- ^ Consumer token
+           -> S.ByteString      -- ^ Consumer secret
+           -> S.ByteString      -- ^ OAuth token
+           -> S.ByteString      -- ^ OAuth token secret
+           -> Auth
+oauth1Auth = OAuth1
+
+-- | OAuth1 temporary token authentication. This consists of
+-- a consumer token, a consumer secret and a callback URI
+oauth1Temp :: S.ByteString      -- ^ Consumer token
+           -> S.ByteString      -- ^ Consumer secret
+           -> S.ByteString      -- ^ Callback URI
+           -> Auth
+oauth1Temp = OAuth1Temp
+
+-- | OAuth1 access token authentication. Used to make requests
+-- to exchange temporary tokens for access tokens
+oauth1ReqAccessToken :: S.ByteString  -- ^ Consumer token
+                     -> S.ByteString  -- ^ Consumer secret
+                     -> S.ByteString  -- ^ Temporary token
+                     -> S.ByteString  -- ^ Temporary secret
+                     -> S.ByteString  -- ^ OAuth Verifier
+                     -> Auth
+oauth1ReqAccessToken = OAuth1ReqAccessToken
 
 -- | An OAuth2 bearer token. This is treated by many services as the
 -- equivalent of a username and password.
