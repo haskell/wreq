@@ -16,6 +16,7 @@ import Data.List (sort)
 import Data.Monoid ((<>))
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
+import Data.Time.Locale.Compat (defaultTimeLocale)
 import Data.Time.LocalTime (utc, utcToLocalTime)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
 import Network.Wreq.Internal.Lens
