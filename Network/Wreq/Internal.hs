@@ -18,6 +18,7 @@ module Network.Wreq.Internal
     , preparePut
     , prepareDelete
     , prepareMethod
+    , preparePayloadMethod
     ) where
 
 import Control.Applicative ((<$>))
@@ -162,6 +163,12 @@ preparePost opts url payload = Req (manager opts) <$>
 prepareMethod :: HTTP.Method -> Options -> String -> IO Req
 prepareMethod method opts url = Req (manager opts) <$>
   prepare (return . (Lens.method .~ method)) opts url
+
+preparePayloadMethod :: Postable a => HTTP.Method -> Options -> String -> a
+                        -> IO Req
+                        
+preparePayloadMethod method opts url payload = Req (manager opts) <$>
+  prepare (postPayload payload . (Lens.method .~ method)) opts url
 
 prepareHead :: Options -> String -> IO Req
 prepareHead = prepareMethod HTTP.methodHead

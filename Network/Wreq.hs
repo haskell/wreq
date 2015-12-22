@@ -63,6 +63,9 @@ module Network.Wreq
     -- ** Custom Method
     , customMethod
     , customMethodWith
+    -- ** Custom Payload Method
+    , customPayloadMethod
+    , customPayloadMethodWith
     -- * Incremental consumption of responses
     -- ** GET
     , foldGet
@@ -357,6 +360,22 @@ customMethod method url = customMethodWith method defaults url
 -- 200
 customMethodWith :: String -> Options -> String -> IO (Response L.ByteString)
 customMethodWith method opts url = runRead =<< prepareMethod methodBS opts url
+  where
+    methodBS = BC8.pack method
+
+-- | Issue a custom-method request with a payload
+customPayloadMethod :: Postable a => String -> String -> a
+                    -> IO (Response L.ByteString)
+
+customPayloadMethod method url payload =
+  customPayloadMethodWith method defaults url payload
+
+-- | Issue a custom-method request with a payload, using the supplied 'Options'.
+customPayloadMethodWith :: Postable a => String -> Options -> String -> a
+                        -> IO (Response L.ByteString)
+                           
+customPayloadMethodWith method opts url payload =
+  runRead =<< preparePayloadMethod methodBS opts url payload
   where
     methodBS = BC8.pack method
 
