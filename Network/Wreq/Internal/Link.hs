@@ -1,11 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.Wreq.Internal.Link
-       (
-         links
+       ( links
        ) where
 
-import Control.Applicative ((<$>), (<*>), (*>), (<*), many)
+import Control.Applicative (many)
 import Data.Attoparsec.ByteString.Char8 as A8
 import Data.ByteString (ByteString)
 import Network.Wreq.Types (Link(..))

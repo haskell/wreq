@@ -37,10 +37,10 @@ module Network.Wreq.Types
     , Run
     ) where
 
-import Control.Lens ((&), (.~))
+import Lens.Micro ((&), (.~))
 import Data.Aeson (Value, encode)
 import Data.Int (Int8, Int16, Int32, Int64)
-import Data.Word (Word, Word8, Word16, Word32, Word64)
+import Data.Word (Word8, Word16, Word32, Word64)
 import Network.HTTP.Client (Request)
 import Network.HTTP.Client.MultipartFormData (Part, formDataBody)
 import Network.Wreq.Internal.Types

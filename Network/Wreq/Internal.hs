@@ -20,9 +20,9 @@ module Network.Wreq.Internal
     , prepareMethod
     ) where
 
-import Control.Applicative ((<$>))
+
 import Control.Arrow ((***))
-import Control.Lens ((&), (.~), (%~))
+import Lens.Micro ((&), (.~), (%~))
 import Data.Monoid ((<>))
 import Data.Text.Encoding (encodeUtf8)
 import Data.Version (showVersion)

@@ -77,46 +77,47 @@ library
   default-language: Haskell98
 
   exposed-modules:
-    Network.Wreq
-    Network.Wreq.Cache
-    Network.Wreq.Cache.Store
-    Network.Wreq.Lens
-    Network.Wreq.Session
-    Network.Wreq.Types
+                  Network.Wreq
+                  Network.Wreq.Cache
+                  Network.Wreq.Cache.Store
+                  Network.Wreq.Lens
+                  Network.Wreq.Session
+                  Network.Wreq.Types
   other-modules:
-    Network.Wreq.Internal
-    Network.Wreq.Internal.AWS
-    Network.Wreq.Internal.Lens
-    Network.Wreq.Internal.Link
-    Network.Wreq.Internal.Types
-    Network.Wreq.Lens.Machinery
-    Network.Wreq.Lens.TH
-    Paths_wreq
+                Network.Wreq.Internal
+                Network.Wreq.Internal.AWS
+                Network.Wreq.Internal.Lens
+                Network.Wreq.Internal.Link
+                Network.Wreq.Internal.Types
+                Network.Wreq.Lens.Extra
+                Network.Wreq.Lens.Machinery
+                Network.Wreq.Lens.TH
+                Paths_wreq
   build-depends:
-    psqueues >= 0.2,
-    aeson >= 0.7.0.3,
-    attoparsec >= 0.11.1.0,
-    base >= 4.5 && < 5,
-    base16-bytestring,
-    byteable,
-    bytestring >= 0.9,
-    case-insensitive,
-    containers,
-    cryptohash,
-    exceptions >= 0.5,
-    ghc-prim,
-    hashable,
-    http-client >= 0.4.6,
-    http-client-tls >= 0.2,
-    http-types >= 0.8,
-    lens >= 4.5,
-    lens-aeson,
-    mime-types,
-    old-locale,
-    template-haskell,
-    text,
-    time,
-    unordered-containers
+                psqueues >= 0.2,
+                aeson >= 0.7.0.3,
+                attoparsec >= 0.11.1.0,
+                base >= 4.5 && < 5,
+                base16-bytestring,
+                byteable,
+                bytestring >= 0.9,
+                case-insensitive,
+                containers,
+                cryptohash,
+                exceptions >= 0.5,
+                ghc-prim,
+                hashable,
+                http-client >= 0.4.6,
+                http-client-tls >= 0.2,
+                http-types >= 0.8,
+                microlens >= 0.2.0.0,
+                microlens-th >= 0.2.1.1,
+                mime-types,
+                old-locale,
+                template-haskell,
+                text,
+                time,
+                unordered-containers
 
 -- A convenient server for testing locally, or if httpbin.org is down.
 executable httpbin
@@ -185,8 +186,7 @@ test-suite tests
     hashable,
     http-client,
     http-types,
-    lens,
-    lens-aeson,
+    microlens,            
     network-info,
     snap-core,
     snap-server >= 0.9.4.4,

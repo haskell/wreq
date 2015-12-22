@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 
 -- |
@@ -22,7 +23,7 @@
 -- import "Network.Wreq"
 --
 -- \-\- Operators such as ('&') and ('.~').
--- import "Control.Lens"
+-- import "Lens.Micro"
 --
 -- \-\- Conversion of Haskell values to JSON.
 -- import "Data.Aeson" ('Data.Aeson.toJSON')
@@ -100,21 +101,23 @@ module Network.Wreq.Lens
     , atto_
     ) where
 
-import Control.Applicative ((<*))
-import Control.Lens (Fold, Lens, Lens', Traversal', folding)
-import Data.Attoparsec.ByteString (Parser, endOfInput, parseOnly)
-import Data.ByteString (ByteString)
-import Data.Text (Text)
-import Data.Time.Clock (UTCTime)
-import Network.HTTP.Client (Cookie, CookieJar, Manager, ManagerSettings, Proxy)
-import Network.HTTP.Client (RequestBody, Response)
-import Network.HTTP.Client.MultipartFormData (Part)
-import Network.HTTP.Types.Header (Header, HeaderName, ResponseHeaders)
-import Network.HTTP.Types.Status (Status)
-import Network.HTTP.Types.Version (HttpVersion)
-import Network.Mime (MimeType)
-import Network.Wreq.Types (Auth, Link, Options, StatusChecker)
+
+import           Data.Attoparsec.ByteString (Parser, endOfInput, parseOnly)
+import           Data.ByteString (ByteString)
+import           Data.Text (Text)
+import           Data.Time.Clock (UTCTime)
+import           Lens.Micro (Lens, Lens', Traversal')
+import           Lens.Micro.TH (Fold)
+import           Network.HTTP.Client (Cookie, CookieJar, Manager, ManagerSettings, Proxy)
+import           Network.HTTP.Client (RequestBody, Response)
+import           Network.HTTP.Client.MultipartFormData (Part)
+import           Network.HTTP.Types.Header (Header, HeaderName, ResponseHeaders)
+import           Network.HTTP.Types.Status (Status)
+import           Network.HTTP.Types.Version (HttpVersion)
+import           Network.Mime (MimeType)
+import           Network.Wreq.Lens.Extra (folding)
 import qualified Network.Wreq.Lens.TH as TH
+import           Network.Wreq.Types (Auth, Link, Options, StatusChecker)
 
 -- | A lens onto configuration of the connection manager provided by
 -- the http-client package.
@@ -126,7 +129,7 @@ import qualified Network.Wreq.Lens.TH as TH
 --import "OpenSSL.Session" ('OpenSSL.Session.context')
 --import "Network.HTTP.Client.OpenSSL"
 --
---let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'manager' 'Control.Lens..~' Left ('Network.HTTP.Client.OpenSSL.opensslManagerSettings' 'OpenSSL.Session.context')
+--let opts = 'Network.Wreq.defaults' 'Lens.Micro.&' 'manager' 'Lens.Micro..~' Left ('Network.HTTP.Client.OpenSSL.opensslManagerSettings' 'OpenSSL.Session.context')
 --'Network.HTTP.Client.OpenSSL.withOpenSSL' $
 --  'Network.Wreq.getWith' opts \"https:\/\/httpbin.org\/get\"
 -- @
@@ -138,8 +141,8 @@ import qualified Network.Wreq.Lens.TH as TH
 --import "Network.HTTP.Client.OpenSSL"
 --import "Network.HTTP.Client" ('Network.HTTP.Client.defaultManagerSettings', 'Network.HTTP.Client.managerResponseTimeout')
 --
---let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'manager' 'Control.Lens..~' Left ('Network.HTTP.Client.OpenSSL.opensslManagerSettings' 'OpenSSL.Session.context')
---                    'Control.Lens.&' 'manager' 'Control.Lens..~' Left ('Network.HTTP.Client.defaultManagerSettings' { 'Network.HTTP.Client.managerResponseTimeout' = Just 10000 } )
+--let opts = 'Network.Wreq.defaults' 'Lens.Micro.&' 'manager' 'Lens.Micro..~' Left ('Network.HTTP.Client.OpenSSL.opensslManagerSettings' 'OpenSSL.Session.context')
+--                    'Lens.Micro.&' 'manager' 'Lens.Micro..~' Left ('Network.HTTP.Client.defaultManagerSettings' { 'Network.HTTP.Client.managerResponseTimeout' = Just 10000 } )
 --
 --'Network.HTTP.Client.OpenSSL.withOpenSSL' $
 --  'Network.Wreq.getWith' opts \"https:\/\/httpbin.org\/get\"
@@ -152,11 +155,11 @@ manager = TH.manager
 -- Example:
 --
 -- @
---let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'proxy' 'Control.Lens.?~' 'Network.Wreq.httpProxy' \"localhost\" 8000
+--let opts = 'Network.Wreq.defaults' 'Lens.Micro.&' 'proxy' 'Lens.Micro.?~' 'Network.Wreq.httpProxy' \"localhost\" 8000
 --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
 --
--- Note here the use of the 'Control.Lens.?~' setter to turn a 'Proxy'
+-- Note here the use of the 'Lens.Micro.?~' setter to turn a 'Proxy'
 -- into a 'Maybe' 'Proxy', to make the type of the RHS compatible with
 -- the 'Lens.proxy' lens.
 proxy :: Lens' Options (Maybe Proxy)
@@ -167,7 +170,7 @@ proxy = TH.proxy
 -- Example (note the use of TLS):
 --
 -- @
---let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'Lens.auth' 'Control.Lens.?~' 'Network.Wreq.basicAuth' \"user\" \"pass\"
+--let opts = 'Network.Wreq.defaults' 'Lens.Micro.&' 'Lens.auth' 'Lens.Micro.?~' 'Network.Wreq.basicAuth' \"user\" \"pass\"
 --'Network.Wreq.getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
 -- @
 auth :: Lens' Options (Maybe Auth)
@@ -179,7 +182,7 @@ auth = TH.auth
 -- Example:
 --
 -- @
---let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'header' \"Accept\" 'Control.Lens..~' [\"*\/*\"]
+--let opts = 'Network.Wreq.defaults' 'Lens.Micro.&' 'header' \"Accept\" 'Lens.Micro..~' [\"*\/*\"]
 --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
 header :: HeaderName -> Lens' Options [ByteString]
@@ -191,7 +194,7 @@ header = TH.header
 -- every request.
 --
 -- @
---print ('Network.Wreq.defaults' 'Control.Lens.^.' 'headers')
+--print ('Network.Wreq.defaults' 'Lens.Micro.^.' 'headers')
 -- @
 headers :: Lens' Options [Header]
 headers = TH.headers
@@ -203,7 +206,7 @@ headers = TH.headers
 -- \"@http:\/\/httpbin.org\/get?foo=bar&foo=quux@\".
 --
 -- @
---let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'param' \"foo\" 'Control.Lens..~' [\"bar\", \"quux\"]
+--let opts = 'Network.Wreq.defaults' 'Lens.Micro.&' 'param' \"foo\" 'Lens.Micro..~' [\"bar\", \"quux\"]
 --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
 param :: Text -> Lens' Options [Text]
@@ -221,7 +224,7 @@ params = TH.params
 -- because the maximum number of redirects allowed will be exceeded.
 --
 -- @
---let opts = 'Network.Wreq.defaults' 'Control.Lens.&' 'redirects' 'Control.Lens..~' 3
+--let opts = 'Network.Wreq.defaults' 'Lens.Micro.&' 'redirects' 'Lens.Micro..~' 3
 --'Network.Wreq.getWith' opts \"http:\/\/httpbin.org\/redirect\/5\"
 -- @
 redirects :: Lens' Options Int
@@ -312,27 +315,27 @@ responseVersion = TH.responseVersion
 -- | A lens onto all matching named headers in an HTTP response.
 --
 -- To access exactly one header (the result will be the empty string if
--- there is no match), use the ('Control.Lens.^.') operator.
+-- there is no match), use the ('Lens.Micro.^.') operator.
 --
 -- @
 --r <- 'Network.Wreq.get' \"http:\/\/httpbin.org\/get\"
---print (r 'Control.Lens.^.' 'responseHeader' \"Content-Type\")
+--print (r 'Lens.Micro.^.' 'responseHeader' \"Content-Type\")
 -- @
 --
 -- To access at most one header (the result will be 'Nothing' if there
--- is no match), use the ('Control.Lens.^?') operator.
+-- is no match), use the ('Lens.Micro.^?') operator.
 --
 -- @
 --r <- 'Network.Wreq.get' \"http:\/\/httpbin.org\/get\"
---print (r 'Control.Lens.^?' 'responseHeader' \"Content-Transfer-Encoding\")
+--print (r 'Lens.Micro.^?' 'responseHeader' \"Content-Transfer-Encoding\")
 -- @
 --
 -- To access all (zero or more) matching headers, use the
--- ('Control.Lens.^..') operator.
+-- ('Lens.Micro.^..') operator.
 --
 -- @
 --r <- 'Network.Wreq.get' \"http:\/\/httpbin.org\/get\"
---print (r 'Control.Lens.^..' 'responseHeader' \"Set-Cookie\")
+--print (r 'Lens.Micro.^..' 'responseHeader' \"Set-Cookie\")
 -- @
 responseHeader :: HeaderName
                -- ^ Header name to match.
@@ -357,7 +360,7 @@ responseHeaders = TH.responseHeaders
 --
 -- @
 --r <- 'Network.Wreq.get' \"https:\/\/api.github.com\/search\/code?q=addClass+user:mozilla\"
---print (r 'Control.Lens.^?' 'responseLink' \"rel\" \"next\" . 'linkURL')
+--print (r 'Lens.Micro.^?' 'responseLink' \"rel\" \"next\" . 'linkURL')
 -- @
 responseLink :: ByteString
              -- ^ Parameter name to match.
@@ -370,7 +373,7 @@ responseLink = TH.responseLink
 --
 -- @
 --r <- 'Network.Wreq.get' \"http:\/\/httpbin.org\/get\"
---print (r 'Control.Lens.^.' 'responseBody')
+--print (r 'Lens.Micro.^.' 'responseBody')
 -- @
 responseBody :: Lens (Response body0) (Response body1) body0 body1
 responseBody = TH.responseBody
@@ -379,7 +382,7 @@ responseBody = TH.responseBody
 --
 -- @
 --r <- 'Network.Wreq.get' \"http:\/\/www.nytimes.com\/\"
---print (r 'Control.Lens.^?' responseCookie \"RMID\")
+--print (r 'Lens.Micro.^?' responseCookie \"RMID\")
 -- @
 responseCookie :: ByteString
                -- ^ Name of cookie to match.
@@ -463,7 +466,7 @@ atto_ p = atto (p <* endOfInput)
 -- $setup
 --
 -- >>> :set -XOverloadedStrings
--- >>> import Control.Lens
+-- >>> import Lens.Micro
 -- >>> import Data.Aeson (toJSON)
 -- >>> import Data.Aeson.Lens (key, nth)
 -- >>> import Network.Wreq

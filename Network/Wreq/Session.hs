@@ -67,17 +67,20 @@ module Network.Wreq.Session
     , Lens.seshRun
     ) where
 
-import Control.Lens ((&), (?~), (.~))
+import qualified Data.ByteString.Lazy as L
 import Data.Foldable (forM_)
 import Data.IORef (newIORef, readIORef, writeIORef)
+import Lens.Micro ((&), (.~))
+import qualified Network.HTTP.Client as HTTP
 import Network.Wreq (Options, Response)
 import Network.Wreq.Internal
+import qualified Network.Wreq.Internal.Lens as Lens
 import Network.Wreq.Internal.Types (Body(..), Req(..), Session(..))
+import Network.Wreq.Lens.Extra ((?~))
 import Network.Wreq.Types (Postable, Putable, Run)
 import Prelude hiding (head)
-import qualified Data.ByteString.Lazy as L
-import qualified Network.HTTP.Client as HTTP
-import qualified Network.Wreq.Internal.Lens as Lens
+
+---
 
 -- | Create a 'Session', passing it to the given function.  The
 -- 'Session' will no longer be valid after that function returns.

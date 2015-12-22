@@ -2,48 +2,49 @@
     FlexibleContexts, OverloadedStrings, RecordWildCards #-}
 
 module Network.Wreq.Cache
-    (
-      shouldCache
+    ( shouldCache
     , validateEntry
     , cacheStore
     ) where
 
-import Control.Applicative
-import Control.Lens ((^?), (^.), (^..), folded, non, pre, to)
-import Control.Monad (guard)
-import Data.Attoparsec.ByteString.Char8 as A
-import Data.CaseInsensitive (mk)
-import Data.Foldable (forM_)
-import Data.HashSet (HashSet)
-import Data.Hashable (Hashable)
-import Data.IntSet (IntSet)
-import Data.IORef (newIORef)
-import Data.List (sort)
-import Data.Maybe (listToMaybe)
-import Data.Monoid (First(..), mconcat)
-import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
-import Data.Time.Format (parseTime)
-import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
-import Network.HTTP.Types (HeaderName, Method)
-import Network.Wreq.Internal.Lens
-import Network.Wreq.Internal.Types
-import Network.Wreq.Lens
+import           Control.Applicative
+import           Control.Monad (guard)
+import           Data.Attoparsec.ByteString.Char8 as A
 import qualified Data.ByteString.Char8 as B
+import           Data.CaseInsensitive (mk)
+import           Data.Foldable (forM_)
+import           Data.HashSet (HashSet)
 import qualified Data.HashSet as HashSet
+import           Data.Hashable (Hashable)
+import           Data.IORef (newIORef)
+import           Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
+import           Data.List (sort)
+import           Data.Maybe (listToMaybe)
+import           Data.Monoid (First(..), mconcat)
+import           Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
+import           Data.Time.Format (parseTime)
+import           Data.Typeable (Typeable)
+import           GHC.Generics (Generic)
+import           Lens.Micro ((&), (^?), (^.), (^..), folded, non, to)
+import           Network.HTTP.Types (HeaderName, Method)
 import qualified Network.Wreq.Cache.Store as Store
+import           Network.Wreq.Internal.Lens
+import           Network.Wreq.Internal.Types
+import           Network.Wreq.Lens
 
 #if MIN_VERSION_time(1,5,0)
-import Data.Time.Format (defaultTimeLocale)
+import           Data.Time.Format (defaultTimeLocale)
 #else
-import System.Locale (defaultTimeLocale)
+import           System.Locale (defaultTimeLocale)
 #endif
 
 #if MIN_VERSION_base(4,6,0)
-import Data.IORef (atomicModifyIORef')
+import           Data.IORef (atomicModifyIORef')
 #else
-import Data.IORef (IORef, atomicModifyIORef)
+import           Data.IORef (IORef, atomicModifyIORef)
+
+---
 
 atomicModifyIORef' :: IORef a -> (a -> (a, b)) -> IO b
 atomicModifyIORef' = atomicModifyIORef
@@ -104,7 +105,7 @@ shouldCache now (Req _ req) resp = do
       mexpires = case crs of
                    [] -> resp ^? dateHeader "Expires"
                    _  -> computeExpiration now crs
-      created = resp ^. pre (dateHeader "Date") . non now
+      created = (resp ^? dateHeader "Date") ^. non now
   case mexpires of
     Just expires | expires <= created                -> empty
     Nothing      | req ^. method == "GET" &&

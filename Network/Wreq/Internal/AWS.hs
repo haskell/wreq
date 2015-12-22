@@ -6,8 +6,8 @@ module Network.Wreq.Internal.AWS
       signRequest
     ) where
 
-import Control.Applicative ((<$>))
-import Control.Lens ((%~), (^.), (&), to)
+
+import Lens.Micro ((%~), (^.), (&), to)
 import Crypto.MAC (hmac, hmacGetDigest)
 import Data.ByteString.Base16 as HEX (encode)
 import Data.Byteable (toBytes)

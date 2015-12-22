@@ -45,7 +45,7 @@ module Network.Wreq.Internal.Types
 
 import Control.Exception (Exception, SomeException)
 import Data.IORef (IORef)
-import Data.Monoid ((<>), mconcat)
+import Data.Monoid ((<>))
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Typeable (Typeable)

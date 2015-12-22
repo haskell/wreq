@@ -22,7 +22,7 @@
 -- import "Network.Wreq"
 --
 -- \-\- Operators such as ('&') and ('.~').
--- import "Control.Lens"
+-- import "Lens.Micro"
 --
 -- \-\- Conversion of Haskell values to JSON.
 -- import "Data.Aeson" ('Data.Aeson.toJSON')
@@ -151,7 +151,7 @@ module Network.Wreq
     , Lens.atto_
     ) where
 
-import Control.Lens ((.~), (&))
+import Lens.Micro ((.~), (&))
 import Control.Monad (unless)
 import Control.Monad.Catch (MonadThrow(throwM))
 import Data.Aeson (FromJSON)
@@ -394,7 +394,7 @@ foldGetWith opts f z0 url = request return opts url (foldResponseBody f z0)
 --
 --foo = do
 --  r <- 'asJSON' =<< 'get' \"http:\/\/httpbin.org\/get\"
---  print (headers (r 'Control.Lens.^.' 'responseBody'))
+--  print (headers (r 'Lens.Micro.^.' 'responseBody'))
 -- @
 --
 -- If we use 'asJSON' in the 'Either' monad, it will return 'Left'
@@ -424,7 +424,7 @@ asJSON resp = do
 -- @
 --foo = do
 --  r <- 'asValue' =<< 'get' \"http:\/\/httpbin.org\/get\"
---  print (r 'Control.Lens.^?' 'responseBody' . key \"headers\" . key \"User-Agent\")
+--  print (r 'Lens.Micro.^?' 'responseBody' . key \"headers\" . key \"User-Agent\")
 -- @
 asValue :: (MonadThrow m) => Response L.ByteString -> m (Response Aeson.Value)
 {-# SPECIALIZE asValue :: Response L.ByteString
@@ -447,7 +447,7 @@ asValue = asJSON
 --'getWith' opts \"https:\/\/httpbin.org\/basic-auth\/user\/pass\"
 -- @
 --
--- Note here the use of the 'Control.Lens.?~' setter to turn an 'Auth'
+-- Note here the use of the 'Lens.Micro.?~' setter to turn an 'Auth'
 -- into a 'Maybe' 'Auth', to make the type of the RHS compatible with
 -- the 'Lens.auth' lens.
 --
@@ -505,7 +505,7 @@ awsAuth = AWSAuth
 --'getWith' opts \"http:\/\/httpbin.org\/get\"
 -- @
 --
--- Note here the use of the 'Control.Lens.?~' setter to turn a 'Proxy'
+-- Note here the use of the 'Lens.Micro.?~' setter to turn a 'Proxy'
 -- into a 'Maybe' 'Proxy', to make the type of the RHS compatible with
 -- the 'Lens.proxy' lens.
 httpProxy :: S.ByteString -> Int -> Proxy
@@ -587,7 +587,7 @@ partString name value = Form.partBS name (encodeUtf8 (T.pack value))
 -- $setup
 --
 -- >>> :set -XOverloadedStrings
--- >>> import Control.Lens
+-- >>> import Lens.Micro
 -- >>> import Data.Aeson (toJSON)
 -- >>> import Data.Aeson.Lens (key, nth)
 -- >>> import Network.Wreq

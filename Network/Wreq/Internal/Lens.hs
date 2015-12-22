@@ -2,8 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Network.Wreq.Internal.Lens
-    (
-      HTTP.Request
+    ( HTTP.Request
     , method
     , secure
     , host
@@ -34,20 +33,29 @@ module Network.Wreq.Internal.Lens
     , deleteKey
     ) where
 
-import Control.Lens hiding (makeLenses)
-import Data.List (partition)
-import Network.HTTP.Client (Request)
-import Network.HTTP.Types (HeaderName)
-import Network.Wreq.Lens.Machinery (makeLenses)
-import Network.Wreq.Internal.Types (Session)
 import qualified Data.ByteString as S
+import           Data.List (partition)
+import           Lens.Micro
+import           Network.HTTP.Client (Request)
 import qualified Network.HTTP.Client as HTTP
+import           Network.HTTP.Types (HeaderName)
+import           Network.Wreq.Internal.Types (Session)
+import           Network.Wreq.Lens.Machinery (makeLenses)
+
+---
 
 makeLenses ''HTTP.Request
 makeLenses ''Session
 
-assoc :: (Eq k) => k -> IndexedTraversal' k [(k, a)] a
-assoc i = traverse . itraversed . index i
+-- | `lookup` in Lens form for an association list.
+assoc :: (Eq k, Show k) => k -> Lens' [(k, a)] a
+assoc k f ka = fmap (g ka) $ f (h ka)
+  where g [] _ = []
+        g ((k',a'):ka') a | k == k' = (k',a) : ka'
+                          | otherwise = (k',a') : g ka' a
+        h [] = error $ "No value for index: " ++ show k
+        h ((k',a'):ka') | k == k' = a'
+                        | otherwise = h ka'
 
 assoc2 :: Eq k => k -> Lens' [(k,a)] [a]
 -- This is only a lens up to the ordering of the list (which changes
