@@ -40,6 +40,7 @@ import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.Wreq.Internal.Lens as Lens
 import qualified Network.Wreq.Internal.AWS as AWS (signRequest)
+import qualified Network.Wreq.Internal.OAuth1 as OAuth1 (signRequest)
 import qualified Network.Wreq.Lens as Lens hiding (checkStatus)
 
 -- This mess allows this module to continue to load during interactive
@@ -117,7 +118,9 @@ prepare modify opts url = do
     signRequest = maybe return f $ auth opts
       where
         f (AWSAuth versn key secret) = AWS.signRequest versn key secret
+        f (OAuth1 consumerToken consumerSecret token secret) = OAuth1.signRequest consumerToken consumerSecret token secret
         f _ = return
+
 
 setQuery :: Options -> Request -> Request
 setQuery opts =
@@ -136,6 +139,7 @@ setAuth = maybe id f . auth
     f (OAuth2Token token)   = setHeader "Authorization" ("token " <> token)
     -- for AWS request signature, see Internal/AWS
     f (AWSAuth _ _ _)       = id
+    f (OAuth1 _ _ _ _)      = id
 
 setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy
