@@ -5,38 +5,38 @@
 
 module UnitTests (testWith) where
 
-import Control.Applicative ((<$>))
-import Control.Concurrent (forkIO, killThread)
-import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
-import Control.Exception (Exception, toException)
-import Control.Lens ((^.), (^?), (.~), (?~), (&))
-import Control.Monad (unless, void)
-import Data.Aeson
-import Data.Aeson.Lens (key)
-import Data.ByteString (ByteString)
-import Data.Char (toUpper)
-import Data.Maybe (isJust)
-import Data.Monoid ((<>))
-import HttpBin.Server (serve)
-import Network.HTTP.Client (HttpException(..))
-import Network.HTTP.Types.Status (Status(Status), status200, status401)
-import Network.HTTP.Types.Version (http11)
+import           Control.Applicative ((<$>))
+import           Control.Concurrent (forkIO, killThread)
+import           Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
+import           Control.Exception (Exception, toException)
+import qualified Control.Exception as E
+import           Control.Monad (unless, void)
+import           Data.Aeson
+import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Lazy as L
+import           Data.Char (toUpper)
+import           Data.Maybe (isJust)
+import           Data.Monoid ((<>))
+import qualified Data.Text as T
+import           HttpBin.Server (serve)
+import           Lens.Micro
+import           Lens.Micro.Aeson (key)
+import           Network.HTTP.Client (HttpException(..))
+import           Network.HTTP.Types.Status (Status(Status), status200, status401)
+import           Network.HTTP.Types.Version (http11)
+import qualified Network.Wreq as Wreq
 import Network.Wreq hiding
   (get, post, head_, put, options, delete,
    getWith, postWith, headWith, putWith, optionsWith, deleteWith)
-import Network.Wreq.Lens
-import Network.Wreq.Types (Postable, Putable)
-import Snap.Http.Server.Config
-import System.IO (hClose, hPutStr)
-import System.IO.Temp (withSystemTempFile)
-import Test.Framework (Test, defaultMain, testGroup)
-import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assertBool, assertEqual, assertFailure)
-import qualified Control.Exception as E
-import qualified Data.Text as T
+import           Network.Wreq.Lens
 import qualified Network.Wreq.Session as Session
-import qualified Data.ByteString.Lazy as L
-import qualified Network.Wreq as Wreq
+import           Network.Wreq.Types (Postable, Putable)
+import           Snap.Http.Server.Config
+import           System.IO (hClose, hPutStr)
+import           System.IO.Temp (withSystemTempFile)
+import           Test.Framework (Test, defaultMain, testGroup)
+import           Test.Framework.Providers.HUnit (testCase)
+import           Test.HUnit (assertBool, assertEqual, assertFailure)
 
 data Verb = Verb {
     get :: String -> IO (Response L.ByteString)
@@ -160,7 +160,7 @@ throwsStatusCode Verb{..} site =
                       _ -> assertFailure "unexpected exception thrown"
 
 getBasicAuth Verb{..} site = do
-  let opts = defaults & auth ?~ basicAuth "user" "passwd"
+  let opts = defaults & auth .~ Just (basicAuth "user" "passwd")
   r <- getWith opts (site "/basic-auth/user/passwd")
   assertEqual "basic auth GET succeeds" status200 (r ^. responseStatus)
   let inspect e = case e of
@@ -171,7 +171,7 @@ getBasicAuth Verb{..} site = do
     getWith opts (site "/basic-auth/user/asswd")
 
 getOAuth2 Verb{..} kind ctor site = do
-  let opts = defaults & auth ?~ ctor "token1234"
+  let opts = defaults & auth .~ Just (ctor "token1234")
   r <- getWith opts (site $ "/oauth2/" <> kind <> "/token1234")
   assertEqual ("oauth2 " <> kind <> " GET succeeds")
     status200 (r ^. responseStatus)

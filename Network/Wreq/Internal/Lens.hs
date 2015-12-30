@@ -47,6 +47,7 @@ import           Network.Wreq.Lens.Machinery (makeLenses)
 makeLenses ''HTTP.Request
 makeLenses ''Session
 
+-- TODO: This can be a Traversal', using `ix`. 
 -- | `lookup` in Lens form for an association list.
 assoc :: (Eq k, Show k) => k -> Lens' [(k, a)] a
 assoc k f ka = fmap (g ka) $ f (h ka)
