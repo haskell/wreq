@@ -47,16 +47,14 @@ import           Network.Wreq.Lens.Machinery (makeLenses)
 makeLenses ''HTTP.Request
 makeLenses ''Session
 
--- TODO: This can be a Traversal', using `ix`. 
--- | `lookup` in Lens form for an association list.
-assoc :: (Eq k, Show k) => k -> Lens' [(k, a)] a
-assoc k f ka = fmap (g ka) $ f (h ka)
-  where g [] _ = []
-        g ((k',a'):ka') a | k == k' = (k',a) : ka'
-                          | otherwise = (k',a') : g ka' a
-        h [] = error $ "No value for index: " ++ show k
-        h ((k',a'):ka') | k == k' = a'
-                        | otherwise = h ka'
+-- | `lookup` in Traversal form for an association list.
+assoc :: Eq k => k -> Traversal' [(k, a)] a
+assoc k f al = case lookup k al of
+  Nothing -> pure al
+  Just a  -> (\a' -> insert' a' al) <$> f a
+    where insert' a' [] = [(k,a')]
+          insert' a' ((k',x):xs) | k == k' = (k,a') : xs
+                                 | otherwise = (k',x) : insert' a' xs
 
 assoc2 :: Eq k => k -> Lens' [(k,a)] [a]
 -- This is only a lens up to the ordering of the list (which changes
