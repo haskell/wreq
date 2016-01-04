@@ -7,9 +7,9 @@ module Network.Wreq.Lens.Extra
        ) where
 
 import Data.Foldable (traverse_)
-import Lens.Micro
-import Lens.Micro.Internal (phantom)
-import Lens.Micro.TH (Fold)
+import Data.Functor.Contravariant (phantom)
+import Lens.Micro hiding (folding)
+import Lens.Micro.Contra (Fold)
        
 --- 
 

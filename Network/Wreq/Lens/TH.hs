@@ -63,7 +63,8 @@ module Network.Wreq.Lens.TH
 
 import           Data.ByteString (ByteString)
 import           Data.Text (Text)
-import           Lens.Micro
+import           Lens.Micro hiding (folding)
+import           Lens.Micro.Contra (Fold)
 import           Lens.Micro.TH hiding (makeLenses)
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Client.MultipartFormData as Form
