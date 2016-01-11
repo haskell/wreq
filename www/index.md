@@ -55,7 +55,7 @@ walks you through the
 powerful to work with.
 
 ~~~~ {.haskell}
-ghci> import Control.Lens
+ghci> import Lens.Micro
 ghci> r ^. responseHeader "Content-Type"
 "application/json"
 ~~~~
@@ -89,7 +89,7 @@ JSON search result we just received from GitHub above, and pulls out
 the authors of our popular Tetris clones.
 
 ~~~~ {.haskell}
-ghci> import Data.Aeson.Lens
+ghci> import Lens.Micro.Aeson
 ghci> r ^.. responseBody . key "items" . values .
             key "owner" . key "login" . _String
 ["steffi2392","rmies","Spacejoker","walpen",{-...-}

@@ -71,7 +71,7 @@ The `wreq` package makes heavy use of Edward Kmett's
 consistent API.
 
 ~~~~ {.haskell}
-ghci> import Control.Lens
+ghci> import Lens.Micro
 ~~~~
 
 While `lens` has a vast surface area, the portion that you must
@@ -118,7 +118,7 @@ function.  The `*With` family of functions all accept an
 parameter that allow changes from the library's default behaviours.
 
 ~~~~ {.haskell}
-ghci> import Data.Aeson.Lens (_String, key)
+ghci> import Lens.Micro.Aeson (_String, key)
 ghci> let opts = defaults & param "foo" .~ ["bar", "quux"]
 ghci> r <- getWith opts "http://httpbin.org/get"
 ghci> r ^. responseBody . key "url" . _String
@@ -233,11 +233,11 @@ traversing JSON structures without having to either build a
 corresponding Haskell type or traverse a `Value` by hand.
 
 The first of these is
-[`key`](http://hackage.haskell.org/package/lens/docs/Data-Aeson-Lens.html#v:key),
+[`key`](http://hackage.haskell.org/package/microlens-aeson/docs/Lens-Micro-Aeson.html#v:key),
 which traverses to the named key in a JSON object.
 
 ~~~~ {.haskell}
-ghci> import Data.Aeson.Lens (key)
+ghci> import Lens.Micro.Aeson (key)
 ghci> r <- get "http://httpbin.org/get"
 ghci> r ^? responseBody . key "url"
 Just (String "http://httpbin.org/get")
@@ -255,7 +255,7 @@ That said, our result above has the type `Maybe Value`, so it's quite
 annoying to work with. This is where the `_String` lens comes in.
 
 ~~~~ {.haskell}
-ghci> import Data.Aeson.Lens (_String, key)
+ghci> import Lens.Micro.Aeson (_String, key)
 ghci> r <- get "http://httpbin.org/get"
 ghci> r ^. responseBody . key "url" . _String
 "http://httpbin.org/get"
@@ -386,7 +386,7 @@ or if the file is large enough that we want to stream its contents,
 [`partFileSource`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq.html#t:partFileSource).
 
 ~~~~ {.haskell}
-ghci> import Data.Aeson.Lens (members)
+ghci> import Lens.Micro.Aeson (members)
 ghci> r <- post "http://httpbin.org/post" (partFile "file" "hello.hs")
 ghci> r ^.. responseBody . key "files" . members . _String
 ["main = putStrLn \"hello\"\n"]
@@ -525,7 +525,7 @@ unauthenticated request fails.
 
 ~~~~ {.haskell}
 import Control.Exception as E
-import Control.Lens
+import Lens.Micro
 import Network.HTTP.Client
 import Network.Wreq
 
@@ -568,7 +568,7 @@ Here's a complete example.
 ~~~~ {.haskell}
 {-# LANGUAGE OverloadedStrings #-}
 
-import Control.Lens
+import Lens.Micro
 import Network.Wreq
 import qualified Network.Wreq.Session as S
 
