@@ -95,8 +95,6 @@ param n = params . assoc2 n
 header :: HTTP.HeaderName -> Lens' Types.Options [ByteString]
 header n = headers . assoc2 n
 
--- Colin: This has been specialized to a Lens' from an Iso'. Is this good
--- enough?
 _CookieJar :: Lens' HTTP.CookieJar [HTTP.Cookie]
 _CookieJar = lens HTTP.destroyCookieJar (const HTTP.createCookieJar)
 

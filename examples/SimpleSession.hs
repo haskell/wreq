@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Control.Lens
+import Lens.Micro
 import Network.Wreq
 import qualified Network.Wreq.Session as S
 

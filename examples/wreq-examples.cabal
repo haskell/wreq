@@ -17,14 +17,15 @@ executable wreq-example-json-response
   default-language: Haskell98
 
   build-depends:
-    aeson,
-    base >= 4.5 && < 5,
-    containers,
-    ghc-prim,
-    lens,
-    lens-aeson,
-    text,
-    wreq
+                  aeson
+                , base >= 4.5 && < 5
+                , containers
+                , ghc-prim
+                , microlens
+                , microlens-aeson
+                , microlens-aeson >= 2.1.0
+                , text
+                , wreq
 
 
 executable wreq-example-simple-session
@@ -34,7 +35,7 @@ executable wreq-example-simple-session
 
   build-depends:
     base >= 4.5 && < 5,
-    lens,
+    microlens,
     wreq
 
 executable upload-paste
@@ -43,17 +44,18 @@ executable upload-paste
   default-language: Haskell98
 
   build-depends:
-    aeson,
-    ansi-wl-pprint >= 0.6.6,
-    base >= 4.5 && < 5,
-    bytestring,
-    filepath,
-    lens,
-    optparse-applicative >= 0.11,
-    mtl,
-    tagsoup,
-    text,
-    wreq
+                aeson,
+                ansi-wl-pprint >= 0.6.6,
+                base >= 4.5 && < 5,
+                bytestring,
+                filepath,
+                microlens,
+                microlens-th,
+                optparse-applicative >= 0.11,
+                mtl,
+                tagsoup,
+                text,
+                wreq
 
 source-repository head
   type:     git

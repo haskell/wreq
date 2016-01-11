@@ -12,19 +12,20 @@
 {-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall #-}
 
-import Control.Applicative
-import Control.Lens
-import Data.Char (toLower)
-import Data.Maybe (listToMaybe)
-import Data.Monoid (mempty)
-import Network.Wreq (FormParam((:=)), post, responseBody)
-import Network.Wreq.Types (FormValue(..))
-import Options.Applicative as Opts
-import Options.Applicative.Types (readerAsk)
-import System.FilePath (takeExtension, takeFileName)
-import Text.HTML.TagSoup
+import           Control.Applicative
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
+import           Data.Char (toLower)
+import           Data.Maybe (listToMaybe)
+import           Data.Monoid (mempty)
+import           Lens.Micro
+import           Lens.Micro.TH
+import           Network.Wreq (FormParam((:=)), post, responseBody)
+import           Network.Wreq.Types (FormValue(..))
+import           Options.Applicative as Opts
+import           Options.Applicative.Types (readerAsk)
+import           System.FilePath (takeExtension, takeFileName)
+import           Text.HTML.TagSoup
 
 -- A post to lpaste.net can either be private or public (visible in an
 -- index).

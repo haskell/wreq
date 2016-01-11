@@ -5,15 +5,15 @@
 {-# LANGUAGE DeriveGeneric, OverloadedStrings, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 
-import Control.Lens ((&), (^.), (^?), (.~))
-import Data.Aeson (FromJSON)
-import Data.Aeson.Lens (key)
-import Data.Map (Map)
-import Data.Text (Text)
-import GHC.Generics (Generic)
 import qualified Control.Exception as E
+import           Data.Aeson (FromJSON)
+import           Data.Map (Map)
+import           Data.Text (Text)
+import           GHC.Generics (Generic)
+import           Lens.Micro ((&), (^.), (^?), (.~))
+import           Lens.Micro.Aeson (key)
 
-import Network.Wreq
+import           Network.Wreq
 
 
 -- This Haskell type corresponds to the structure of a response body
