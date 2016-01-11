@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module AWS.SQS (tests) where
 
-import Control.Lens
-import Data.Aeson.Lens (key, _String, values)
 import Data.IORef (IORef, readIORef, writeIORef)
 import Data.Text as T (Text, pack, unpack, split)
+import Lens.Micro
+import Lens.Micro.Aeson (key, _String, values)
 import Network.Wreq
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)

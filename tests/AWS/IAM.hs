@@ -3,13 +3,13 @@ module AWS.IAM (tests) where
 
 import AWS.Aeson
 import Control.Concurrent (threadDelay)
-import Control.Lens hiding ((.=))
 import Data.Aeson.Encode (encode)
-import Data.Aeson.Lens (key, _String, values)
+import Lens.Micro.Aeson (key, _String, values)
 import Data.IORef (IORef, readIORef, writeIORef)
 import Data.Text as T (Text, pack, unpack, split)
 import Data.Text.Lazy as LT (toStrict)
 import Data.Text.Lazy.Encoding as E (decodeUtf8)
+import Lens.Micro
 import Network.Wreq
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)

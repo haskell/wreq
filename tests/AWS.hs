@@ -61,18 +61,18 @@ or machine. The default prefix used for all resources created
 
 module AWS (tests) where
 
-import Control.Exception as E (IOException, catch)
-import Control.Lens
-import Data.ByteString.Char8 as BS8 (pack)
-import Data.IORef (newIORef)
-import Network.Info (getNetworkInterfaces, mac, ipv6)
-import Network.Wreq
-import System.Environment (getEnv)
-import Test.Framework (Test, testGroup)
 import qualified AWS.DynamoDB (tests)
 import qualified AWS.IAM (tests)
 import qualified AWS.S3 (tests)
 import qualified AWS.SQS (tests)
+import           Control.Exception as E (IOException, catch)
+import           Data.ByteString.Char8 as BS8 (pack)
+import           Data.IORef (newIORef)
+import           Micro.Lens
+import           Network.Info (getNetworkInterfaces, mac, ipv6)
+import           Network.Wreq
+import           System.Environment (getEnv)
+import           Test.Framework (Test, testGroup)
 
 tests :: IO Test
 tests = do

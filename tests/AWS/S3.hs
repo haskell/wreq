@@ -1,15 +1,15 @@
 {-# LANGUAGE OverloadedLists, OverloadedStrings #-}
 module AWS.S3 (tests) where
 
-import AWS.Aeson
-import Control.Lens hiding ((.=))
-import Data.Char (toLower)
-import Data.Monoid ((<>))
-import Network.Wreq
-import Test.Framework (Test, testGroup)
-import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assertBool)
+import           AWS.Aeson
 import qualified Data.ByteString.Char8 as BS8 (ByteString, pack)
+import           Data.Char (toLower)
+import           Data.Monoid ((<>))
+import           Lens.Micro
+import           Network.Wreq
+import           Test.Framework (Test, testGroup)
+import           Test.Framework.Providers.HUnit (testCase)
+import           Test.HUnit (assertBool)
 
 -- FIXME: retry create call in case we get the S3 specific "A
 -- conflicting conditional operation is currently in progress against

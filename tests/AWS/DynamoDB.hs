@@ -3,9 +3,9 @@ module AWS.DynamoDB (tests) where
 
 import AWS.Aeson
 import Control.Concurrent (threadDelay)
-import Control.Lens hiding ((.=))
-import Data.Aeson.Lens (key, _String, values, _Double)
+import Lens.Micro.Aeson (key, _String, values, _Double)
 import Data.Text as T (pack)
+import Lens.Micro
 import Network.Wreq
 import System.Timeout (timeout)
 import Test.Framework (Test, testGroup)
