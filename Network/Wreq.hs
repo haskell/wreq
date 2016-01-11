@@ -28,7 +28,7 @@
 -- import "Data.Aeson" ('Data.Aeson.toJSON')
 --
 -- \-\- Easy traversal of JSON data.
--- import "Data.Aeson.Lens" ('Data.Aeson.Lens.key', 'Data.Aeson.Lens.nth')
+-- import "Lens.Micro.Aeson" ('Lens.Micro.Aeson.key', 'Lens.Micro.Aeson.nth')
 -- @
 --
 -- There exist some less frequently used lenses that are not exported
@@ -619,5 +619,5 @@ partString name value = Form.partBS name (encodeUtf8 (T.pack value))
 -- >>> :set -XOverloadedStrings
 -- >>> import Lens.Micro
 -- >>> import Data.Aeson (toJSON)
--- >>> import Data.Aeson.Lens (key, nth)
+-- >>> import Lens.Micro.Aeson (key, nth)
 -- >>> import Network.Wreq

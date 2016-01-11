@@ -29,7 +29,7 @@
 -- import "Data.Aeson" ('Data.Aeson.toJSON')
 --
 -- \-\- Easy traversal of JSON data.
--- import "Data.Aeson.Lens" ('Data.Aeson.Lens.key', 'Data.Aeson.Lens.nth')
+-- import "Lens.Micro.Aeson" ('Lens.Micro.Aeson.key', 'Lens.Micro.Aeson.nth')
 -- @
 
 module Network.Wreq.Lens
@@ -468,5 +468,5 @@ atto_ p = atto (p <* endOfInput)
 -- >>> :set -XOverloadedStrings
 -- >>> import Lens.Micro
 -- >>> import Data.Aeson (toJSON)
--- >>> import Data.Aeson.Lens (key, nth)
+-- >>> import Lens.Micro.Aeson (key, nth)
 -- >>> import Network.Wreq
