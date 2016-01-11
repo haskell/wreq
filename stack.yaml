@@ -1,7 +1,7 @@
 # For more information, see: https://github.com/commercialhaskell/stack/blob/release/doc/yaml_configuration.md
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
-resolver: nightly-2015-12-16
+resolver: nightly-2016-01-11
 
 # Local packages, usually specified by relative directory name
 packages:
@@ -10,10 +10,7 @@ packages:
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
-  - microlens-0.4.0.1
-  - microlens-th-0.3.0.0
   - microlens-aeson-2.1.0
-  - microlens-contra-0.1.0.0
 
 # Override default flag values for local packages and extra-deps
 flags:
