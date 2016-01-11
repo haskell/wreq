@@ -63,6 +63,9 @@ module Network.Wreq
     -- ** Custom Method
     , customMethod
     , customMethodWith
+    -- ** Custom Payload Method
+    , customPayloadMethod
+    , customPayloadMethodWith
     -- * Incremental consumption of responses
     -- ** GET
     , foldGet
@@ -87,6 +90,7 @@ module Network.Wreq
     , AWSAuthVersion(..)
     , Lens.auth
     , basicAuth
+    , oauth1Auth
     , oauth2Bearer
     , oauth2Token
     , awsAuth
@@ -359,6 +363,22 @@ customMethodWith method opts url = runRead =<< prepareMethod methodBS opts url
   where
     methodBS = BC8.pack method
 
+-- | Issue a custom-method request with a payload
+customPayloadMethod :: Postable a => String -> String -> a
+                    -> IO (Response L.ByteString)
+
+customPayloadMethod method url payload =
+  customPayloadMethodWith method defaults url payload
+
+-- | Issue a custom-method request with a payload, using the supplied 'Options'.
+customPayloadMethodWith :: Postable a => String -> Options -> String -> a
+                        -> IO (Response L.ByteString)
+                           
+customPayloadMethodWith method opts url payload =
+  runRead =<< preparePayloadMethod methodBS opts url payload
+  where
+    methodBS = BC8.pack method
+
 foldGet :: (a -> S.ByteString -> IO a) -> a -> String -> IO a
 foldGet f z url = foldGetWith defaults f z url
 
@@ -459,6 +479,16 @@ basicAuth :: S.ByteString       -- ^ Username.
           -> S.ByteString       -- ^ Password.
           -> Auth
 basicAuth = BasicAuth
+
+-- | OAuth1 authentication. This consists of a consumer token,
+-- a consumer secret, a token and a token secret
+oauth1Auth :: S.ByteString          -- ^ Consumer token
+       -> S.ByteString          -- ^ Consumer secret
+       -> S.ByteString          -- ^ OAuth token
+       -> S.ByteString          -- ^ OAuth token secret
+       -> Auth
+oauth1Auth = OAuth1
+
 
 -- | An OAuth2 bearer token. This is treated by many services as the
 -- equivalent of a username and password.

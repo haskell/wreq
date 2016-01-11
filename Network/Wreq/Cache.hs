@@ -24,6 +24,7 @@ import           Data.Maybe (listToMaybe)
 import           Data.Monoid (First(..), mconcat)
 import           Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
 import           Data.Time.Format (parseTime)
+import           Data.Time.Locale.Compat (defaultTimeLocale)
 import           Data.Typeable (Typeable)
 import           GHC.Generics (Generic)
 import           Lens.Micro ((&), (^?), (^.), (^..), folded, non, to)
@@ -32,12 +33,6 @@ import qualified Network.Wreq.Cache.Store as Store
 import           Network.Wreq.Internal.Lens
 import           Network.Wreq.Internal.Types
 import           Network.Wreq.Lens
-
-#if MIN_VERSION_time(1,5,0)
-import           Data.Time.Format (defaultTimeLocale)
-#else
-import           System.Locale (defaultTimeLocale)
-#endif
 
 #if MIN_VERSION_base(4,6,0)
 import           Data.IORef (atomicModifyIORef')

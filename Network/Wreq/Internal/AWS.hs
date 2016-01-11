@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, OverloadedStrings, BangPatterns #-}
+{-# LANGUAGE OverloadedStrings, BangPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.Wreq.Internal.AWS
@@ -16,6 +16,7 @@ import Data.List (sort)
 import Data.Monoid ((<>))
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
+import Data.Time.Locale.Compat (defaultTimeLocale)
 import Data.Time.LocalTime (utc, utcToLocalTime)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
 import Network.Wreq.Internal.Lens
@@ -26,12 +27,6 @@ import qualified Data.ByteString.Char8 as S
 import qualified Data.CaseInsensitive  as CI (original)
 import qualified Data.HashSet as HashSet
 import qualified Network.HTTP.Client as HTTP
-
-#if MIN_VERSION_time(1,5,0)
-import Data.Time.Format (defaultTimeLocale)
-#else
-import System.Locale (defaultTimeLocale)
-#endif
 
 -- Sign requests following the AWS v4 request signing specification:
 -- http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
