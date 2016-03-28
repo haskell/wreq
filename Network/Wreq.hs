@@ -57,6 +57,9 @@ module Network.Wreq
     -- ** PUT
     , put
     , putWith
+    -- ** PATCH
+    , patch
+    , patchWith
     -- ** DELETE
     , delete
     , deleteWith
@@ -278,6 +281,36 @@ put url payload = putWith defaults url payload
 -- | Issue a PUT request, using the supplied 'Options'.
 putWith :: Putable a => Options -> String -> a -> IO (Response L.ByteString)
 putWith opts url payload = runRead =<< preparePut opts url payload
+
+-- | Issue a PATCH request.
+--
+-- Example:
+--
+-- @
+--'patch' \"http:\/\/httpbin.org\/patch\" ('Aeson.toJSON' [1,2,3])
+-- @
+--
+-- >>> r <- patch "http://httpbin.org/patch" (toJSON [1,2,3])
+-- >>> r ^? responseBody . key "json" . nth 2
+-- Just (Number 3.0)
+patch :: Patchable a => String -> a -> IO (Response L.ByteString)
+patch url payload = patchWith defaults url payload
+
+-- | Issue a PATCH request, using the supplied 'Options'.
+--
+-- Example:
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.param' \"foo\" '.~' [\"bar\"]
+--'patchWith' opts \"http:\/\/httpbin.org\/patch\" ('Aeson.toJSON' [1,2,3])
+-- @
+--
+-- >>> let opts = defaults & param "foo" .~ ["bar"]
+-- >>> r <- patchWith opts "http://httpbin.org/patch" (toJSON [1,2,3])
+-- >>> r ^? responseBody . key "url"
+-- Just (String "http://httpbin.org/patch?foo=bar")
+patchWith :: Patchable a => Options -> String -> a -> IO (Response L.ByteString)
+patchWith opts url payload = runRead =<< preparePatch opts url payload
 
 -- | Issue an OPTIONS request.
 --

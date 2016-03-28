@@ -56,6 +56,7 @@ module Network.Wreq.Session
     , options
     , put
     , delete
+    , patch
     -- ** Configurable verbs
     , getWith
     , postWith
@@ -63,6 +64,7 @@ module Network.Wreq.Session
     , optionsWith
     , putWith
     , deleteWith
+    , patchWith
     -- * Extending a session
     , Lens.seshRun
     ) where
@@ -73,7 +75,7 @@ import Data.IORef (newIORef, readIORef, writeIORef)
 import Network.Wreq (Options, Response)
 import Network.Wreq.Internal
 import Network.Wreq.Internal.Types (Body(..), Req(..), Session(..))
-import Network.Wreq.Types (Postable, Putable, Run)
+import Network.Wreq.Types (Postable, Putable, Patchable, Run)
 import Prelude hiding (head)
 import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
@@ -139,6 +141,10 @@ put = putWith defaults
 delete :: Session -> String -> IO (Response L.ByteString)
 delete = deleteWith defaults
 
+-- | 'Session'-specific version of 'Network.Wreq.patch'.
+patch :: Patchable a => Session -> String -> a -> IO (Response L.ByteString)
+patch = patchWith defaults
+
 -- | 'Session'-specific version of 'Network.Wreq.getWith'.
 getWith :: Options -> Session -> String -> IO (Response L.ByteString)
 getWith opts sesh url = run string sesh =<< prepareGet opts url
@@ -165,6 +171,12 @@ putWith opts sesh url payload = run string sesh =<< preparePut opts url payload
 -- | 'Session'-specific version of 'Network.Wreq.deleteWith'.
 deleteWith :: Options -> Session -> String -> IO (Response L.ByteString)
 deleteWith opts sesh url = run string sesh =<< prepareDelete opts url
+
+-- | 'Session'-specific version of 'Network.Wreq.patchWith'.
+patchWith :: Patchable a => Options -> Session -> String -> a
+         -> IO (Response L.ByteString)
+patchWith opts sesh url payload =
+  run string sesh =<< preparePatch opts url payload
 
 runWith :: Session -> Run Body -> Run Body
 runWith Session{..} act (Req _ req) = do

@@ -19,6 +19,7 @@ module Network.Wreq.Internal
     , prepareDelete
     , prepareMethod
     , preparePayloadMethod
+    , preparePatch
     ) where
 
 import Control.Applicative ((<$>))
@@ -32,7 +33,7 @@ import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wreq.Internal.Lens (setHeader)
 import Network.Wreq.Internal.Types (Mgr, Req(..), Run)
-import Network.Wreq.Types (Auth(..), Options(..), Postable(..), Putable(..))
+import Network.Wreq.Types (Auth(..), Options(..), Postable(..), Putable(..), Patchable (..))
 import Prelude hiding (head)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as Char8
@@ -185,3 +186,7 @@ preparePut opts url payload = Req (manager opts) <$>
 
 prepareDelete :: Options -> String -> IO Req
 prepareDelete = prepareMethod HTTP.methodDelete
+
+preparePatch :: Patchable a => Options -> String -> a -> IO Req
+preparePatch opts url payload = Req (manager opts) <$>
+  prepare (patchPayload payload . (Lens.method .~ HTTP.methodPatch)) opts url
