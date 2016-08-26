@@ -44,11 +44,11 @@ module Network.Wreq.Session
     (
     -- * Session creation
       Session
-    , withSession
-    , withAPISession
+    , newSession
+    , newAPISession
     -- ** More control-oriented session creation
-    , withSessionWith
-    , withSessionControl
+    , newSessionWith
+    , newSessionControl
     -- * HTTP verbs
     , get
     , post
@@ -84,36 +84,35 @@ import qualified Network.Wreq.Internal.Lens as Lens
 --
 -- This session manages cookies and uses default session manager
 -- configuration.
-withSession :: (Session -> IO a) -> IO a
-withSession = withSessionWith defaultManagerSettings
+newSession :: IO Session
+newSession = newSessionWith defaultManagerSettings
 
 -- | Create a session.
 --
 -- This uses the default session manager settings, but does not manage
 -- cookies.  It is intended for use with REST-like HTTP-based APIs,
 -- which typically do not use cookies.
-withAPISession :: (Session -> IO a) -> IO a
-withAPISession = withSessionControl Nothing defaultManagerSettings
+newAPISession :: IO Session
+newAPISession = newSessionControl Nothing defaultManagerSettings
 
 -- | Create a session, using the given manager settings.  This session
 -- manages cookies.
-withSessionWith :: HTTP.ManagerSettings -> (Session -> IO a) -> IO a
-withSessionWith = withSessionControl (Just (HTTP.createCookieJar []))
-{-# DEPRECATED withSessionWith "Use withSessionControl instead." #-}
+newSessionWith :: HTTP.ManagerSettings -> IO Session
+newSessionWith = newSessionControl (Just (HTTP.createCookieJar []))
 
 -- | Create a session, using the given cookie jar and manager settings.
-withSessionControl :: Maybe HTTP.CookieJar
+newSessionControl :: Maybe HTTP.CookieJar
                   -- ^ If 'Nothing' is specified, no cookie management
                   -- will be performed.
                -> HTTP.ManagerSettings
-               -> (Session -> IO a) -> IO a
-withSessionControl mj settings act = do
+               -> IO Session
+newSessionControl mj settings = do
   mref <- maybe (return Nothing) (fmap Just . newIORef) mj
-  HTTP.withManager settings $ \mgr ->
-    act Session { seshCookies = mref
-                , seshManager = mgr
-                , seshRun = runWith
-                }
+  mgr <- HTTP.newManager settings
+  return Session { seshCookies = mref
+                 , seshManager = mgr
+                 , seshRun = runWith
+                 }
 
 -- | 'Session'-specific version of 'Network.Wreq.get'.
 get :: Session -> String -> IO (Response L.ByteString)
