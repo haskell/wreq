@@ -112,7 +112,7 @@ prepare modify opts url = do
                    & setQuery opts
                    & setAuth opts
                    & setProxy opts
-                   & setCheckStatus opts
+                   & setCheckResponse opts
                    & setRedirects opts
                    & Lens.cookieJar .~ cookies opts
     signRequest :: Request -> IO Request
@@ -146,9 +146,9 @@ setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy
   where f (Proxy host port) = addProxy host port
 
-setCheckStatus :: Options -> Request -> Request
-setCheckStatus = maybe id f . checkStatus
-  where f cs = ( & Lens.checkStatus .~ cs)
+setCheckResponse :: Options -> Request -> Request
+setCheckResponse = maybe id f . checkResponse
+  where f cs = ( & Lens.checkResponse .~ cs)
 
 prepareGet :: Options -> String -> IO Req
 prepareGet opts url = Req (manager opts) <$> prepare return opts url
@@ -166,7 +166,6 @@ prepareMethod method opts url = Req (manager opts) <$>
 
 preparePayloadMethod :: Postable a => HTTP.Method -> Options -> String -> a
                         -> IO Req
-                        
 preparePayloadMethod method opts url payload = Req (manager opts) <$>
   prepare (postPayload payload . (Lens.method .~ method)) opts url
 
