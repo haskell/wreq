@@ -20,8 +20,7 @@ module Network.Wreq.Internal.Lens
     , decompress
     , redirectCount
     , responseTimeout
-    , checkStatus
-    , getConnectionWrapper
+    , checkResponse
     , cookieJar
     , seshCookies
     , seshManager
