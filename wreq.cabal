@@ -135,7 +135,7 @@ executable httpbin
   else
     build-depends:
       aeson >= 0.7,
-      aeson-pretty >= 0.7.1,
+      aeson-pretty >= 0.8.0,
       base >= 4.5 && < 5,
       base64-bytestring,
       bytestring,
@@ -178,7 +178,7 @@ test-suite tests
     HUnit,
     QuickCheck >= 2.7,
     aeson,
-    aeson-pretty >= 0.7.1,
+    aeson-pretty >= 0.8.0,
     base >= 4.5 && < 5,
     base64-bytestring,
     bytestring,

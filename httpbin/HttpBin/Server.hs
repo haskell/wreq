@@ -8,7 +8,7 @@ module HttpBin.Server (serve) where
 import Control.Applicative ((<$>))
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (Value(..), eitherDecode, object, toJSON)
-import Data.Aeson.Encode.Pretty (Config(..), encodePretty')
+import Data.Aeson.Encode.Pretty (Config(..), Indent(Spaces), defConfig, encodePretty')
 import Data.ByteString.Char8 (pack)
 import Data.CaseInsensitive (original)
 import Data.Maybe (catMaybes, fromMaybe)
@@ -133,7 +133,7 @@ rqIntParam name req =
 
 writeJSON obj = do
   modifyResponse $ setContentType "application/json"
-  writeLBS . (<> "\n") . encodePretty' (Config 2 compare) . object $ obj
+  writeLBS . (<> "\n") . encodePretty' defConfig { confIndent = Spaces 2, confCompare = compare } . object $ obj
 
 respond act = do
   req <- getRequest
