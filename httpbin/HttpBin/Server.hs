@@ -149,7 +149,7 @@ respond act = do
                                     "http://" <> host <> rqURI req)]
   writeJSON =<< act ([ ("args", toJSON params)
                      , ("headers", toJSON hdrs)
-                     , ("origin", toJSON . decodeUtf8 . rqRemoteAddr $ req)
+                     , ("origin", toJSON . decodeUtf8 . rqClientAddr $ req)
                      ] <> url)
 
 meths ms h = methods ms (path "" h)
