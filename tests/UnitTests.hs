@@ -22,10 +22,10 @@ import Network.HTTP.Client (HttpException(..))
 import Network.HTTP.Types.Status (Status(Status), status200, status401)
 import Network.HTTP.Types.Version (http11)
 import Network.Wreq hiding
-  (get, post, head_, put, options, delete,
-   getWith, postWith, headWith, putWith, optionsWith, deleteWith)
+  (get, post, head_, put, options, delete, patch,
+   getWith, postWith, headWith, putWith, optionsWith, deleteWith, patchWith)
 import Network.Wreq.Lens
-import Network.Wreq.Types (Postable, Putable)
+import Network.Wreq.Types (Postable, Putable, Patchable)
 import Snap.Http.Server.Config
 import System.IO (hClose, hPutStr)
 import System.IO.Temp (withSystemTempFile)
@@ -52,6 +52,9 @@ data Verb = Verb {
   , optionsWith :: Options -> String -> IO (Response ())
   , delete :: String -> IO (Response L.ByteString)
   , deleteWith :: Options -> String -> IO (Response L.ByteString)
+  , patch :: Patchable a => String -> a -> IO (Response L.ByteString)
+  , patchWith :: Patchable a => Options -> String -> a
+             -> IO (Response L.ByteString)
   }
 
 basic :: Verb
@@ -60,7 +63,8 @@ basic = Verb { get = Wreq.get, getWith = Wreq.getWith, post = Wreq.post
              , headWith = Wreq.headWith, put = Wreq.put
              , putWith = Wreq.putWith, options = Wreq.options
              , optionsWith = Wreq.optionsWith, delete = Wreq.delete
-             , deleteWith = Wreq.deleteWith }
+             , deleteWith = Wreq.deleteWith, patch = Wreq.patch
+             , patchWith = Wreq.patchWith }
 
 session :: Session.Session -> Verb
 session s = Verb { get = Session.get s
@@ -74,7 +78,9 @@ session s = Verb { get = Session.get s
                  , options = Session.options s
                  , optionsWith = flip Session.optionsWith s
                  , delete = Session.delete s
-                 , deleteWith = flip Session.deleteWith s }
+                 , deleteWith = flip Session.deleteWith s
+                 , patch = Session.patch s
+                 , patchWith = flip Session.patchWith s }
 
 basicGet Verb{..} site = do
   r <- get (site "/get")
@@ -151,6 +157,23 @@ byteStringPut Verb{..} site = do
 basicDelete Verb{..} site = do
   r <- delete (site "/delete")
   assertEqual "DELETE succeeds" status200 (r ^. responseStatus)
+
+basicPatch Verb{..} site = do
+  r <- patch (site "/patch") ("wibble" :: ByteString)
+  assertEqual "PATCH succeeds" status200 (r ^. responseStatus)
+
+jsonPatch Verb{..} site = do
+  r <- patch (site "/patch") $ toJSON solrAdd
+  assertEqual "toJSON PATCH request has correct Content-Type header"
+    (Just "application/json")
+    (r ^. responseBody ^? key "headers" . key "Content-Type")
+
+byteStringPatch Verb{..} site = do
+  let opts = defaults & header "Content-Type" .~ ["application/json"]
+  r <- patchWith opts (site "/patch") $ encode solrAdd
+  assertEqual "ByteString PATCH request has correct Content-Type header"
+    (Just "application/json")
+    (r ^. responseBody ^? key "headers" . key "Content-Type")
 
 throwsStatusCode Verb{..} site =
     assertThrows "404 causes exception to be thrown" inspect $
@@ -318,6 +341,7 @@ commonTestsWith verb site = [
     , testCase "head" $ basicHead verb site
     , testCase "put" $ basicPut verb site
     , testCase "delete" $ basicDelete verb site
+    , testCase "patch" $ basicPatch verb site
     , testCase "404" $ throwsStatusCode verb site
     , testCase "headRedirect" $ headRedirect verb site
     , testCase "redirectOverflow" $ redirectOverflow verb site
@@ -332,6 +356,8 @@ commonTestsWith verb site = [
     , testCase "gzip" $ getGzip verb site
     , testCase "json put" $ jsonPut verb site
     , testCase "bytestring put" $ byteStringPut verb site
+    , testCase "json patch" $ jsonPatch verb site
+    , testCase "bytestring patch" $ byteStringPatch verb site
     , testCase "cookiesSet" $ cookiesSet verb site
     , testCase "getWithManager" $ getWithManager site
     , testCase "cookieSession" $ cookieSession site

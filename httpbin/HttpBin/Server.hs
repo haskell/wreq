@@ -40,6 +40,8 @@ put = post
 
 delete = respond return
 
+patch = post
+
 status = do
   val <- (fromMaybe 200 . rqIntParam "val") <$> getRequest
   let code | val >= 200 && val <= 505 = val
@@ -165,6 +167,7 @@ serve mkConfig = do
     , ("/post", meth POST post)
     , ("/put", meth PUT put)
     , ("/delete", meth DELETE delete)
+    , ("/patch", meth PATCH patch)
     , ("/redirect/:n", redirect_)
     , ("/status/:val", status)
     , ("/gzip", meths [GET,HEAD] gzip)

@@ -71,7 +71,7 @@ flag developer
   manual: True
 
 library
-  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
+  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -fno-warn-deprecations
   if flag(developer)
     ghc-options:  -Werror
   default-language: Haskell98
@@ -97,7 +97,7 @@ library
     psqueues >= 0.2,
     aeson >= 0.7.0.3,
     attoparsec >= 0.11.1.0,
-    authenticate-oauth == 1.5.*,
+    authenticate-oauth,
     base >= 4.5 && < 5,
     base16-bytestring,
     byteable,
@@ -108,8 +108,8 @@ library
     exceptions >= 0.5,
     ghc-prim,
     hashable,
-    http-client >= 0.4.6,
-    http-client-tls >= 0.2,
+    http-client,
+    http-client-tls,
     http-types >= 0.8,
     lens >= 4.5,
     lens-aeson,

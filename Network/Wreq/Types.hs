@@ -23,6 +23,7 @@ module Network.Wreq.Types
     , Payload(..)
     , Postable(..)
     , Putable(..)
+    , Patchable(..)
     -- ** URL-encoded forms
     , FormParam(..)
     , FormValue(..)
@@ -98,6 +99,19 @@ instance Putable L.ByteString where
 
 instance Putable Value where
     putPayload = payload "application/json" . HTTP.RequestBodyLBS . encode
+
+
+instance Patchable Payload where
+    patchPayload = putPayload
+
+instance Patchable S.ByteString where
+    patchPayload = putPayload
+
+instance Patchable L.ByteString where
+    patchPayload = putPayload
+
+instance Patchable Value where
+    patchPayload = putPayload
 
 
 instance FormValue T.Text where
