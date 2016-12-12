@@ -19,7 +19,7 @@ module Network.Wreq.Internal.Types
     , Mgr
     , Auth(..)
     , AWSAuthVersion(..)
-    , StatusChecker
+    , ResponseChecker
     -- * Request payloads
     , Payload(..)
     , Postable(..)
@@ -43,16 +43,16 @@ module Network.Wreq.Internal.Types
     , CacheEntry(..)
     ) where
 
-import Control.Exception (Exception, SomeException)
+import Control.Exception (Exception)
 import Data.IORef (IORef)
-import Data.Monoid ((<>), mconcat)
+import Data.Monoid ((<>))
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Typeable (Typeable)
 import Network.HTTP.Client (CookieJar, Manager, ManagerSettings, Request,
                             RequestBody)
 import Network.HTTP.Client.Internal (Response, Proxy)
-import Network.HTTP.Types (Header, Status, ResponseHeaders)
+import Network.HTTP.Types (Header)
 import Prelude hiding (head)
 import qualified Data.ByteString.Char8 as S
 import qualified Data.ByteString.Lazy as L
@@ -150,7 +150,7 @@ data Options = Options {
   -- etc.), this field will be used only for the /first/ HTTP request
   -- to be issued during a 'Network.Wreq.Session.Session'. Any changes
   -- changes made for subsequent requests will be ignored.
-  , checkStatus :: Maybe StatusChecker
+  , checkResponse :: Maybe ResponseChecker
   -- ^ Function that checks the status code and potentially returns an
   -- exception.
   --
@@ -161,8 +161,7 @@ data Options = Options {
 
 -- | A function that checks the result of a HTTP request and
 -- potentially returns an exception.
-type StatusChecker = Status -> ResponseHeaders -> CookieJar
-                   -> Maybe SomeException
+type ResponseChecker = Request -> Response HTTP.BodyReader -> IO ()
 
 -- | Supported authentication types.
 --

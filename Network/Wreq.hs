@@ -82,7 +82,7 @@ module Network.Wreq
     , Lens.params
     , Lens.cookie
     , Lens.cookies
-    , Lens.checkStatus
+    , Lens.checkResponse
 
     -- ** Authentication
     -- $auth
@@ -373,7 +373,7 @@ customPayloadMethod method url payload =
 -- | Issue a custom-method request with a payload, using the supplied 'Options'.
 customPayloadMethodWith :: Postable a => String -> Options -> String -> a
                         -> IO (Response L.ByteString)
-                           
+
 customPayloadMethodWith method opts url payload =
   runRead =<< preparePayloadMethod methodBS opts url payload
   where

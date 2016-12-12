@@ -42,7 +42,7 @@ import qualified Network.HTTP.Types as HTTP
 import qualified Network.Wreq.Internal.Lens as Lens
 import qualified Network.Wreq.Internal.AWS as AWS (signRequest)
 import qualified Network.Wreq.Internal.OAuth1 as OAuth1 (signRequest)
-import qualified Network.Wreq.Lens as Lens hiding (checkStatus)
+import qualified Network.Wreq.Lens as Lens hiding (checkResponse)
 
 -- This mess allows this module to continue to load during interactive
 -- development in ghci :-(
@@ -66,7 +66,7 @@ defaults = Options {
   , params      = []
   , redirects   = 10
   , cookies     = Just (HTTP.createCookieJar [])
-  , checkStatus = Nothing
+  , checkResponse = Nothing
   }
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
 
@@ -106,7 +106,7 @@ run emgr act req = either (flip HTTP.withManager go) go emgr
 
 prepare :: (Request -> IO Request) -> Options -> String -> IO Request
 prepare modify opts url = do
-  signRequest =<< modify =<< frob <$> HTTP.parseUrl url
+  signRequest =<< modify =<< frob <$> HTTP.parseUrlThrow url
   where
     frob req = req & Lens.requestHeaders %~ (headers opts ++)
                    & setQuery opts

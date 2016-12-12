@@ -18,7 +18,7 @@ module Network.Wreq.Types
       Options(..)
     , Auth(..)
     , AWSAuthVersion(..)
-    , StatusChecker
+    , ResponseChecker
     -- * Request payloads
     , Payload(..)
     , Postable(..)
