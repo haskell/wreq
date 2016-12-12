@@ -24,6 +24,7 @@ module Network.Wreq.Internal
 import Control.Applicative ((<$>))
 import Control.Arrow ((***))
 import Control.Lens ((&), (.~), (%~))
+import Control.Monad ((>=>))
 import Data.Monoid ((<>))
 import Data.Text.Encoding (encodeUtf8)
 import Data.Version (showVersion)
@@ -101,7 +102,7 @@ request :: (Request -> IO Request) -> Options -> String
 request modify opts url act = run (manager opts) act =<< prepare modify opts url
 
 run :: Mgr -> (Response BodyReader -> IO a) -> Request -> IO a
-run emgr act req = either (flip HTTP.withManager go) go emgr
+run emgr act req = either (HTTP.newManager >=> go) go emgr
   where go mgr = HTTP.withResponse req mgr act
 
 prepare :: (Request -> IO Request) -> Options -> String -> IO Request

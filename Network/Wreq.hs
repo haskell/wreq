@@ -192,7 +192,8 @@ get :: String -> IO (Response L.ByteString)
 get url = getWith defaults url
 
 withManager :: (Options -> IO a) -> IO a
-withManager act = HTTP.withManager defaultManagerSettings $ \mgr ->
+withManager act = do
+  mgr <- HTTP.newManager defaultManagerSettings
   act defaults { Wreq.manager = Right mgr }
 
 -- | Issue a GET request, using the supplied 'Options'.
