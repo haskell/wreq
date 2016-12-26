@@ -109,11 +109,11 @@ withSessionControl :: Maybe HTTP.CookieJar
                -> (Session -> IO a) -> IO a
 withSessionControl mj settings act = do
   mref <- maybe (return Nothing) (fmap Just . newIORef) mj
-  HTTP.withManager settings $ \mgr ->
-    act Session { seshCookies = mref
-                , seshManager = mgr
-                , seshRun = runWith
-                }
+  mgr <- HTTP.newManager settings
+  act Session { seshCookies = mref
+              , seshManager = mgr
+              , seshRun = runWith
+              }
 
 -- | 'Session'-specific version of 'Network.Wreq.get'.
 get :: Session -> String -> IO (Response L.ByteString)

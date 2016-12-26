@@ -160,6 +160,7 @@ test-suite tests
   other-modules:
     Properties.Store
     UnitTests
+    HttpBin.Server
 
   if flag(aws)
     cpp-options: -DAWS_TESTS
