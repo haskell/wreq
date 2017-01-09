@@ -1,5 +1,13 @@
 -*- markdown -*-
 
+2017-01-09 0.5.0.0
+
+* Compatible with `http-client` >= 0.5
+
+* This compatibility change required a small API change: `checkStatus`
+  is now named `checkResponse` for compatibility with the
+  `http-client` package
+
 2015-05-10 0.4.0.0
 
 * Compatible with GHC 7.10.
