@@ -24,6 +24,7 @@ module Network.Wreq.Internal
 import Control.Applicative ((<$>))
 import Control.Arrow ((***))
 import Control.Lens ((&), (.~), (%~))
+import Control.Monad ((>=>))
 import Data.Monoid ((<>))
 import Data.Text.Encoding (encodeUtf8)
 import Data.Version (showVersion)
@@ -42,7 +43,7 @@ import qualified Network.HTTP.Types as HTTP
 import qualified Network.Wreq.Internal.Lens as Lens
 import qualified Network.Wreq.Internal.AWS as AWS (signRequest)
 import qualified Network.Wreq.Internal.OAuth1 as OAuth1 (signRequest)
-import qualified Network.Wreq.Lens as Lens hiding (checkStatus)
+import qualified Network.Wreq.Lens as Lens hiding (checkResponse)
 
 -- This mess allows this module to continue to load during interactive
 -- development in ghci :-(
@@ -66,7 +67,7 @@ defaults = Options {
   , params      = []
   , redirects   = 10
   , cookies     = Just (HTTP.createCookieJar [])
-  , checkStatus = Nothing
+  , checkResponse = Nothing
   }
   where userAgent = "haskell wreq-" <> Char8.pack (showVersion version)
 
@@ -101,18 +102,18 @@ request :: (Request -> IO Request) -> Options -> String
 request modify opts url act = run (manager opts) act =<< prepare modify opts url
 
 run :: Mgr -> (Response BodyReader -> IO a) -> Request -> IO a
-run emgr act req = either (flip HTTP.withManager go) go emgr
+run emgr act req = either (HTTP.newManager >=> go) go emgr
   where go mgr = HTTP.withResponse req mgr act
 
 prepare :: (Request -> IO Request) -> Options -> String -> IO Request
 prepare modify opts url = do
-  signRequest =<< modify =<< frob <$> HTTP.parseUrl url
+  signRequest =<< modify =<< frob <$> HTTP.parseUrlThrow url
   where
     frob req = req & Lens.requestHeaders %~ (headers opts ++)
                    & setQuery opts
                    & setAuth opts
                    & setProxy opts
-                   & setCheckStatus opts
+                   & setCheckResponse opts
                    & setRedirects opts
                    & Lens.cookieJar .~ cookies opts
     signRequest :: Request -> IO Request
@@ -146,9 +147,9 @@ setProxy :: Options -> Request -> Request
 setProxy = maybe id f . proxy
   where f (Proxy host port) = addProxy host port
 
-setCheckStatus :: Options -> Request -> Request
-setCheckStatus = maybe id f . checkStatus
-  where f cs = ( & Lens.checkStatus .~ cs)
+setCheckResponse :: Options -> Request -> Request
+setCheckResponse = maybe id f . checkResponse
+  where f cs = ( & Lens.checkResponse .~ cs)
 
 prepareGet :: Options -> String -> IO Req
 prepareGet opts url = Req (manager opts) <$> prepare return opts url
@@ -166,7 +167,6 @@ prepareMethod method opts url = Req (manager opts) <$>
 
 preparePayloadMethod :: Postable a => HTTP.Method -> Options -> String -> a
                         -> IO Req
-                        
 preparePayloadMethod method opts url payload = Req (manager opts) <$>
   prepare (postPayload payload . (Lens.method .~ method)) opts url
 
