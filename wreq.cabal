@@ -200,6 +200,7 @@ test-suite tests
     text,
     time,
     transformers,
+    unordered-containers,
     unix-compat,
     uuid,
     vector,

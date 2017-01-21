@@ -5,14 +5,15 @@
 
 module UnitTests (testWith) where
 
+import Control.Arrow (first)
 import Control.Applicative ((<$>))
 import Control.Concurrent (forkIO, killThread)
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 import Control.Exception (Exception, throwIO)
-import Control.Lens ((^.), (^?), (.~), (?~), (&))
+import Control.Lens ((^.), (^?), (.~), (?~), (&), iso, ix, Traversal')
 import Control.Monad (unless, void)
 import Data.Aeson
-import Data.Aeson.Lens (key)
+import Data.Aeson.Lens (key, AsValue, _Object)
 import Data.ByteString (ByteString)
 import Data.Char (toUpper)
 import Data.Maybe (isJust)
@@ -33,6 +34,8 @@ import Test.Framework (Test, defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool, assertEqual, assertFailure)
 import qualified Control.Exception as E
+import qualified Data.CaseInsensitive as CI
+import qualified Data.HashMap.Strict as HMap
 import qualified Data.Text as T
 import qualified Network.Wreq.Session as Session
 import qualified Data.ByteString.Lazy as L
@@ -76,10 +79,20 @@ session s = Verb { get = Session.get s
                  , delete = Session.delete s
                  , deleteWith = flip Session.deleteWith s }
 
+-- Helper aeson lens for case insensitive keys
+-- The test 'snap' server unfortunately lowercases all headers, we have to be case-insensitive
+-- when checking the returned header list.
+cikey :: AsValue t => T.Text -> Traversal' t Value
+cikey i = _Object . toInsensitive . ix (CI.mk i)
+  where
+    toInsensitive = iso toCi fromCi
+    toCi = HMap.fromList . map (first CI.mk) . HMap.toList
+    fromCi = HMap.fromList . map (first CI.original) . HMap.toList
+
 basicGet Verb{..} site = do
   r <- get (site "/get")
   assertBool "GET request has User-Agent header" $
-    isJust (r ^. responseBody ^? key "headers" . key "User-Agent")
+    isJust (r ^. responseBody ^? key "headers" . cikey "User-Agent")
   -- test the various lenses
   assertEqual "GET succeeds" status200 (r ^. responseStatus)
   assertEqual "GET succeeds 200" 200 (r ^. responseStatus . statusCode)
@@ -96,7 +109,7 @@ basicPost Verb{..} site = do
   assertEqual "POST succeeds" status200 (r ^. responseStatus)
   assertEqual "POST echoes input" (Just "wibble") (body ^? key "data")
   assertEqual "POST is binary" (Just "application/octet-stream")
-                               (body ^? key "headers" . key "Content-Type")
+                               (body ^? key "headers" . cikey "Content-Type")
 
 multipartPost Verb{..} site =
   withSystemTempFile "foo.html" $ \name handle -> do
@@ -139,14 +152,14 @@ jsonPut Verb{..} site = do
   r <- put (site "/put") $ toJSON solrAdd
   assertEqual "toJSON PUT request has correct Content-Type header"
     (Just "application/json")
-    (r ^. responseBody ^? key "headers" . key "Content-Type")
+    (r ^. responseBody ^? key "headers" . cikey "Content-Type")
 
 byteStringPut Verb{..} site = do
   let opts = defaults & header "Content-Type" .~ ["application/json"]
   r <- putWith opts (site "/put") $ encode solrAdd
   assertEqual "ByteString PUT request has correct Content-Type header"
     (Just "application/json")
-    (r ^. responseBody ^? key "headers" . key "Content-Type")
+    (r ^. responseBody ^? key "headers" . cikey "Content-Type")
 
 basicDelete Verb{..} site = do
   r <- delete (site "/delete")
@@ -213,7 +226,7 @@ getHeaders Verb{..} site = do
   r <- getWith opts (site "/get")
   assertEqual "extra header set correctly"
     (Just "bar")
-    (r ^. responseBody ^? key "headers" . key "X-Wibble")
+    (r ^. responseBody ^? key "headers" . cikey "X-Wibble")
 
 getCheckStatus Verb {..} site = do
   let opts = defaults & checkResponse .~ Just customRc
