@@ -37,6 +37,7 @@ copyright:           2014 Bryan O'Sullivan
 category:            Web
 build-type:          Custom
 cabal-version:       >=1.10
+tested-with:         GHC==8.2.1, GHC==8.0.2, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
 extra-source-files:
   README.md
   TODO.md
