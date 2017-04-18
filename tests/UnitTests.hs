@@ -391,8 +391,8 @@ startServer = do
   let go n | n >= 100 = putMVar started Nothing
            | otherwise = do
         let port = 8000 + n
-            startedUp p = putMVar started (Just ("http://localhost:" <> p))
-            mkCfg = return . setBind ("localhost") . setPort port .
+            startedUp p = putMVar started (Just ("http://0.0.0.0:" <> p))
+            mkCfg = return . setBind ("0.0.0.0") . setPort port .
                     setVerbose False .
                     setStartupHook (const (startedUp (show port)))
         serve mkCfg `E.catch` \(_::E.IOException) -> go (n+1)
