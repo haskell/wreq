@@ -10,6 +10,10 @@ sudo: false
 git:
   submodules: false  # whether to recursively clone submodules
 
+# Bryan threatens to turn off Travis-CI if he gets any email :-)
+notifications:
+  email: false
+
 cache:
   directories:
     - $HOME/.cabal/packages
