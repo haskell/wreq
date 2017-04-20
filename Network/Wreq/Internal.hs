@@ -17,6 +17,7 @@ module Network.Wreq.Internal
     , prepareOptions
     , preparePut
     , prepareDelete
+    , prepareDeleteWithBody
     , prepareMethod
     , preparePayloadMethod
     ) where
@@ -33,7 +34,7 @@ import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wreq.Internal.Lens (setHeader)
 import Network.Wreq.Internal.Types (Mgr, Req(..), Run)
-import Network.Wreq.Types (Auth(..), Options(..), Postable(..), Putable(..))
+import Network.Wreq.Types (Auth(..), Options(..), Postable(..), Deletable(..), Putable(..))
 import Prelude hiding (head)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as Char8
@@ -185,3 +186,7 @@ preparePut opts url payload = Req (manager opts) <$>
 
 prepareDelete :: Options -> String -> IO Req
 prepareDelete = prepareMethod HTTP.methodDelete
+
+prepareDeleteWithBody :: Deletable a => Options -> String -> a -> IO Req
+prepareDeleteWithBody opts url payload = Req (manager opts) <$>
+  prepare (deletePayload payload . (Lens.method .~ HTTP.methodDelete)) opts url
