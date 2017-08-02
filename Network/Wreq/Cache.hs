@@ -22,7 +22,7 @@ import Data.List (sort)
 import Data.Maybe (listToMaybe)
 import Data.Monoid (First(..), mconcat)
 import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
-import Data.Time.Format (parseTime)
+import Data.Time.Format (parseTimeM)
 import Data.Time.Locale.Compat (defaultTimeLocale)
 import Data.Typeable (Typeable)
 import GHC.Generics (Generic)
@@ -150,4 +150,4 @@ parseDate s = getFirst . mconcat . map tryout $ [
   , "%A, %d-%b-%y %H:%M:%S %Z"
   , "%a %b %e %H:%M:%S %Y"
   ]
-  where tryout fmt = First $ parseTime defaultTimeLocale fmt (B.unpack s)
+  where tryout fmt = First $ parseTimeM True defaultTimeLocale fmt (B.unpack s)
