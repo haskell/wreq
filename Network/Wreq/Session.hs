@@ -65,6 +65,7 @@ module Network.Wreq.Session
     , putWith
     , deleteWith
     , customMethodWith
+    , customPayloadMethodWith
     -- * Extending a session
     , Lens.seshRun
     ) where

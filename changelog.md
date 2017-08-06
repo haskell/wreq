@@ -1,5 +1,11 @@
 -*- markdown -*-
 
+2017-01-09 0.5.1.0
+
+* Add Session-specific version of Network.Wreq.customPayloadMethodWith
+
+* 8.2 GHC compatibility
+
 2017-01-09 0.5.0.0
 
 * Compatible with `http-client` >= 0.5
