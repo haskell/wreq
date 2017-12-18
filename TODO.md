@@ -2,8 +2,6 @@
 
 * More advanced tutorial-style documentation
 
-* TLS server certificate verification
-
 * An example that spiders a Haddock package's docs to validate its
   internal and external links
 
