@@ -1,5 +1,16 @@
 -*- markdown -*-
 
+2017-12-23 0.5.1.1
+
+* Add awsSessionTokenAuth (in addition to the existing awsAuth) to
+  support AWS Session Token Service (AWS STS) credentials. These look
+  like regular AWS credentials but have an additional session token as
+  a 3rd element. This mechanism is needed to be able to (a) use EC2
+  instance profiles, (b) make calls form AWS Lambda, (c) is useful for
+  delegated role access (assumeRole within and across accounts), and (d)
+  enables MFA-protected access scenarios.
+  See tests/AWS/IAM.hs for a test and simple example.
+
 2017-01-09 0.5.1.0
 
 * Add Session-specific version of Network.Wreq.customPayloadMethodWith

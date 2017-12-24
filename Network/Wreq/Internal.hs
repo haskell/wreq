@@ -119,7 +119,7 @@ prepare modify opts url = do
     signRequest :: Request -> IO Request
     signRequest = maybe return f $ auth opts
       where
-        f (AWSAuth versn key secret) = AWS.signRequest versn key secret
+        f (AWSAuth versn key secret _) = AWS.signRequest versn key secret
         f (OAuth1 consumerToken consumerSecret token secret) = OAuth1.signRequest consumerToken consumerSecret token secret
         f _ = return
 
@@ -139,8 +139,9 @@ setAuth = maybe id f . auth
     f (BasicAuth user pass) = HTTP.applyBasicAuth user pass
     f (OAuth2Bearer token)  = setHeader "Authorization" ("Bearer " <> token)
     f (OAuth2Token token)   = setHeader "Authorization" ("token " <> token)
-    -- for AWS request signature, see Internal/AWS
-    f (AWSAuth _ _ _)       = id
+    -- for AWS request signature implementation, see Internal/AWS
+    f (AWSAuth _ _ _ mSessionToken) =
+      maybe id (setHeader "X-Amz-Security-Token") mSessionToken
     f (OAuth1 _ _ _ _)      = id
 
 setProxy :: Options -> Request -> Request

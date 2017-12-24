@@ -14,12 +14,9 @@ To configure and run these tests you need an AWS account. We assume
 that you are familiar with AWS concepts and the charging model.
 
 ** ENABLING AWS TESTS **
-For now, enable AWS tests by setting the WREQ_AWS_ACCESS_KEY_ID
-env variable per below.
-
-TODO| To enable AWS tests use the `-faws` flag as part of
-TODO|   $ cabal configure --enable-tests -faws ...
-TODO| To capture code coverage information, add the `-fdeveloper` flag.
+To enable AWS tests use the `-faws` flag as part of
+  $ cabal configure --enable-tests -faws ...
+To capture code coverage information, add the `-fdeveloper` flag.
 
 ** REQUIRED CLIENT CONFIGURATION **
 The tests require two environment variables:
@@ -76,20 +73,6 @@ import qualified AWS.SQS (tests)
 
 tests :: IO Test
 tests = do
-  -- TODO - use ... configure -faws ... in the future
-  --        but couldn't figure out (yet) how to get
-  --        a hold of the flag value in test code.
-  -- Workaround: for now, the presence of the
-  --   WREQ_AWS_ACCESS_KEY_ID
-  -- env variable enables the tests.
-  flag <- (getEnv "WREQ_AWS_ACCESS_KEY_ID" >> return True) `E.catch`
-          \(_::IOException) -> return False
-  tests0 flag
-
-tests0 :: Bool -> IO Test
-tests0 False =
-  return $ testGroup "aws" [] -- skip AWS tests
-tests0 True = do
   region <- env "us-west-2" "WREQ_AWS_REGION"
   key <- BS8.pack `fmap` getEnv "WREQ_AWS_ACCESS_KEY_ID"
   secret <- BS8.pack `fmap` getEnv "WREQ_AWS_SECRET_ACCESS_KEY"

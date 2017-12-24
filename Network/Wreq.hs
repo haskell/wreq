@@ -94,6 +94,7 @@ module Network.Wreq
     , oauth2Bearer
     , oauth2Token
     , awsAuth
+    , awsSessionTokenAuth
     -- ** Proxy settings
     , Proxy(Proxy)
     , Lens.proxy
@@ -525,7 +526,25 @@ oauth2Token = OAuth2Token
 --'getWith' opts \"https:\/\/dynamodb.us-west-2.amazonaws.com\"
 -- @
 awsAuth :: AWSAuthVersion -> S.ByteString -> S.ByteString -> Auth
-awsAuth = AWSAuth
+awsAuth version key secret = AWSAuth version key secret Nothing
+
+-- | AWS v4 request signature using a AWS STS Session Token.
+--
+-- Example (note the use of TLS):
+--
+-- @
+--let opts = 'defaults'
+--           '&' 'Lens.auth'
+--           '?~' 'awsAuth AWSv4' \"key\" \"secret\" \"stsSessionToken\"
+--'getWith' opts \"https:\/\/dynamodb.us-west-2.amazonaws.com\"
+-- @
+awsSessionTokenAuth :: AWSAuthVersion -- ^ Signature version (V4)
+                    -> S.ByteString   -- ^ AWS AccessKeyId
+                    -> S.ByteString   -- ^ AWS SecretAccessKey
+                    -> S.ByteString   -- ^ AWS STS SessionToken
+                    -> Auth
+awsSessionTokenAuth version key secret sessionToken =
+  AWSAuth version key secret (Just sessionToken)
 
 -- | Proxy configuration.
 --
