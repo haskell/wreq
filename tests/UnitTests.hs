@@ -12,7 +12,7 @@ import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 import Control.Exception (Exception, throwIO)
 import Control.Lens ((^.), (^?), (.~), (?~), (&), iso, ix, Traversal')
 import Control.Monad (unless, void)
-import Data.Aeson
+import Data.Aeson hiding (Options)
 import Data.Aeson.Lens (key, AsValue, _Object)
 import Data.ByteString (ByteString)
 import Data.Char (toUpper)

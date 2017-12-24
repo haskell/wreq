@@ -1,19 +1,24 @@
-{-# LANGUAGE OverloadedLists, OverloadedStrings #-}
+{-# LANGUAGE OverloadedLists, OverloadedStrings, DeriveGeneric #-}
 module AWS.IAM (tests) where
 
 import AWS.Aeson
 import Control.Concurrent (threadDelay)
 import Control.Lens hiding ((.=))
-import Data.Aeson.Encode (encode)
-import Data.Aeson.Lens (key, _String, values)
+import Data.Aeson (encode)
+import Data.Aeson.Lens (key, _String, values, _Value)
+import Data.Char (toUpper)
 import Data.IORef (IORef, readIORef, writeIORef)
 import Data.Text as T (Text, pack, unpack, split)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Lazy as LT (toStrict)
 import Data.Text.Lazy.Encoding as E (decodeUtf8)
+import GHC.Generics
 import Network.Wreq
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool)
+import qualified Data.Aeson as A
+import qualified Data.Aeson.Types as DAT
 
 tests :: String -> String -> Options -> IORef String -> Test
 tests prefix region baseopts iamTestState = testGroup "iam" [
@@ -111,8 +116,20 @@ listRoles prefix region baseopts = do
     elem (prefix ++ roleName) arns'
 
 -- Security Token Service (STS)
+data Cred = Cred {
+    accessKeyId :: T.Text,
+    secretAccessKey :: T.Text,
+    sessionToken :: T.Text,
+    expiration :: Int -- Unix epoch
+  } deriving (Generic, Show, Eq)
+
+instance A.FromJSON Cred where
+  parseJSON = DAT.genericParseJSON $ DAT.defaultOptions {
+      DAT.fieldLabelModifier = \(h:t) -> toUpper h:t
+    }
+
 stsAssumeRole :: String -> String -> Options -> IORef String -> IO ()
-stsAssumeRole _prefix region baseopts iamTestState = do
+stsAssumeRole prefix region baseopts iamTestState = do
   arn <- readIORef iamTestState
   let opts = baseopts
              & param  "Action"  .~ ["AssumeRole"]
@@ -122,8 +139,48 @@ stsAssumeRole _prefix region baseopts iamTestState = do
              & param  "RoleSessionName" .~ ["Bob"]
              & header "Accept"  .~ ["application/json"]
   r <- getWith opts (stsUrl region) -- STS call (part of IAM service family)
+  let v = r ^? responseBody
+            . key "AssumeRoleResponse"
+            . key "AssumeRoleResult"
+            . key "Credentials"
+            . _Value
   assertBool "stsAssumeRole 200" $ r ^. responseStatus . statusCode == 200
   assertBool "stsAssumeRole OK" $ r ^. responseStatus . statusMessage == "OK"
+
+  -- Now, use the temporary credentials to call an AWS service
+  let cred = conv v :: Cred
+  let key' = encodeUtf8 $ accessKeyId cred
+  let secret' = encodeUtf8 $ secretAccessKey cred
+  let token' = encodeUtf8 $ sessionToken cred
+  let baseopts2 = defaults
+                  & auth ?~ awsSessionTokenAuth AWSv4 key' secret' token'
+  let opts2 = baseopts2
+              & param  "Action"  .~ ["ListRoles"]
+              & param  "Version" .~ ["2010-05-08"]
+              & header "Accept"  .~ ["application/json"]
+  r2 <- getWith opts2 (iamUrl region)
+  assertBool "listRoles 200" $ r2 ^. responseStatus . statusCode == 200
+  assertBool "listRoles OK" $ r2 ^. responseStatus . statusMessage == "OK"
+  let arns = r2 ^.. responseBody . key "ListRolesResponse" .
+                                  key "ListRolesResult" .
+                                  key "Roles" .
+                                  values .
+                                  key "Arn" . _String
+  -- arns are of form: "arn:aws:iam::<acct>:role/ec2-role"
+  let arns' = map (T.unpack . last . T.split (=='/')) arns
+  assertBool "listRoles contains test role" $
+    elem (prefix ++ roleName) arns'
+
+  where
+    conv :: DAT.FromJSON a => Maybe DAT.Value -> a
+    conv v = case v of
+      Nothing -> error "1"
+      Just x ->
+        case A.fromJSON x of
+          A.Success r ->
+            r
+          A.Error e ->
+            error $ show e
 
 iamUrl :: String -> String
 iamUrl _ =

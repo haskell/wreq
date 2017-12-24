@@ -179,9 +179,9 @@ data Auth = BasicAuth S.ByteString S.ByteString
             -- to be used only by GitHub). This is treated by whoever
             -- accepts it as the equivalent of a username and
             -- password.
-          | AWSAuth AWSAuthVersion S.ByteString S.ByteString
+          | AWSAuth AWSAuthVersion S.ByteString S.ByteString (Maybe S.ByteString)
             -- ^ Amazon Web Services request signing
-            -- AWSAuthVersion key secret
+            -- AWSAuthVersion key secret (optional: session-token)
           | OAuth1 S.ByteString S.ByteString S.ByteString S.ByteString
             -- ^ OAuth1 request signing
             -- OAuth1 consumerToken consumerSecret token secret
