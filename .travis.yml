@@ -62,6 +62,7 @@ install:
  - rm -fv cabal.project.local
  - "echo 'packages: .' > cabal.project"
  - rm -f cabal.project.freeze
+ - cabal install Cabal
  - cabal new-build -w ${HC} ${TEST} ${BENCH} --dep -j2 all
  - cabal new-build -w ${HC} --disable-tests --disable-benchmarks --dep -j2 all
 
@@ -72,7 +73,6 @@ script:
 ## This creates packagedb, so that sdist works
  - cabal new-build -w ${HC} --disable-tests --disable-benchmarks all
 ## This somehow needs to be installed for sdist for older ghc distros
- - cabal install Cabal
  - cabal sdist # test that a source-distribution can be generated
  - cd dist/
  - SRCTAR=(${PKGNAME}-*.tar.gz)
