@@ -36,7 +36,7 @@ maintainer:          bos@serpentine.com
 copyright:           2014 Bryan O'Sullivan
 category:            Web
 build-type:          Custom
-cabal-version:       >=1.10
+cabal-version:       >=1.24
 tested-with:         GHC==8.2.1, GHC==8.0.2, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
 extra-source-files:
   README.md
@@ -47,6 +47,10 @@ extra-source-files:
   www/*.css
   www/*.md
   www/Makefile
+
+custom-setup
+  setup-depends:
+    base, Cabal, cabal-doctest >=1.0.2 && <1.1
 
 -- disable doctests with -f-doctest
 flag doctest
@@ -207,14 +211,14 @@ test-suite tests
     vector,
     wreq
 
-test-suite doctest
+test-suite doctests
   type:           exitcode-stdio-1.0
   hs-source-dirs: tests
-  main-is:        DocTests.hs
+  main-is:        doctests.hs
   ghc-options:    -Wall -fwarn-tabs -threaded
   if flag(developer)
     ghc-options:  -Werror
-  default-language: Haskell98
+  default-language: Haskell2010
 
   if !flag(doctest)
     buildable: False
