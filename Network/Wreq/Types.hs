@@ -37,11 +37,11 @@ module Network.Wreq.Types
     , Run
     ) where
 
-import Control.Lens ((&), (.~), (^.))
+import Control.Lens ((&), (.~))
 import Data.Aeson (Value, encode)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
-import Network.HTTP.Client (Request)
+import Network.HTTP.Client (Request(method))
 import Network.HTTP.Client.MultipartFormData (Part, formDataBody)
 import Network.Wreq.Internal.Types
 import qualified Data.ByteString as S
@@ -59,12 +59,12 @@ instance Postable Part where
 instance Postable [Part] where
     postPayload p req =
         -- According to doc, formDataBody changes the request type to POST which is wrong; change it back
-        (Lens.method .~ (req ^. Lens.method)) <$> formDataBody p req
+        (\r -> r{method=method req}) <$> formDataBody p req
 
 instance Postable [(S.ByteString, S.ByteString)] where
     postPayload ps req =
         -- According to doc, urlEncodedBody changes the request type to POST which is wrong; change it back
-        return $ HTTP.urlEncodedBody ps req & Lens.method .~ (req ^. Lens.method)
+        return $ HTTP.urlEncodedBody ps req {method=method req}
 
 instance Postable (S.ByteString, S.ByteString) where
     postPayload p = postPayload [p]
