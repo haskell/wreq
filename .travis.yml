@@ -62,13 +62,13 @@ install:
  - rm -fv cabal.project.local
  - "echo 'packages: .' > cabal.project"
  - rm -f cabal.project.freeze
- - cabal new-build -w ${HC} ${TEST} ${BENCH} -f-doctest --dep -j2 all
+ - cabal new-build -w ${HC} ${TEST} ${BENCH} --dep -j2 all
  - cabal new-build -w ${HC} --disable-tests --disable-benchmarks --dep -j2 all
 
 # Here starts the actual work to be performed for the package under test;
 # any command which exits with a non-zero exit code causes the build to fail.
 script:
- - if [ -f configure.ac ]; then autoreconf -i; fi
+ - find dist/
  - rm -rf dist/
  - cabal sdist # test that a source-distribution can be generated
  - cd dist/
@@ -87,6 +87,6 @@ script:
 
  # build & run tests
  - cabal new-build -w ${HC} ${TEST} ${BENCH} -f-doctest  all
- - if [ "x$TEST" = "x--enable-tests" ]; then cabal new-test -w ${HC} ${TEST} ${BENCH} -f-doctest all; fi
+ - if [ "x$TEST" = "x--enable-tests" ]; then cabal new-test -w ${HC} ${TEST} ${BENCH} all; fi
 
 # EOF
