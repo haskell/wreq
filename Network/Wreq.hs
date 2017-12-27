@@ -431,7 +431,8 @@ asJSON :: (MonadThrow m, FromJSON a) =>
 asJSON resp = do
   let contentType = fst . S.break (==59) . fromMaybe "unknown" .
                     lookup "Content-Type" . HTTP.responseHeaders $ resp
-  unless ("application/json" `S.isPrefixOf` contentType) $
+  unless ("application/json" `S.isPrefixOf` contentType
+        || ("application/" `S.isPrefixOf` contentType && "+json" `S.isSuffixOf` contentType)) $
     throwM . JSONError $ "content type of response is " ++ show contentType
   case Aeson.eitherDecode' (HTTP.responseBody resp) of
     Left err  -> throwM (JSONError err)
