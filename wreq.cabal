@@ -122,7 +122,7 @@ library
     time-locale-compat,
     template-haskell,
     text,
-    time,
+    time >= 1.5,
     unordered-containers
 
 -- A convenient server for testing locally, or if httpbin.org is down.
