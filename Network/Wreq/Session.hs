@@ -40,9 +40,9 @@
 -- so that we can refer unambiguously to the 'Session'-specific
 -- implementation of HTTP GET.
 --
--- One 'Manager' (possibly set with 'withSessionControl') is used for all
+-- One 'Network.HTTP.Client.Manager' (possibly set with 'withSessionControl') is used for all
 -- session requests. The manager settings in the 'Options' parameter
--- for the *With functions ('getWith' etc.) is ignored.
+-- for the 'getWith', 'postWith' and similar functions is ignored.
 
 module Network.Wreq.Session
     (
@@ -53,6 +53,8 @@ module Network.Wreq.Session
     -- ** More control-oriented session creation
     , withSessionWith
     , withSessionControl
+    -- ** Get information about session state
+    , getSessionCookieJar
     -- * HTTP verbs
     , get
     , post
@@ -123,6 +125,13 @@ withSessionControl mj settings act = do
               , seshManager = mgr
               , seshRun = runWith
               }
+
+-- | Extract current 'Network.HTTP.Client.CookieJar' from a 'Session'
+getSessionCookieJar :: Session -> IO (Maybe HTTP.CookieJar)
+getSessionCookieJar session =
+  case seshCookies session of
+    Nothing -> return Nothing
+    Just ajar -> Just <$> readIORef ajar
 
 -- | 'Session'-specific version of 'Network.Wreq.get'.
 get :: Session -> String -> IO (Response L.ByteString)
