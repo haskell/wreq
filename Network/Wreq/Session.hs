@@ -39,6 +39,10 @@
 -- Note the use of qualified import statements in the examples above,
 -- so that we can refer unambiguously to the 'Session'-specific
 -- implementation of HTTP GET.
+--
+-- One 'Manager' (possibly set with 'withSessionControl') is used for all
+-- session requests. The manager settings in the 'Options' parameter
+-- for the *With functions ('getWith' etc.) is ignored.
 
 module Network.Wreq.Session
     (
@@ -209,4 +213,4 @@ string :: Mapping L.ByteString
 string = (\(StringBody s) -> s, StringBody, runRead)
 
 ignore :: Mapping ()
-ignore = (\_ -> (), const NoBody, runIgnore)
+ignore = (const (), const NoBody, runIgnore)
