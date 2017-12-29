@@ -38,6 +38,7 @@ module Network.Wreq.Internal.Types
     -- * Sessions
     , Session(..)
     , Run
+    , RunHistory
     , Body(..)
     -- * Caches
     , CacheEntry(..)
@@ -290,12 +291,15 @@ reqURL (Req _ req) = mconcat [
 -- response.
 type Run body = Req -> IO (Response body)
 
+type RunHistory body = Req -> IO (HTTP.HistoriedResponse body)
+
 -- | A session that spans multiple requests.  This is responsible for
 -- cookie management and TCP connection reuse.
 data Session = Session {
       seshCookies :: Maybe (IORef CookieJar)
     , seshManager :: Manager
     , seshRun :: Session -> Run Body -> Run Body
+    , seshRunHistory :: Session -> RunHistory Body -> RunHistory Body
     }
 
 instance Show Session where

@@ -75,16 +75,18 @@ module Network.Wreq.Session
     , deleteWith
     , customMethodWith
     , customPayloadMethodWith
+    , customHistoriedMethodWith
+    , customHistoriedPayloadMethodWith
     -- * Extending a session
     , Lens.seshRun
     ) where
 
-import Control.Lens ((&), (?~), (.~))
+import Control.Lens ((&), (.~))
 import Data.Foldable (forM_)
 import Data.IORef (newIORef, readIORef, writeIORef)
-import Network.Wreq (Options, Response)
+import Network.Wreq (Options, Response, HistoriedResponse)
 import Network.Wreq.Internal
-import Network.Wreq.Internal.Types (Body(..), Req(..), Session(..))
+import Network.Wreq.Internal.Types (Body(..), Req(..), Session(..), RunHistory)
 import Network.Wreq.Types (Postable, Putable, Run)
 import Prelude hiding (head)
 import qualified Data.ByteString.Char8 as BC8
@@ -155,6 +157,7 @@ newSessionControl mj settings = do
      return Session { seshCookies = mref
                      , seshManager = mgr
                      , seshRun = runWith
+                     , seshRunHistory = runWithHistory
                      }
 
 -- | Extract current 'Network.HTTP.Client.CookieJar' from a 'Session'
@@ -222,6 +225,13 @@ customMethodWith method opts sesh url = run string sesh =<< prepareMethod method
   where
     methodBS = BC8.pack method
 
+-- | 'Session'-specific version of 'Network.Wreq.customHistoriedMethodWith'.
+customHistoriedMethodWith :: String -> Options -> Session -> String -> IO (HistoriedResponse L.ByteString)
+customHistoriedMethodWith method opts sesh url =
+    runHistory stringHistory sesh =<< prepareMethod methodBS opts url
+  where
+    methodBS = BC8.pack method
+
 -- | 'Session'-specific version of 'Network.Wreq.customPayloadMethodWith'.
 customPayloadMethodWith :: Postable a => String -> Options -> Session -> String -> a
                         -> IO (Response L.ByteString)
@@ -230,24 +240,45 @@ customPayloadMethodWith method opts sesh url payload =
   where
     methodBS = BC8.pack method
 
-runWith :: Session -> Run Body -> Run Body
-runWith Session{..} act (Req _ req) = do
-  req' <- case seshCookies of
-            Nothing -> return (req & Lens.cookieJar .~ Nothing)
-            Just ref -> (\s -> req & Lens.cookieJar ?~ s) `fmap` readIORef ref
+-- | 'Session'-specific version of 'Network.Wreq.customHistoriedPayloadMethodWith'.
+customHistoriedPayloadMethodWith :: Postable a => String -> Options -> Session -> String -> a
+                        -> IO (HistoriedResponse L.ByteString)
+customHistoriedPayloadMethodWith method opts sesh url payload =
+  runHistory stringHistory sesh =<< preparePayloadMethod methodBS opts url payload
+  where
+    methodBS = BC8.pack method
+
+
+runWithGeneric :: (resp -> Response b) -> Session -> (Req -> IO resp) -> Req -> IO resp
+runWithGeneric extract Session{..} act (Req _ req) = do
+  req' <- (\c -> req & Lens.cookieJar .~ c) <$> traverse readIORef seshCookies
   resp <- act (Req (Right seshManager) req')
   forM_ seshCookies $ \ref ->
-    writeIORef ref (HTTP.responseCookieJar resp)
+    writeIORef ref (HTTP.responseCookieJar (extract resp))
   return resp
 
+runWith :: Session -> Run Body -> Run Body
+runWith = runWithGeneric id
+
+runWithHistory :: Session -> RunHistory Body -> RunHistory Body
+runWithHistory = runWithGeneric HTTP.hrFinalResponse
+
 type Mapping a = (Body -> a, a -> Body, Run a)
+type MappingHistory a = (Body -> a, a -> Body, RunHistory a)
 
 run :: Mapping a -> Session -> Run a
 run (to,from,act) sesh =
   fmap (fmap to) . seshRun sesh sesh (fmap (fmap from) . act)
 
+runHistory :: MappingHistory a -> Session -> RunHistory a
+runHistory (to,from,act) sesh =
+  fmap (fmap to) . seshRunHistory sesh sesh (fmap (fmap from) . act)
+
 string :: Mapping L.ByteString
 string = (\(StringBody s) -> s, StringBody, runRead)
+
+stringHistory :: MappingHistory L.ByteString
+stringHistory = (\(StringBody s) -> s, StringBody, runReadHistory)
 
 ignore :: Mapping ()
 ignore = (const (), const NoBody, runIgnore)

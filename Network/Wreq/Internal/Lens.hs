@@ -25,6 +25,7 @@ module Network.Wreq.Internal.Lens
     , seshCookies
     , seshManager
     , seshRun
+    , seshRunHistory
     -- * Useful functions
     , assoc
     , assoc2

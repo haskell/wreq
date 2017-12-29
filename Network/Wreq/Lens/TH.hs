@@ -45,6 +45,11 @@ module Network.Wreq.Lens.TH
     , responseCookieJar
     , responseClose'
 
+    , HTTP.HistoriedResponse
+    , hrFinalResponse
+    , hrFinalRequest
+    , hrRedirects
+
     , HTTP.Status
     , statusCode
     , statusMessage
@@ -77,6 +82,7 @@ makeLenses ''Types.Options
 makeLensesWith (lensRules & lensField .~ fieldName toCamelCase) ''HTTP.Cookie
 makeLenses ''HTTP.Proxy
 makeLenses ''HTTP.Response
+makeLenses ''HTTP.HistoriedResponse
 makeLenses ''HTTP.Status
 makeLenses ''Types.Link
 makeLenses ''Form.Part

@@ -12,6 +12,7 @@ module Network.Wreq.Internal
     , prepareGet
     , preparePost
     , runRead
+    , runReadHistory
     , prepareHead
     , runIgnore
     , prepareOptions
@@ -28,11 +29,11 @@ import Control.Monad ((>=>))
 import Data.Monoid ((<>))
 import Data.Text.Encoding (encodeUtf8)
 import Data.Version (showVersion)
-import Network.HTTP.Client (BodyReader)
+import Network.HTTP.Client (BodyReader, HistoriedResponse(..))
 import Network.HTTP.Client.Internal (Proxy(..), Request, Response(..), addProxy)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wreq.Internal.Lens (setHeader)
-import Network.Wreq.Internal.Types (Mgr, Req(..), Run)
+import Network.Wreq.Internal.Types (Mgr, Req(..), Run, RunHistory)
 import Network.Wreq.Types (Auth(..), Options(..), Postable(..), Putable(..))
 import Prelude hiding (head)
 import qualified Data.ByteString as S
@@ -88,6 +89,12 @@ readResponse resp = do
   chunks <- HTTP.brConsume (HTTP.responseBody resp)
   return resp { responseBody = L.fromChunks chunks }
 
+readHistoriedResponse :: HistoriedResponse BodyReader -> IO (HistoriedResponse L.ByteString)
+readHistoriedResponse resp = do
+  let finalResp = hrFinalResponse resp
+  chunks <- HTTP.brConsume (HTTP.responseBody finalResp)
+  return resp { hrFinalResponse = finalResp { responseBody = L.fromChunks chunks } }
+
 foldResponseBody :: (a -> S.ByteString -> IO a) -> a
                  -> Response BodyReader -> IO a
 foldResponseBody f z0 resp = go z0
@@ -104,6 +111,10 @@ request modify opts url act = run (manager opts) act =<< prepare modify opts url
 run :: Mgr -> (Response BodyReader -> IO a) -> Request -> IO a
 run emgr act req = either (HTTP.newManager >=> go) go emgr
   where go mgr = HTTP.withResponse req mgr act
+
+runHistory :: Mgr -> (HistoriedResponse BodyReader -> IO a) -> Request -> IO a
+runHistory emgr act req = either (HTTP.newManager >=> go) go emgr
+  where go mgr = HTTP.withResponseHistory req mgr act
 
 prepare :: (Request -> IO Request) -> Options -> String -> IO Request
 prepare modify opts url = do
@@ -157,6 +168,9 @@ prepareGet opts url = Req (manager opts) <$> prepare return opts url
 
 runRead :: Run L.ByteString
 runRead (Req mgr req) = run mgr readResponse req
+
+runReadHistory :: RunHistory L.ByteString
+runReadHistory (Req mgr req) = runHistory mgr readHistoriedResponse req
 
 preparePost :: Postable a => Options -> String -> a -> IO Req
 preparePost opts url payload = Req (manager opts) <$>

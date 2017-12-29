@@ -63,9 +63,13 @@ module Network.Wreq
     -- ** Custom Method
     , customMethod
     , customMethodWith
+    , customHistoriedMethod
+    , customHistoriedMethodWith
     -- ** Custom Payload Method
     , customPayloadMethod
     , customPayloadMethodWith
+    , customHistoriedPayloadMethod
+    , customHistoriedPayloadMethodWith
     -- * Incremental consumption of responses
     -- ** GET
     , foldGet
@@ -133,6 +137,10 @@ module Network.Wreq
     , Lens.Status
     , Lens.statusCode
     , Lens.statusMessage
+    , HistoriedResponse
+    , Lens.hrFinalRequest
+    , Lens.hrFinalResponse
+    , Lens.hrRedirects
     -- ** Link headers
     , Lens.Link
     , Lens.linkURL
@@ -163,6 +171,7 @@ import Data.Aeson (FromJSON)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
+import Network.HTTP.Client (HistoriedResponse)
 import Network.HTTP.Client.Internal (Proxy(..), Response)
 import Network.Wreq.Internal
 import Network.Wreq.Types (Options)
@@ -337,6 +346,7 @@ deleteWith opts url = runRead =<< prepareDelete opts url
 -- | Issue a custom-method request
 --
 -- Example:
+--
 -- @
 -- 'customMethod' \"PATCH\" \"http:\/\/httpbin.org\/patch\"
 -- @
@@ -365,6 +375,29 @@ customMethodWith method opts url = runRead =<< prepareMethod methodBS opts url
   where
     methodBS = BC8.pack method
 
+
+-- | Issue a custom request method. Keep track of redirects and return the 'HistoriedResponse'
+--
+-- Example:
+--
+-- @
+-- 'customHistoriedMethod' \"GET\" \"http:\/\/httpbin.org\/redirect\/3\"
+-- @
+--
+-- >>> r <- customHistoriedMethod "GET" "http://httpbin.org/redirect/3"
+-- >>> length (r ^. hrRedirects)
+-- 3
+customHistoriedMethod :: String -> String -> IO (HistoriedResponse L.ByteString)
+customHistoriedMethod method url = customHistoriedMethodWith method defaults url
+
+-- | Issue a custom request method request, using the supplied 'Options'.
+-- Keep track of redirects and return the 'HistoriedResponse'.
+customHistoriedMethodWith :: String -> Options -> String -> IO (HistoriedResponse L.ByteString)
+customHistoriedMethodWith method opts url =
+    runReadHistory =<< prepareMethod methodBS opts url
+  where
+    methodBS = BC8.pack method
+
 -- | Issue a custom-method request with a payload
 customPayloadMethod :: Postable a => String -> String -> a
                     -> IO (Response L.ByteString)
@@ -378,6 +411,22 @@ customPayloadMethodWith :: Postable a => String -> Options -> String -> a
 
 customPayloadMethodWith method opts url payload =
   runRead =<< preparePayloadMethod methodBS opts url payload
+  where
+    methodBS = BC8.pack method
+
+-- | Issue a custom-method historied request with a payload
+customHistoriedPayloadMethod :: Postable a => String -> String -> a
+                        -> IO (HistoriedResponse L.ByteString)
+
+customHistoriedPayloadMethod method url payload =
+  customHistoriedPayloadMethodWith method defaults url payload
+
+-- | Issue a custom-method historied request with a paylod, using the supplied 'Options'.
+customHistoriedPayloadMethodWith :: Postable a => String -> Options -> String -> a
+                        -> IO (HistoriedResponse L.ByteString)
+
+customHistoriedPayloadMethodWith method opts url payload =
+  runReadHistory =<< preparePayloadMethod methodBS opts url payload
   where
     methodBS = BC8.pack method
 

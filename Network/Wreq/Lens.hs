@@ -78,6 +78,12 @@ module Network.Wreq.Lens
     , responseStatus
     , responseVersion
 
+    -- * HistoriedResponse
+    , HistoriedResponse
+    , hrFinalResponse
+    , hrFinalRequest
+    , hrRedirects
+
     -- ** Status
     , Status
     , statusCode
@@ -104,9 +110,10 @@ import Control.Applicative ((<*))
 import Control.Lens (Fold, Lens, Lens', Traversal', folding)
 import Data.Attoparsec.ByteString (Parser, endOfInput, parseOnly)
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Lazy as L
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
-import Network.HTTP.Client (Cookie, CookieJar, Manager, ManagerSettings, Proxy)
+import Network.HTTP.Client (Cookie, CookieJar, Request, Manager, ManagerSettings, Proxy, HistoriedResponse)
 import Network.HTTP.Client (RequestBody, Response)
 import Network.HTTP.Client.MultipartFormData (Part)
 import Network.HTTP.Types.Header (Header, HeaderName, ResponseHeaders)
@@ -389,6 +396,18 @@ responseCookie = TH.responseCookie
 -- | A lens onto all cookies set in the response.
 responseCookieJar :: Lens' (Response body) CookieJar
 responseCookieJar = TH.responseCookieJar
+
+-- | A lens onto the final request of a historied response.
+hrFinalRequest :: Lens' (HistoriedResponse body) Request
+hrFinalRequest = TH.hrFinalRequest
+
+-- | A lens onto the final response of a historied response.
+hrFinalResponse :: Lens' (HistoriedResponse body) (Response body)
+hrFinalResponse = TH.hrFinalResponse
+
+-- | A lens onto the list of redirects of a historied response.
+hrRedirects :: Lens' (HistoriedResponse body) [(Request, Response L.ByteString)]
+hrRedirects = TH.hrRedirects
 
 -- | A lens onto the numeric identifier of an HTTP status.
 statusCode :: Lens' Status Int
