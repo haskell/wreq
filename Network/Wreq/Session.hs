@@ -128,10 +128,7 @@ withSessionControl mj settings act = do
 
 -- | Extract current 'Network.HTTP.Client.CookieJar' from a 'Session'
 getSessionCookieJar :: Session -> IO (Maybe HTTP.CookieJar)
-getSessionCookieJar session =
-  case seshCookies session of
-    Nothing -> return Nothing
-    Just ajar -> Just <$> readIORef ajar
+getSessionCookieJar = traverse readIORef . seshCookies
 
 -- | 'Session'-specific version of 'Network.Wreq.get'.
 get :: Session -> String -> IO (Response L.ByteString)
