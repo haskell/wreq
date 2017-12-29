@@ -53,41 +53,40 @@ import qualified Data.Text.Lazy.Builder as TL
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.Wreq.Internal.Lens as Lens
 
-instance Postable Part where
-    postPayload a = postPayload [a]
+-- By default if the type is Putable, we use that as postPayload
+instance Postable Part
+instance Postable [Part]
+instance Postable [(S.ByteString, S.ByteString)]
+instance Postable (S.ByteString, S.ByteString)
+instance Postable [FormParam]
+instance Postable FormParam
+instance Postable Payload
+instance Postable S.ByteString
+instance Postable L.ByteString
+instance Postable Value
 
-instance Postable [Part] where
-    postPayload p req =
+instance Putable Part where
+    putPayload a = putPayload [a]
+
+instance Putable [Part] where
+    putPayload p req =
         -- According to doc, formDataBody changes the request type to POST which is wrong; change it back
         (\r -> r{method=method req}) <$> formDataBody p req
 
-instance Postable [(S.ByteString, S.ByteString)] where
-    postPayload ps req =
+instance Putable [(S.ByteString, S.ByteString)] where
+    putPayload ps req =
         -- According to doc, urlEncodedBody changes the request type to POST which is wrong; change it back
         return $ HTTP.urlEncodedBody ps req {method=method req}
 
-instance Postable (S.ByteString, S.ByteString) where
-    postPayload p = postPayload [p]
+instance Putable (S.ByteString, S.ByteString) where
+    putPayload p = putPayload [p]
 
-instance Postable [FormParam] where
-    postPayload ps = postPayload (map f ps)
+instance Putable [FormParam] where
+    putPayload ps = putPayload (map f ps)
       where f (a := b) = (a, renderFormValue b)
 
-instance Postable FormParam where
-    postPayload p = postPayload [p]
-
-instance Postable Payload where
-    postPayload = putPayload
-
-instance Postable S.ByteString where
-    postPayload = putPayload
-
-instance Postable L.ByteString where
-    postPayload = putPayload
-
-instance Postable Value where
-    postPayload = putPayload
-
+instance Putable FormParam where
+    putPayload p = putPayload [p]
 
 instance Putable Payload where
     putPayload pl =

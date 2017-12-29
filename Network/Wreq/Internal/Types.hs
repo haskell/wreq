@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFunctor, FlexibleInstances, GADTs,
-    OverloadedStrings, RankNTypes, RecordWildCards #-}
+    OverloadedStrings, RankNTypes, RecordWildCards, DefaultSignatures #-}
 
 -- |
 -- Module      : Network.Wreq.Internal.Types
@@ -209,6 +209,8 @@ instance Show Options where
 -- | A type that can be converted into a POST request payload.
 class Postable a where
     postPayload :: a -> Request -> IO Request
+    default postPayload :: Putable a => a -> Request -> IO Request
+    postPayload = putPayload
     -- ^ Represent a value in the request body (and perhaps the
     -- headers) of a POST request.
 
