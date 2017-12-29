@@ -48,9 +48,12 @@ module Network.Wreq.Session
     (
     -- * Session creation
       Session
+    , newSession
+    , newAPISession
     , withSession
     , withAPISession
     -- ** More control-oriented session creation
+    , newSessionControl
     , withSessionWith
     , withSessionControl
     -- ** Get information about session state
@@ -96,7 +99,15 @@ import qualified Network.Wreq.Lens as Lens
 -- This session manages cookies and uses default session manager
 -- configuration.
 withSession :: (Session -> IO a) -> IO a
-withSession = withSessionWith defaultManagerSettings
+withSession act = newSession >>= act
+{-# DEPRECATED withSession "Use newSession instead." #-}
+
+-- | Create a 'Session'.
+--
+-- This session manages cookies and uses default session manager
+-- configuration.
+newSession :: IO Session
+newSession = newSessionControl (Just (HTTP.createCookieJar [])) defaultManagerSettings
 
 -- | Create a session.
 --
@@ -104,13 +115,22 @@ withSession = withSessionWith defaultManagerSettings
 -- cookies.  It is intended for use with REST-like HTTP-based APIs,
 -- which typically do not use cookies.
 withAPISession :: (Session -> IO a) -> IO a
-withAPISession = withSessionControl Nothing defaultManagerSettings
+withAPISession act = newAPISession >>= act
+{-# DEPRECATED withAPISession "Use newAPISession instead." #-}
+
+-- | Create a session.
+--
+-- This uses the default session manager settings, but does not manage
+-- cookies.  It is intended for use with REST-like HTTP-based APIs,
+-- which typically do not use cookies.
+newAPISession :: IO Session
+newAPISession = newSessionControl Nothing defaultManagerSettings
 
 -- | Create a session, using the given manager settings.  This session
 -- manages cookies.
 withSessionWith :: HTTP.ManagerSettings -> (Session -> IO a) -> IO a
 withSessionWith = withSessionControl (Just (HTTP.createCookieJar []))
-{-# DEPRECATED withSessionWith "Use withSessionControl instead." #-}
+{-# DEPRECATED withSessionWith "Use newSessionControl instead." #-}
 
 -- | Create a session, using the given cookie jar and manager settings.
 withSessionControl :: Maybe HTTP.CookieJar
@@ -119,12 +139,23 @@ withSessionControl :: Maybe HTTP.CookieJar
                -> HTTP.ManagerSettings
                -> (Session -> IO a) -> IO a
 withSessionControl mj settings act = do
-  mref <- maybe (return Nothing) (fmap Just . newIORef) mj
-  mgr <- HTTP.newManager settings
-  act Session { seshCookies = mref
-              , seshManager = mgr
-              , seshRun = runWith
-              }
+    sess <- newSessionControl mj settings
+    act sess
+{-# DEPRECATED withSessionControl "Use newSessionControl instead." #-}
+
+-- | Create a session, using the given cookie jar and manager settings.
+newSessionControl ::  Maybe HTTP.CookieJar
+                  -- ^ If 'Nothing' is specified, no cookie management
+                  -- will be performed.
+               -> HTTP.ManagerSettings
+               -> IO Session
+newSessionControl mj settings = do
+     mref <- maybe (return Nothing) (fmap Just . newIORef) mj
+     mgr <- HTTP.newManager settings
+     return Session { seshCookies = mref
+                     , seshManager = mgr
+                     , seshRun = runWith
+                     }
 
 -- | Extract current 'Network.HTTP.Client.CookieJar' from a 'Session'
 getSessionCookieJar :: Session -> IO (Maybe HTTP.CookieJar)

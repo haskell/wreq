@@ -287,7 +287,8 @@ cookiesSet Verb{..} site = do
     (r ^? responseCookie "x" . cookieValue)
 
 
-cookieSession site = Session.withSession $ \s -> do
+cookieSession site = do
+  s <- Session.newSession
   r0 <- Session.get s (site "/cookies/set?foo=bar")
   assertEqual "after set foo, foo set" (Just "bar")
     (r0 ^? responseCookie "foo" . cookieValue)
@@ -366,7 +367,8 @@ commonTestsWith verb site = [
 -- Snap responds incorrectly to HEAD (by sending a response body),
 -- thereby killing http-client's ability to continue a session.
 -- https://github.com/snapframework/snap-core/issues/192
-snapHeadSessionBug site = Session.withSession $ \s -> do
+snapHeadSessionBug site = do
+  s <- Session.newSession
   basicHead (session s) site
   -- will crash with (InvalidStatusLine "0")
   basicGet (session s) site
@@ -402,8 +404,8 @@ startServer = do
 testWith :: [Test] -> IO ()
 testWith tests = do
   (tid, mserv) <- startServer
-  Session.withSession $ \s ->
-    flip E.finally (killThread tid) .
+  s <- Session.newSession
+  flip E.finally (killThread tid) .
     defaultMain $ tests <>
                   [ testGroup "plain" $ httpbinTests basic
                   , testGroup "session" $ httpbinTests (session s)] <>
