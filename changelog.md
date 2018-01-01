@@ -1,5 +1,17 @@
 -*- markdown -*-
 
+2018-01-01 0.5.2.0
+
+* Added some HistoriedResponse support
+
+* Deprecated withSession, added newSession (to be inline with upstream http-client)
+
+* Added same instances for Putable as for Postable (might be merged?)
+
+* Added getSessionCookieJar to get cookies from a Session
+
+* Fixed customPayloadMethod to follow the method (it was sometimes POST)
+
 2017-12-23 0.5.1.1
 
 * Add awsSessionTokenAuth (in addition to the existing awsAuth) to
