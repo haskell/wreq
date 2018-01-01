@@ -387,11 +387,15 @@ customMethodWith method opts url = runRead =<< prepareMethod methodBS opts url
 -- >>> r <- customHistoriedMethod "GET" "http://httpbin.org/redirect/3"
 -- >>> length (r ^. hrRedirects)
 -- 3
+--
+-- @since 0.5.2.0
 customHistoriedMethod :: String -> String -> IO (HistoriedResponse L.ByteString)
 customHistoriedMethod method url = customHistoriedMethodWith method defaults url
 
 -- | Issue a custom request method request, using the supplied 'Options'.
 -- Keep track of redirects and return the 'HistoriedResponse'.
+--
+-- @since 0.5.2.0
 customHistoriedMethodWith :: String -> Options -> String -> IO (HistoriedResponse L.ByteString)
 customHistoriedMethodWith method opts url =
     runReadHistory =<< prepareMethod methodBS opts url

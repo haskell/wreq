@@ -141,9 +141,9 @@ respond act = do
       params = Map.foldlWithKey' step Map.empty .
                rqQueryParams $ req
       wibble (k,v) = (decodeUtf8 (original k), decodeUtf8 v)
-      rqHeaders = headers req
-      hdrs = Map.fromList . map wibble . listHeaders $ rqHeaders
-      url = case getHeader "Host" rqHeaders of
+      rqHdrs = headers req
+      hdrs = Map.fromList . map wibble . listHeaders $ rqHdrs
+      url = case getHeader "Host" rqHdrs of
               Nothing   -> []
               Just host -> [("url", toJSON . decodeUtf8 $
                                     "http://" <> host <> rqURI req)]

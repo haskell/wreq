@@ -108,6 +108,8 @@ withSession act = newSession >>= act
 --
 -- This session manages cookies and uses default session manager
 -- configuration.
+--
+-- @since 0.5.2.0
 newSession :: IO Session
 newSession = newSessionControl (Just (HTTP.createCookieJar [])) defaultManagerSettings
 
@@ -125,6 +127,8 @@ withAPISession act = newAPISession >>= act
 -- This uses the default session manager settings, but does not manage
 -- cookies.  It is intended for use with REST-like HTTP-based APIs,
 -- which typically do not use cookies.
+--
+-- @since 0.5.2.0
 newAPISession :: IO Session
 newAPISession = newSessionControl Nothing defaultManagerSettings
 
@@ -146,6 +150,8 @@ withSessionControl mj settings act = do
 {-# DEPRECATED withSessionControl "Use newSessionControl instead." #-}
 
 -- | Create a session, using the given cookie jar and manager settings.
+--
+-- @since 0.5.2.0
 newSessionControl ::  Maybe HTTP.CookieJar
                   -- ^ If 'Nothing' is specified, no cookie management
                   -- will be performed.
@@ -161,6 +167,8 @@ newSessionControl mj settings = do
                      }
 
 -- | Extract current 'Network.HTTP.Client.CookieJar' from a 'Session'
+--
+-- @since 0.5.2.0
 getSessionCookieJar :: Session -> IO (Maybe HTTP.CookieJar)
 getSessionCookieJar = traverse readIORef . seshCookies
 
@@ -226,6 +234,8 @@ customMethodWith method opts sesh url = run string sesh =<< prepareMethod method
     methodBS = BC8.pack method
 
 -- | 'Session'-specific version of 'Network.Wreq.customHistoriedMethodWith'.
+--
+-- @since 0.5.2.0
 customHistoriedMethodWith :: String -> Options -> Session -> String -> IO (HistoriedResponse L.ByteString)
 customHistoriedMethodWith method opts sesh url =
     runHistory stringHistory sesh =<< prepareMethod methodBS opts url
@@ -241,6 +251,8 @@ customPayloadMethodWith method opts sesh url payload =
     methodBS = BC8.pack method
 
 -- | 'Session'-specific version of 'Network.Wreq.customHistoriedPayloadMethodWith'.
+--
+-- @since 0.5.2.0
 customHistoriedPayloadMethodWith :: Postable a => String -> Options -> Session -> String -> a
                         -> IO (HistoriedResponse L.ByteString)
 customHistoriedPayloadMethodWith method opts sesh url payload =

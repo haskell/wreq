@@ -13,6 +13,7 @@ module Network.Wreq.Internal.Lens
     , requestHeaders
     , requestBody
     , requestVersion
+    , requestManagerOverride
     , onRequestBodyException
     , proxy
     , hostAddress
