@@ -435,7 +435,11 @@ will throw a
 
 ~~~~ {.haskell}
 ghci> r <- get "http://httpbin.org/basic-auth/user/pass"
-*** Exception: StatusCodeException (Status {statusCode = 401, {-...-}
+*** Exception: HttpExceptionRequest Request { ... }
+ (StatusCodeException (Response {
+    responseStatus = Status {statusCode = 401, {-...-} }
+    , {- ... -}
+ }), "..." )
 ~~~~
 
 If we then supply a username and password, our request will succeed.
@@ -516,7 +520,11 @@ throw a `HttpException`.
 
 ~~~~ {.haskell}
 h> r <- get "http://httpbin.org/wibblesticks"
-*** Exception: StatusCodeException (Status {statusCode = 404, {-...-}
+*** Exception: HttpExceptionRequest Request { ... }
+ (StatusCodeException (Response {
+    responseStatus = Status {statusCode = 404, {-...-} }
+    , {- ... -}
+ }), "..." )
 ~~~~
 
 Here's a simple example of how we can respond to one kind of error: a
@@ -526,17 +534,19 @@ unauthenticated request fails.
 ~~~~ {.haskell}
 import Control.Exception as E
 import Control.Lens
-import Network.HTTP.Client
+import Network.HTTP.Client (HttpException (HttpExceptionRequest),
+                            HttpExceptionContent (StatusCodeException))
 import Network.Wreq
 
 getAuth url myauth = get url `E.catch` handler
   where
-    handler e@(StatusCodeException s _ _)
-      | s ^. statusCode == 401 = getWith authopts authurl
-      | otherwise              = throwIO e
-      where authopts = defaults & auth .~ myauth
-            -- switch to TLS when we use auth
-            authurl = "https" ++ dropWhile (/=':') url
+    handler e@(HttpExceptionRequest _ (StatusCodeException r _))
+      | r ^. responseStatus . statusCode == 401 = getWith authopts authurl
+      | otherwise                               = throwIO e
+    handler e = throwIO e
+    authopts = defaults & auth ?~ myauth
+    -- switch to TLS when we use auth
+    authurl = "https" ++ dropWhile (/=':') url
 ~~~~
 
 (A "real world" version would remember which URLs required
