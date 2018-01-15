@@ -583,7 +583,8 @@ import Network.Wreq
 import qualified Network.Wreq.Session as S
 
 main :: IO ()
-main = S.withSession $ \sess -> do
+main = do
+  sess <- S.newSession
   -- First request: tell the server to set a cookie
   S.get sess "http://httpbin.org/cookies/set?name=hi"
 
@@ -599,8 +600,7 @@ The key differences from the basic API are as follows.
   module qualified, and we'll identify its functions by prefixing them
   with "`S.`".
 
-* To create a `Session`, we use `S.withSession`. It calls our code
-  with `sess`, the `Session` value we'll use.
+* To create a `Session`, we use `S.newSession`.
 
 * Instead of `get` and `post`, we call the `Session`-specific
   versions, [`S.get`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq-Session.html#v:get) and [`S.post`](http://hackage.haskell.org/package/wreq/docs/Network-Wreq-Session.html#v:post), and pass `sess` to each of them.
