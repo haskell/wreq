@@ -164,6 +164,9 @@ serviceAndRegion endpoint
     -- not s3
   | endpoint `elem` ["sts.amazonaws.com"] =
     ("sts", "us-east-1")
+  | ".execute-api" `S.isInfixOf` endpoint =
+     let gateway:service:region:_ = S.split '.' endpoint
+     in (service, region)
   | svc `HashSet.member` noRegion =
     (svc, "us-east-1")
   | otherwise =
