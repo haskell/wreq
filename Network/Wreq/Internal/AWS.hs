@@ -8,9 +8,9 @@ module Network.Wreq.Internal.AWS
 
 import Control.Applicative ((<$>))
 import Control.Lens ((%~), (^.), (&), to)
-import Crypto.MAC (hmac, hmacGetDigest)
+import Crypto.MAC.HMAC (HMAC (..), hmac, hmacGetDigest)
 import Data.ByteString.Base16 as HEX (encode)
-import Data.Byteable (toBytes)
+import Data.ByteArray (convert)
 import Data.Char (toLower)
 import Data.List (sort)
 import Data.Monoid ((<>))
@@ -21,9 +21,9 @@ import Data.Time.LocalTime (utc, utcToLocalTime)
 import Network.HTTP.Types (parseSimpleQuery, urlEncode)
 import Network.Wreq.Internal.Lens
 import Network.Wreq.Internal.Types (AWSAuthVersion(..))
-import qualified Crypto.Hash as CT (HMAC, SHA256)
-import qualified Crypto.Hash.SHA256 as SHA256 (hash, hashlazy)
+import qualified Crypto.Hash as CT (Digest, SHA256, hash, hashlazy)
 import qualified Data.ByteString.Char8 as S
+import qualified Data.ByteString.Lazy.Char8  as L
 import qualified Data.CaseInsensitive  as CI (original)
 import qualified Data.HashSet as HashSet
 import qualified Network.HTTP.Client as HTTP
@@ -44,6 +44,17 @@ signRequest :: AWSAuthVersion -> S.ByteString -> S.ByteString ->
                Request -> IO Request
 signRequest AWSv4 = signRequestV4
 
+hexSha256Hash :: S.ByteString -> S.ByteString
+hexSha256Hash dta =
+  let digest = CT.hash dta :: CT.Digest CT.SHA256
+  in S.pack (show digest)
+
+hexSha256HashLazy :: L.ByteString -> S.ByteString
+hexSha256HashLazy dta =
+  let digest = CT.hashlazy dta :: CT.Digest CT.SHA256
+  in S.pack (show digest)
+
+
 signRequestV4 :: S.ByteString -> S.ByteString -> Request -> IO Request
 signRequestV4 key secret request = do
   !ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
@@ -55,7 +66,7 @@ signRequestV4 key secret request = do
       date = S.takeWhile (/= 'T') ts      -- YYYYMMDD
       hashedPayload
         | request ^. method `elem` ["POST", "PUT"] = payloadHash req
-        | otherwise = HEX.encode $ SHA256.hash ""
+        | otherwise = hexSha256Hash ""
       -- add common v4 signing headers, service specific headers, and
       -- drop tmp header and Runscope-Bucket-Auth header (if present).
       req = request & requestHeaders %~
@@ -87,7 +98,7 @@ signRequestV4 key secret request = do
           "AWS4-HMAC-SHA256"
         , ts
         , dateScope
-        , HEX.encode $ SHA256.hash canonicalReq
+        , hexSha256Hash canonicalReq
         ]
   -- task 3, steps 1 and 2
   let signature = ("AWS4" <> secret) &
@@ -113,16 +124,15 @@ signRequestV4 key secret request = do
     timestamp = render <$> getCurrentTime
       where render = S.pack . formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" .
                      utcToLocalTime utc -- UTC printable: YYYYMMDDTHHMMSSZ
-    hmac' s k = toBytes (hmacGetDigest h)
-      where h = hmac k s :: (CT.HMAC CT.SHA256)
+    hmac' :: S.ByteString -> S.ByteString -> S.ByteString
+    hmac' s k = convert (hmacGetDigest h)
+      where h = hmac k s :: (HMAC CT.SHA256)
 
 payloadHash :: Request -> S.ByteString
 payloadHash req =
   case HTTP.requestBody req of
-    HTTP.RequestBodyBS bs ->
-      HEX.encode $ SHA256.hash bs
-    HTTP.RequestBodyLBS lbs ->
-      HEX.encode $ SHA256.hashlazy lbs
+    HTTP.RequestBodyBS bs ->   hexSha256Hash bs
+    HTTP.RequestBodyLBS lbs -> hexSha256HashLazy lbs
     _ -> error "addTmpPayloadHashHeader: unexpected request body type"
 
 -- Per AWS documentation at:
@@ -179,5 +189,5 @@ removeRunscope hostname
   | otherwise = hostname
     where p1 "-"   = "."
           p1 other = other
-          p2 "--"   = "-"
-          p2 other  = other
+          p2 "--"  = "-"
+          p2 other = other
