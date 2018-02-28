@@ -71,7 +71,7 @@ instance Putable Part where
 instance Putable [Part] where
     putPayload p req =
         -- According to doc, formDataBody changes the request type to POST which is wrong; change it back
-        (\r -> r{method=method req}) <$> formDataBody p req
+        (\r -> r{method=method req}) `fmap` formDataBody p req
 
 instance Putable [(S.ByteString, S.ByteString)] where
     putPayload ps req =

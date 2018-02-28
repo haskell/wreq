@@ -95,6 +95,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.Wreq.Internal.Lens as Lens
 import qualified Network.Wreq.Lens as Lens
+import Data.Traversable as T
 
 -- | Create a 'Session', passing it to the given function.  The
 -- 'Session' will no longer be valid after that function returns.
@@ -171,7 +172,7 @@ newSessionControl mj settings = do
 --
 -- @since 0.5.2.0
 getSessionCookieJar :: Session -> IO (Maybe HTTP.CookieJar)
-getSessionCookieJar = traverse readIORef . seshCookies
+getSessionCookieJar = T.traverse readIORef . seshCookies
 
 -- | 'Session'-specific version of 'Network.Wreq.get'.
 get :: Session -> String -> IO (Response L.ByteString)
@@ -264,7 +265,7 @@ customHistoriedPayloadMethodWith method opts sesh url payload =
 
 runWithGeneric :: (resp -> Response b) -> Session -> (Req -> IO resp) -> Req -> IO resp
 runWithGeneric extract Session{..} act (Req _ req) = do
-  req' <- (\c -> req & Lens.cookieJar .~ c) <$> traverse readIORef seshCookies
+  req' <- (\c -> req & Lens.cookieJar .~ c) `fmap` T.traverse readIORef seshCookies
   resp <- act (Req (Right seshManager) req')
   forM_ seshCookies $ \ref ->
     writeIORef ref (HTTP.responseCookieJar (extract resp))
