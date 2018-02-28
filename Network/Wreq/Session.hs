@@ -18,7 +18,7 @@
 --
 -- * Transparent cookie management.  Any cookies set by the server
 --   persist from one request to the next.  (Bypass this overhead
---   using 'withAPISession'.)
+--   using 'newAPISession'.)
 --
 --
 -- This module is designed to be used alongside the "Network.Wreq"
@@ -28,13 +28,14 @@
 -- import "Network.Wreq"
 -- import qualified "Network.Wreq.Session" as Sess
 --
--- main = Sess.'newSession' >>= \\sess ->
+-- main = do
+--   sess <- Sess.'newSession'
 --   Sess.'get' sess \"http:\/\/httpbin.org\/get\"
 -- @
 --
 -- We create a 'Session' using 'newSession', then pass the session to
 -- subsequent functions.  When talking to a REST-like service that does
--- not use cookies, it is more efficient to use 'withAPISession'.
+-- not use cookies, it is more efficient to use 'newAPISession'.
 --
 -- Note the use of qualified import statements in the examples above,
 -- so that we can refer unambiguously to the 'Session'-specific
