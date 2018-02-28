@@ -1,5 +1,11 @@
 -*- markdown -*-
 
+2018-03-01 0.5.2.1
+
+* Fixed some building issues with older versions
+
+* Removed dependency on cryptohash, using cryptonite instead
+
 2018-01-01 0.5.2.0
 
 * Added some HistoriedResponse support

@@ -678,6 +678,10 @@ partString name value = Form.partBS name (encodeUtf8 (T.pack value))
 -- The \"magical\" type conversion on the right-hand side of ':='
 -- above is due to the 'FormValue' class. This package provides
 -- sensible instances for the standard string and number types.
+-- You may need to explicitly add types to the values (e.g. :: String)
+-- in order to evade ambigous type errors.
+--
+-- >>> r <- post "http://httpbin.org/post" ["num" := (31337 :: Int), "str" := ("foo" :: String)]
 --
 -- The 'Aeson.Value' type gives a JSON request body with a
 -- @Content-Type@ of @application/json@. Any instance of
