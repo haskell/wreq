@@ -167,6 +167,9 @@ serviceAndRegion endpoint
   | ".execute-api." `S.isInfixOf` endpoint =
     let gateway:service:region:_ = S.split '.' endpoint
     in (service, region)
+  | ".es.amazonaws.com" `S.isSuffixOf` endpoint =
+    let _:region:_ = S.split '.' endpoint
+    in ("es", region)
   | svc `HashSet.member` noRegion =
     (svc, "us-east-1")
   | otherwise =
