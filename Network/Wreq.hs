@@ -98,6 +98,7 @@ module Network.Wreq
     , oauth2Bearer
     , oauth2Token
     , awsAuth
+    , awsFullAuth
     , awsSessionTokenAuth
     -- ** Proxy settings
     , Proxy(Proxy)
@@ -599,6 +600,17 @@ awsSessionTokenAuth :: AWSAuthVersion -- ^ Signature version (V4)
                     -> Auth
 awsSessionTokenAuth version key secret sessionToken =
   AWSAuth version key secret (Just sessionToken)
+
+-- | AWS v4 request signature.
+--
+-- Example (note the use of TLS):
+--
+-- @
+--let opts = 'defaults' '&' 'Lens.auth' '?~' 'awsFullAuth' 'AWSv4' \"key\" \"secret\" (Just (\"service\", \"region\"))
+--'getWith' opts \"https:\/\/dynamodb.us-west-2.amazonaws.com\"
+-- @
+awsFullAuth :: AWSAuthVersion -> S.ByteString -> S.ByteString -> Maybe S.ByteString -> Maybe (S.ByteString, S.ByteString) -> Auth
+awsFullAuth = AWSFullAuth
 
 -- | Proxy configuration.
 --

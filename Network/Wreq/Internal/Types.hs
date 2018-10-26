@@ -183,6 +183,9 @@ data Auth = BasicAuth S.ByteString S.ByteString
           | AWSAuth AWSAuthVersion S.ByteString S.ByteString (Maybe S.ByteString)
             -- ^ Amazon Web Services request signing
             -- AWSAuthVersion key secret (optional: session-token)
+          | AWSFullAuth AWSAuthVersion S.ByteString S.ByteString  (Maybe S.ByteString) (Maybe (S.ByteString, S.ByteString))
+            -- ^ Amazon Web Services request signing
+            -- AWSAuthVersion key secret Maybe (service, region)
           | OAuth1 S.ByteString S.ByteString S.ByteString S.ByteString
             -- ^ OAuth1 request signing
             -- OAuth1 consumerToken consumerSecret token secret
