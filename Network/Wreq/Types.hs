@@ -38,7 +38,8 @@ module Network.Wreq.Types
     ) where
 
 import Control.Lens ((&), (.~))
-import Data.Aeson (Value, encode)
+import Data.Aeson (Encoding, Value, encode)
+import Data.Aeson.Encoding (encodingToLazyByteString)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Network.HTTP.Client (Request(method))
@@ -64,6 +65,7 @@ instance Postable Payload
 instance Postable S.ByteString
 instance Postable L.ByteString
 instance Postable Value
+instance Postable Encoding
 
 instance Putable Part where
     putPayload a = putPayload [a]
@@ -102,6 +104,9 @@ instance Putable L.ByteString where
 instance Putable Value where
     putPayload = payload "application/json" . HTTP.RequestBodyLBS . encode
 
+instance Putable Encoding where
+    putPayload = payload "application/json" . HTTP.RequestBodyLBS .
+      encodingToLazyByteString
 
 instance FormValue T.Text where
     renderFormValue = T.encodeUtf8
