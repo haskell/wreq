@@ -43,7 +43,7 @@ import qualified Network.HTTP.Client as HTTP
 -- TODO: adjust when DELETE supports a body or PATCH is added
 signRequest :: AWSAuthVersion -> S.ByteString -> S.ByteString ->
                Request -> IO Request
-signRequest AWSv4 id key r = signRequestFull AWSv4 id key Nothing r
+signRequest AWSv4 aid key r = signRequestFull AWSv4 aid key Nothing r
 
 hexSha256Hash :: S.ByteString -> S.ByteString
 hexSha256Hash dta =
