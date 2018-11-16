@@ -1,5 +1,11 @@
 -*- markdown -*-
 
+2018-11-16 0.5.3.0
+
+* Added Postable/Putable on aeson encoding
+
+* Added better AWS signing for urls without region
+
 2018-03-01 0.5.2.1
 
 * Fixed some building issues with older versions

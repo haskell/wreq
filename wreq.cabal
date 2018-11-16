@@ -1,5 +1,5 @@
 name:                wreq
-version:             0.5.2.1
+version:             0.5.3.0
 synopsis:            An easy-to-use HTTP client library.
 description:
   .
