@@ -3,7 +3,8 @@
 
 module Network.Wreq.Internal.AWS
     (
-      signRequest
+      signRequest,
+      signRequestFull
     ) where
 
 import Control.Applicative ((<$>))
@@ -42,7 +43,7 @@ import qualified Network.HTTP.Client as HTTP
 -- TODO: adjust when DELETE supports a body or PATCH is added
 signRequest :: AWSAuthVersion -> S.ByteString -> S.ByteString ->
                Request -> IO Request
-signRequest AWSv4 = signRequestV4
+signRequest AWSv4 id key r = signRequestFull AWSv4 id key Nothing r
 
 hexSha256Hash :: S.ByteString -> S.ByteString
 hexSha256Hash dta =
@@ -55,14 +56,19 @@ hexSha256HashLazy dta =
   in S.pack (show digest)
 
 
-signRequestV4 :: S.ByteString -> S.ByteString -> Request -> IO Request
-signRequestV4 key secret request = do
+signRequestFull :: AWSAuthVersion -> S.ByteString -> S.ByteString -> Maybe (S.ByteString, S.ByteString) -> Request -> IO Request
+signRequestFull AWSv4 = signRequestV4
+
+signRequestV4 :: S.ByteString -> S.ByteString -> Maybe (S.ByteString, S.ByteString) -> Request -> IO Request
+signRequestV4 key secret serviceRegion request = do
   !ts <- timestamp                         -- YYYYMMDDT242424Z, UTC based
   let origHost = request ^. host          -- potentially w/ runscope bucket
       runscopeBucketAuth =
         lookup "Runscope-Bucket-Auth" $ request ^. requestHeaders
       noRunscopeHost = removeRunscope origHost -- rm Runscope for signing
-      (service, region) = serviceAndRegion noRunscopeHost
+      (service, region) = case serviceRegion of
+        Nothing     -> serviceAndRegion noRunscopeHost
+        Just (a, b) ->　(a, b)
       date = S.takeWhile (/= 'T') ts      -- YYYYMMDD
       hashedPayload
         | request ^. method `elem` ["POST", "PUT"] = payloadHash req
