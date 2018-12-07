@@ -82,12 +82,13 @@ signRequestV4 key secret serviceRegion request = do
             -- Runscope (correctly) doesn't send Bucket Auth header to AWS,
             -- remove it from the headers we sign. Adding back in at the end.
             . deleteKey "Runscope-Bucket-Auth"
+  let encodePath p = S.intercalate "/" $ map (urlEncode False) $ S.split '/' p
   -- task 1
   let hl = req ^. requestHeaders . to sort
       signedHeaders = S.intercalate ";" . map (lowerCI . fst) $ hl
       canonicalReq = S.intercalate "\n" [
           req ^. method             -- step 1
-        , req ^. path               -- step 2
+        , encodePath (req ^. path)  -- step 2
         ,   S.intercalate "&"       -- step 3b, incl. sort
             -- urlEncode True (QS) to encode ':' and '/' (e.g. in AWS arns)
           . map (\(k,v) -> urlEncode True k <> "=" <> urlEncode True v)
