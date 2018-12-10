@@ -1,5 +1,9 @@
 -*- markdown -*-
 
+2018-12-10 0.5.3.1
+
+* Fix AWS-related things
+
 2018-11-16 0.5.3.0
 
 * Added Postable/Putable on aeson encoding
