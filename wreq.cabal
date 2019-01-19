@@ -112,7 +112,7 @@ library
     exceptions >= 0.5,
     ghc-prim,
     hashable,
-    http-client >= 0.5.3.2,
+    http-client >= 0.6,
     http-client-tls >= 0.3.3,
     http-types >= 0.8,
     lens >= 4.5,
