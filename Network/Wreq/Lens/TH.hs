@@ -58,7 +58,7 @@ module Network.Wreq.Lens.TH
     , linkURL
     , linkParams
 
-    , Form.Part
+    , Form.PartM
     , partName
     , partFilename
     , partContentType
@@ -85,7 +85,7 @@ makeLenses ''HTTP.Response
 makeLenses ''HTTP.HistoriedResponse
 makeLenses ''HTTP.Status
 makeLenses ''Types.Link
-makeLenses ''Form.Part
+makeLenses ''Form.PartM
 
 responseHeader :: HTTP.HeaderName -> Traversal' (HTTP.Response body) ByteString
 responseHeader n = responseHeaders . assoc n
