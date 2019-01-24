@@ -1,5 +1,9 @@
 -*- markdown -*-
 
+2019-01-25 0.5.3.2
+
+* Compatibility with http-client >= 0.6.0
+
 2018-12-10 0.5.3.1
 
 * Fix AWS-related things
