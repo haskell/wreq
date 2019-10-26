@@ -23,6 +23,7 @@ module Network.Wreq.Internal.Types
     -- * Request payloads
     , Payload(..)
     , Postable(..)
+    , Patchable(..)
     , Putable(..)
     -- ** URL-encoded forms
     , FormParam(..)
@@ -217,6 +218,14 @@ class Postable a where
     postPayload = putPayload
     -- ^ Represent a value in the request body (and perhaps the
     -- headers) of a POST request.
+
+-- | A type that can be converted into a PATCH request payload.
+class Patchable a where
+  patchPayload :: a -> Request -> IO Request
+  default patchPayload :: Putable a => a -> Request -> IO Request
+  patchPayload = putPayload
+  -- ^ Represent a value in the request body (and perhaps the
+  -- headers) of a PATCH request.
 
 -- | A type that can be converted into a PUT request payload.
 class Putable a where
