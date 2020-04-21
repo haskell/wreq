@@ -1,4 +1,4 @@
-name:                wreq
+name:                wreq-patchable
 version:             0.5.3.2
 synopsis:            An easy-to-use HTTP client library.
 description:
@@ -209,7 +209,7 @@ test-suite tests
     unix-compat,
     uuid,
     vector,
-    wreq
+    wreq-patchable
 
 test-suite doctests
   type:           exitcode-stdio-1.0
