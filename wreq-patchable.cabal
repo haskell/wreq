@@ -97,7 +97,7 @@ library
     Network.Wreq.Internal.Types
     Network.Wreq.Lens.Machinery
     Network.Wreq.Lens.TH
-    Paths_wreq
+    Paths_wreq_patchable
   build-depends:
     psqueues >= 0.2,
     aeson >= 0.7.0.3,
