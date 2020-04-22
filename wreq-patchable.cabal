@@ -1,38 +1,16 @@
 name:                wreq-patchable
-version:             0.5.3.2
+version:             1.0.0.0
 synopsis:            An easy-to-use HTTP client library.
 description:
   .
-  A web client library that is designed for ease of use.
-  .
-  Tutorial: <http://www.serpentine.com/wreq/tutorial.html>
-  .
-  Features include:
-  .
-  * Simple but powerful `lens`-based API
-  .
-  * A solid test suite, and built on reliable libraries like
-    http-client and lens
-  .
-  * Session handling includes connection keep-alive and pooling, and
-    cookie persistence
-  .
-  * Automatic response body decompression
-  .
-  * Powerful multipart form and file upload handling
-  .
-  * Support for JSON requests and responses, including navigation of
-    schema-less responses
-  .
-  * Basic and OAuth2 bearer authentication
-  .
-  * Early TLS support via the tls package
+  A fork of wreq <https://hackage.haskell.org/package/wreq>
+    that supports HTTP PATCH requests
 homepage:            http://www.serpentine.com/wreq
-bug-reports:         https://github.com/bos/wreq/issues
+bug-reports:         https://github.com/nitros12/wreq-patchable/issues
 license:             BSD3
 license-file:        LICENSE.md
-author:              Bryan O'Sullivan <bos@serpentine.com>
-maintainer:          bos@serpentine.com
+author:              Bryan O'Sullivan <bos@serpentine.com>, Ben Simms <ben@bensimms.moe>
+maintainer:          ben@bensimms.moe
 copyright:           2014 Bryan O'Sullivan
 category:            Web
 build-type:          Custom
