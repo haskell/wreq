@@ -1,5 +1,9 @@
 -*- markdown -*-
 
+2020-04-22 1.0.0.0
+
+* Fork and add PATCH support
+
 2019-01-25 0.5.3.2
 
 * Compatibility with http-client >= 0.6.0

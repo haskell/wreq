@@ -22,6 +22,7 @@ module Network.Wreq.Types
     -- * Request payloads
     , Payload(..)
     , Postable(..)
+    , Patchable(..)
     , Putable(..)
     -- ** URL-encoded forms
     , FormParam(..)
@@ -66,6 +67,19 @@ instance Postable S.ByteString
 instance Postable L.ByteString
 instance Postable Value
 instance Postable Encoding
+
+-- By default if the type is Putable, we use that as patchPayload
+instance Patchable Part
+instance Patchable [Part]
+instance Patchable [(S.ByteString, S.ByteString)]
+instance Patchable (S.ByteString, S.ByteString)
+instance Patchable [FormParam]
+instance Patchable FormParam
+instance Patchable Payload
+instance Patchable S.ByteString
+instance Patchable L.ByteString
+instance Patchable Value
+instance Patchable Encoding
 
 instance Putable Part where
     putPayload a = putPayload [a]
