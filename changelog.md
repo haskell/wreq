@@ -1,5 +1,9 @@
 -*- markdown -*-
 
+2020-02-08 0.5.3.3
+
+* GHC9 compatibility
+
 2019-01-25 0.5.3.2
 
 * Compatibility with http-client >= 0.6.0
