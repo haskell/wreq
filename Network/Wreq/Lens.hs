@@ -466,7 +466,7 @@ partGetBody = TH.partGetBody
 -- >>> r ^. responseHeader "Allow" . atto verbs . to sort
 -- ["GET","HEAD","OPTIONS"]
 atto :: Parser a -> Fold ByteString a
-atto = folding . parseOnly
+atto p = folding (parseOnly p)
 
 -- | The same as 'atto', but ensures that the parser consumes the
 -- entire input.
