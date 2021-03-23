@@ -161,7 +161,7 @@ data Options = Options {
   } deriving (Typeable)
 
 -- | A function that checks the result of a HTTP request and
--- potentially returns an exception.
+-- potentially throw an exception.
 type ResponseChecker = Request -> Response HTTP.BodyReader -> IO ()
 
 -- | Supported authentication types.
