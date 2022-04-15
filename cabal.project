@@ -1,0 +1,8 @@
+packages: .
+
+--TODO exposes stuff so that we can make lenses without TH
+source-repository-package
+    type: git
+    location: https://github.com/georgefst/http-client
+    subdir: http-client
+    tag: bd218eff5faf19333960833e7fd28c211e2aecc4
