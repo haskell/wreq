@@ -39,14 +39,14 @@ In the case of S3, we translate 'us-east-1' to
 's3-external-1.amazonaws.com' denoting the Virginia (only) endpoint.
 (see http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region).
 
-** AWS USER AND LEAST PRIVILEDGE POLICY **
-The file `tests/AWS/policy.json` contains the least priviledge "AWS
+** AWS USER AND LEAST PRIVILEGE POLICY **
+The file `tests/AWS/policy.json` contains the least privilege "AWS
 Identity and Access (IAM)" policy sufficient to run these tests. It is
 a best security practice to run the tests using an AWS IAM user you
 created specifically for this purpose. Use the AWS IAM Management
 Console to create a new user, get the WREQ_AWS_ACCESS_KEY and
 WREQ_AWS_SECRET_KEY for that user and apply the policy to the user to
-limit its priviledges.
+limit its privileges.
 
 **AVOID AWS RESOURCE NAME COLLISIONS IN CONCURRENT TESTS**
 To run tests concurrently in same AWS account, set the environment
