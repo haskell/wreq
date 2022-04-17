@@ -360,7 +360,7 @@ responseHeaders = TH.responseHeaders
 -- >   <https://api.github.com/search/code?q=addClass+user%3Amozilla&page=34>; rel="last"
 --
 -- And here is an example of how we can retrieve the URL for the @next@ link
--- programatically.
+-- programmatically.
 --
 -- @
 --r <- 'Network.Wreq.get' \"https:\/\/api.github.com\/search\/code?q=addClass+user:mozilla\"
