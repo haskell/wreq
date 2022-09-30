@@ -5,7 +5,6 @@
 
 module UnitTests (testWith) where
 
-import Control.Arrow (first)
 import Control.Applicative ((<$>))
 import Control.Concurrent (forkIO, killThread)
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
@@ -34,6 +33,7 @@ import Test.Framework (Test, defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool, assertEqual, assertFailure)
 import qualified Control.Exception as E
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.CaseInsensitive as CI
 import qualified Data.HashMap.Strict as HMap
 import qualified Data.Text as T
@@ -86,8 +86,8 @@ cikey :: AsValue t => T.Text -> Traversal' t Value
 cikey i = _Object . toInsensitive . ix (CI.mk i)
   where
     toInsensitive = iso toCi fromCi
-    toCi = HMap.fromList . map (first CI.mk) . HMap.toList
-    fromCi = HMap.fromList . map (first CI.original) . HMap.toList
+    toCi = HMap.mapKeys CI.mk . KM.toHashMapText
+    fromCi = KM.fromHashMapText . HMap.mapKeys CI.original
 
 basicGet Verb{..} site = do
   r <- get (site "/get")
