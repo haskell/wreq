@@ -9,6 +9,7 @@ import Control.Applicative ((<$>))
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (Value(..), eitherDecode, object, toJSON)
 import Data.Aeson.Encode.Pretty (Config(..), Indent(Spaces), defConfig, encodePretty')
+import Data.Aeson.Key (fromText)
 import Data.ByteString.Char8 (pack)
 import Data.CaseInsensitive (original)
 import Data.Maybe (catMaybes, fromMaybe)
@@ -69,7 +70,7 @@ setCookies = do
 
 listCookies = do
   cks <- rqCookies <$> getRequest
-  let cs = [(decodeUtf8 (cookieName c),
+  let cs = [(fromText(decodeUtf8 (cookieName c)),
              toJSON (decodeUtf8 (cookieValue c))) | c <- cks]
   respond $ \obj -> return $ obj <> [("cookies", object cs)]
 

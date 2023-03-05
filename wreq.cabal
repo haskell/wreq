@@ -139,7 +139,7 @@ executable httpbin
     buildable: False
   else
     build-depends:
-      aeson >= 0.7,
+      aeson >= 2.0,
       aeson-pretty >= 0.8.0,
       base >= 4.5 && < 5,
       base64-bytestring,
