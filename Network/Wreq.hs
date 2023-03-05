@@ -57,6 +57,9 @@ module Network.Wreq
     -- ** PUT
     , put
     , putWith
+    -- ** PATCH
+    , patch
+    , patchWith
     -- ** DELETE
     , delete
     , deleteWith
@@ -290,6 +293,14 @@ put url payload = putWith defaults url payload
 -- | Issue a PUT request, using the supplied 'Options'.
 putWith :: Putable a => Options -> String -> a -> IO (Response L.ByteString)
 putWith opts url payload = runRead =<< preparePut opts url payload
+
+-- | Issue a PATCH request.
+patch :: Patchable a => String -> a -> IO (Response L.ByteString)
+patch url payload = patchWith defaults url payload
+
+-- | Issue a PATCH request, using the supplied 'Options'.
+patchWith :: Patchable a => Options -> String -> a -> IO (Response L.ByteString)
+patchWith opts url payload = runRead =<< preparePatch opts url payload
 
 -- | Issue an OPTIONS request.
 --

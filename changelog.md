@@ -1,4 +1,9 @@
 -*- markdown -*-
+2023-03-01 0.5.4.0
+
+* Aeson 2.0 compatibility
+* Add patch request
+
 
 2020-02-08 0.5.3.3
 
