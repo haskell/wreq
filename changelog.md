@@ -1,4 +1,10 @@
 -*- markdown -*-
+2023-07-31 0.5.4.1
+
+* Cabal version change2023-07-31 0.5.4.1
+
+* Cabal version change
+
 2023-03-01 0.5.4.0
 
 * Aeson 2.0 compatibility
