@@ -177,9 +177,6 @@ test-suite tests
       AWS.S3
       AWS.SQS
 
-  if flag(aws)
-    build-depends: base >= 4.13 && < 5
-
   build-depends:
     HUnit,
     QuickCheck >= 2.7,
