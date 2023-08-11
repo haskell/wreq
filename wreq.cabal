@@ -103,7 +103,7 @@ library
     aeson >= 0.7.0.3,
     attoparsec >= 0.11.1.0,
     authenticate-oauth >= 1.5,
-    base >= 4.5 && < 5,
+    base >= 4.13 && < 5,
     base16-bytestring,
     bytestring >= 0.9,
     case-insensitive,
@@ -141,7 +141,7 @@ executable httpbin
     build-depends:
       aeson >= 2.0,
       aeson-pretty >= 0.8.0,
-      base >= 4.5 && < 5,
+      base >= 4.13 && < 5,
       base64-bytestring,
       bytestring,
       case-insensitive,
@@ -178,14 +178,14 @@ test-suite tests
       AWS.SQS
 
   if flag(aws)
-    build-depends: base >= 4.7 && < 5
+    build-depends: base >= 4.13 && < 5
 
   build-depends:
     HUnit,
     QuickCheck >= 2.7,
     aeson,
     aeson-pretty >= 0.8.0,
-    base >= 4.5 && < 5,
+    base >= 4.13 && < 5,
     base64-bytestring,
     bytestring,
     case-insensitive,
@@ -224,7 +224,7 @@ test-suite doctests
     buildable: False
   else
     build-depends:
-      base >= 4.5 && < 5,
+      base >= 4.13 && < 5,
       directory,
       doctest,
       filepath
