@@ -1,4 +1,10 @@
 -*- markdown -*-
+
+2023-08-15 0.5.4.2
+
+* Fix base bounds
+
+
 2023-07-31 0.5.4.1
 
 * Cabal version change2023-07-31 0.5.4.1
