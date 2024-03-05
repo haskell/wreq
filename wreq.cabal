@@ -110,7 +110,7 @@ library
     bytestring >= 0.9,
     case-insensitive,
     containers,
-    cryptonite,
+    crypton,
     exceptions >= 0.5,
     ghc-prim,
     hashable,
