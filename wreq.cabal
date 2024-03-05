@@ -37,7 +37,7 @@ maintainer:          bos@serpentine.com
 copyright:           2014 Bryan O'Sullivan
 category:            Web
 build-type:          Custom
-tested-with:         GHC==9.2.8
+tested-with:         GHC ==9.2.8 || ==9.4.8 || ==9.6.4
 extra-source-files:
   README.md
   TODO.md
