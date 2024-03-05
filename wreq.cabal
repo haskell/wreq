@@ -29,11 +29,11 @@ description:
   .
   * Early TLS support via the tls package
 homepage:            http://www.serpentine.com/wreq
-bug-reports:         https://github.com/bos/wreq/issues
+bug-reports:         https://github.com/haskell/wreq/issues
 license:             BSD-3-Clause
 license-file:        LICENSE.md
 author:              Bryan O'Sullivan <bos@serpentine.com>
-maintainer:          bos@serpentine.com
+maintainer:          Ondřej Palkovský
 copyright:           2014 Bryan O'Sullivan
 category:            Web
 build-type:          Custom
@@ -230,8 +230,4 @@ test-suite doctests
 
 source-repository head
   type:     git
-  location: https://github.com/bos/wreq
-
-source-repository head
-  type:     mercurial
-  location: https://bitbucket.org/bos/wreq
+  location: https://github.com/haskell/wreq
