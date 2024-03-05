@@ -1,5 +1,10 @@
 -*- markdown -*-
 
+2023-08-15 0.5.4.3
+
+* Replace cryptonite(deprecated) with crypto
+
+
 2023-08-15 0.5.4.2
 
 * Fix base bounds

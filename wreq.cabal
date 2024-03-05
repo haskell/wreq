@@ -1,6 +1,6 @@
 cabal-version:       3.0
 name:                wreq
-version:             0.5.4.2
+version:             0.5.4.3
 synopsis:            An easy-to-use HTTP client library.
 description:
   .
