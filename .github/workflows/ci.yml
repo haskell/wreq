@@ -1,0 +1,51 @@
+name: CI
+
+# Trigger the workflow on push or pull request, but only for the main branch
+on:
+  pull_request:
+  push:
+    branches: ["master"]
+
+jobs:
+  generate-matrix:
+    name: "Generate matrix from cabal"
+    outputs: 
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract the tested GHC versions
+        id: set-matrix
+        uses: kleidukos/get-tested@v0.1.6.0
+        with:
+          cabal-file: wreq.cabal
+          ubuntu: true
+          version: 0.1.6.0
+  tests:
+    name: ${{ matrix.ghc }} on ${{ matrix.os }}
+    needs: generate-matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix: ${{ fromJSON(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout base repo
+        uses: actions/checkout@v4
+      - name: Set up Haskell
+        id: setup-haskell
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: 'latest'
+      - name: Configure
+        run: cabal configure --enable-tests
+      - name: Freeze
+        run: cabal freeze
+      - name: Cache
+        uses: actions/cache@v4.0.1
+        with:
+          path: ${{ steps.setup-haskell.outputs.cabal-store }}
+          key: ${{ runner.os }}-ghc-${{ matrix.ghc }}-cabal-${{ hashFiles('**/plan.json') }}
+          restore-keys: ${{ runner.os }}-ghc-${{ matrix.ghc }}-
+      - name: Build
+        run: cabal new-build
+      - name: Test
+        run: cabal new-test all
