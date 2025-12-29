@@ -38,7 +38,7 @@ copyright:           2014 Bryan O'Sullivan
 category:            Web
 build-type:          Custom
 tested-with:         GHC ==9.2.8 || ==9.4.8 || ==9.6.4
-extra-source-files:
+extra-doc-files:
   README.md
   TODO.md
   changelog.md
@@ -112,7 +112,6 @@ library
     containers,
     crypton,
     exceptions >= 0.5,
-    ghc-prim,
     hashable,
     http-client >= 0.6,
     http-client-tls >= 0.3.3,
