@@ -18,7 +18,7 @@ jobs:
         uses: kleidukos/get-tested@v0.1.9.1
         with:
           cabal-file: wreq.cabal
-          ubuntu: true
+          ubuntu-version: latest
           version: 0.1.9.1
   tests:
     name: ${{ matrix.ghc }} on ${{ matrix.os }}
