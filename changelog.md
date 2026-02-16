@@ -1,5 +1,11 @@
 -*- markdown -*-
 
+
+2026-02-16 0.5.4.4
+
+* Small doc/dep updates
+
+
 2023-08-15 0.5.4.3
 
 * Replace cryptonite(deprecated) with crypto
