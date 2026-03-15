@@ -1,5 +1,9 @@
 -*- markdown -*-
 
+2026-02-16 0.5.4.5
+
+* Dependency update (memory -> ram)
+
 
 2026-02-16 0.5.4.4
 
